@@ -3,15 +3,273 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, Image, PlusCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Image, PlusCircle, TrendingUp } from "lucide-react";
 import MainLayout from "@/components/layouts/MainLayout";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LabelList,
+} from "recharts";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+
+// Sample data for the charts
+const chartData = [
+  { day: "Mon", tradesTaken: 1, win: 2, loss: 1, profitLoss: -20, rulesFollowed: 2, rulesBroken: 1 },
+  { day: "Tue", tradesTaken: 2, win: 2, loss: 2, profitLoss: 30, rulesFollowed: 3, rulesBroken: 1 },
+  { day: "Wed", tradesTaken: 4, win: 3, loss: 1, profitLoss: 50, rulesFollowed: 3, rulesBroken: 0 },
+  { day: "Thu", tradesTaken: 3, win: 2, loss: 1, profitLoss: 40, rulesFollowed: 2, rulesBroken: 1 },
+  { day: "Fri", tradesTaken: 2, win: 2, loss: 1, profitLoss: 20, rulesFollowed: 3, rulesBroken: 0 },
+];
+
+const tradesTakenConfig = {
+  tradesTaken: {
+    label: "Trades Taken",
+    color: "hsl(var(--chart-1))",
+  },
+};
+
+const winRateConfig = {
+  win: {
+    label: "Win",
+    color: "hsl(var(--chart-1))",
+  },
+  loss: {
+    label: "Loss",
+    color: "hsl(var(--chart-2))",
+  },
+};
+
+const profitLossConfig = {
+  profitLoss: {
+    label: "Profit & Loss",
+    color: "hsl(var(--chart-1))",
+  },
+};
+
+const rulesConfig = {
+  rulesFollowed: {
+    label: "Followed",
+    color: "hsl(var(--chart-1))",
+  },
+  rulesBroken: {
+    label: "Broken",
+    color: "hsl(var(--chart-2))",
+  },
+};
+
+function TradesTakenChart() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Trades Taken</CardTitle>
+        <CardDescription>Daily Trade limit: 4</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={tradesTakenConfig}>
+          <LineChart data={chartData}>
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="day"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
+            <YAxis hide domain={[0, 4]} />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent indicator="line" />}
+            />
+            <Line
+              type="monotone"
+              dataKey="tradesTaken"
+              stroke="var(--color-tradesTaken)"
+              strokeWidth={2}
+              dot={{
+                fill: "var(--color-tradesTaken)",
+              }}
+              activeDot={{
+                r: 6,
+              }}
+            >
+              <LabelList
+                position="top"
+                offset={12}
+                className="fill-foreground"
+                fontSize={12}
+              />
+            </Line>
+          </LineChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col items-start gap-2 text-sm">
+        <div className="flex gap-2 font-medium leading-none">
+          Average trades: 2.4 per day <TrendingUp className="h-4 w-4" />
+        </div>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function WinRateChart() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Win Rate</CardTitle>
+        <CardDescription>Wins vs Losses</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={winRateConfig}>
+          <BarChart data={chartData}>
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="day"
+              tickLine={false}
+              tickMargin={10}
+              axisLine={false}
+            />
+            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            <Bar
+              dataKey="win"
+              stackId="a"
+              fill="var(--color-win)"
+              radius={[4, 4, 0, 0]}
+            />
+            <Bar
+              dataKey="loss"
+              stackId="a"
+              fill="var(--color-loss)"
+              radius={[0, 0, 4, 4]}
+            />
+          </BarChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col items-start gap-2 text-sm">
+        <div className="flex gap-2 font-medium leading-none">
+          Win rate: 68.75% <TrendingUp className="h-4 w-4" />
+        </div>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function ProfitLossChart() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Profit & Loss</CardTitle>
+        <CardDescription>Daily P&L</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={profitLossConfig}>
+          <LineChart data={chartData}>
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="day"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent indicator="line" />}
+            />
+            <Line
+              type="monotone"
+              dataKey="profitLoss"
+              stroke="var(--color-profitLoss)"
+              strokeWidth={2}
+              dot={{
+                fill: "var(--color-profitLoss)",
+              }}
+              activeDot={{
+                r: 6,
+              }}
+            >
+              <LabelList
+                position="top"
+                offset={12}
+                className="fill-foreground"
+                fontSize={12}
+              />
+            </Line>
+          </LineChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col items-start gap-2 text-sm">
+        <div className="flex gap-2 font-medium leading-none">
+          Total P&L: $120 <TrendingUp className="h-4 w-4" />
+        </div>
+      </CardFooter>
+    </Card>
+  );
+}
+
+function RulesChart() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Rules</CardTitle>
+        <CardDescription>Followed vs Broken</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={rulesConfig}>
+          <BarChart data={chartData}>
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="day"
+              tickLine={false}
+              tickMargin={10}
+              axisLine={false}
+            />
+            <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+            <ChartLegend content={<ChartLegendContent />} />
+            <Bar
+              dataKey="rulesFollowed"
+              stackId="a"
+              fill="var(--color-rulesFollowed)"
+              radius={[4, 4, 0, 0]}
+            />
+            <Bar
+              dataKey="rulesBroken"
+              stackId="a"
+              fill="var(--color-rulesBroken)"
+              radius={[0, 0, 4, 4]}
+            />
+          </BarChart>
+        </ChartContainer>
+      </CardContent>
+      <CardFooter className="flex-col items-start gap-2 text-sm">
+        <div className="flex gap-2 font-medium leading-none">
+          Rules followed: 86.67% <TrendingUp className="h-4 w-4" />
+        </div>
+      </CardFooter>
+    </Card>
+  );
+}
 
 export default function Dashboard() {
   const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -24,10 +282,18 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
+  const toggleSidebar = () => {
+    setIsSidebarExpanded(!isSidebarExpanded);
+  };
+
   return (
     <MainLayout>
       <div className="flex h-full">
-        <div className="flex-1 p-6 overflow-auto">
+        <div
+          className={`flex-1 p-6 overflow-auto ${
+            isSidebarExpanded ? "md:mr-80" : "md:mr-12"
+          }`}
+        >
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold">Welcome back, Json Taylor!</h2>
             <p className="text-xl">3:15 PM</p>
@@ -131,30 +397,30 @@ export default function Dashboard() {
 
         {/* Right Sidebar */}
         {!isMobile && (
-          <div className="w-80 bg-white p-6 space-y-6 border-l">
-            {/* <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold">May 2024</h3>
-              <div className="flex space-x-2">
-                <Button variant="ghost" size="icon">
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div> */}
-            <Calendar />
-            <Card>
-              <CardHeader>
-                <CardTitle>Performance</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center py-8">
-                <h3 className="text-xl font-semibold mb-2">No data</h3>
-                <p className="text-gray-600">
-                  Please start journaling daily to see your performance here
-                </p>
-              </CardContent>
-            </Card>
+          <div
+            className={`fixed right-0 top-12 h-full bg-white p-4 space-y-6 border-l overflow-y-auto transition-all duration-300 ease-in-out ${
+              isSidebarExpanded ? "w-80" : "w-12"
+            }`}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 left-1"
+              onClick={toggleSidebar}
+            >
+              {isSidebarExpanded ? <ChevronRight /> : <ChevronLeft />}
+            </Button>
+            {isSidebarExpanded && (
+              <>
+                <div className="mt-12">
+                  <Calendar />
+                </div>
+                <TradesTakenChart />
+                <WinRateChart />
+                <ProfitLossChart />
+                <RulesChart />
+              </>
+            )}
           </div>
         )}
       </div>

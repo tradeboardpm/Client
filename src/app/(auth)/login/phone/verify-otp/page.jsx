@@ -28,12 +28,14 @@ export default function OTPVerificationPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="space-y-2 ">
+        <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold">OTP Verification</h1>
-          <p className="text-muted-foreground text-sm ">
-            We have sent 4-digit code to your registered email
-            ank*****@gmail.com{" "}
-            
+          <p className="text-muted-foreground text-sm">
+            We have sent 4-digit code to your registered mobile number
+            *******886{" "}
+            <Link href="/edit-number" className="text-primary hover:underline">
+              Edit Number
+            </Link>
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
