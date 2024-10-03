@@ -177,7 +177,7 @@ const AnimatedSection = ({ children }) => {
 export default function LandingPage() {
   return (
     <div className="min-h-screen">
-      <nav className="container mx-auto flex items-center justify-between p-4 bg-primary text-background">
+      <nav className=" flex items-center justify-between p-4 bg-primary text-background">
         <div className="flex items-center space-x-2">
           <Image
             src="/placeholder.svg"
@@ -206,7 +206,7 @@ export default function LandingPage() {
 
       <main>
           <section className="bg-primary text-background pt-16">
-            <div className="container mx-auto  text-center">
+            <div className="text-center">
               <h1 className="text-4xl md:text-6xl font-bold mb-4">
                 Trade Better With Discipline
               </h1>

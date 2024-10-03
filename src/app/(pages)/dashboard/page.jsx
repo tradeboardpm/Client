@@ -7,7 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight, Image, PlusCircle, TrendingUp } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import MainLayout from "@/components/layouts/MainLayout";
 import {
   LineChart,
@@ -30,6 +38,22 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Image,
+  PlusCircle,
+  TrendingUp,
+  Trash2,
+} from "lucide-react";
 
 // Sample data for the charts
 const chartData = [
@@ -268,12 +292,18 @@ function RulesChart() {
 }
 
 export default function Dashboard() {
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+const [isMobile, setIsMobile] = useState(false);
+const [isLargeScreen, setIsLargeScreen] = useState(false);
+const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+const [rules, setRules] = useState([]);
+const [trades, setTrades] = useState([]);
 
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsLargeScreen(width >= 1024);
+      setIsSidebarExpanded(width >= 1024);
     };
 
     checkScreenSize();
@@ -286,12 +316,37 @@ export default function Dashboard() {
     setIsSidebarExpanded(!isSidebarExpanded);
   };
 
+  const addRule = (rule) => {
+    setRules([...rules, rule]);
+  };
+
+  const editRule = (index, updatedRule) => {
+    const newRules = [...rules];
+    newRules[index] = updatedRule;
+    setRules(newRules);
+  };
+
+  const deleteRule = (index) => {
+    const newRules = rules.filter((_, i) => i !== index);
+    setRules(newRules);
+  };
+
+  const addTrade = (trade) => {
+    setTrades([...trades, trade]);
+  };
+
+  const importTrades = (importedTrades) => {
+    setTrades([...trades, ...importedTrades]);
+  };
+
   return (
     <MainLayout>
       <div className="flex h-full">
         <div
           className={`flex-1 p-6 overflow-auto ${
-            isSidebarExpanded ? "md:mr-80" : "md:mr-12"
+            !isMobile && isSidebarExpanded
+              ? "lg:mr-80 md:mr-80"
+              : "lg:mr-12 md:mr-12"
           }`}
         >
           <div className="flex justify-between items-center mb-4">
@@ -356,18 +411,40 @@ export default function Dashboard() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-center py-8">
-                      <h4 className="text-xl font-semibold mb-2">
-                        Get Started!
-                      </h4>
-                      <p className="text-gray-600 mb-4">
-                        Please click below to add your trading rules
-                      </p>
-                      <Button>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Rules
-                      </Button>
-                    </div>
+                    {rules.length === 0 ? (
+                      <div className="text-center py-8">
+                        <h4 className="text-xl font-semibold mb-2">
+                          Get Started!
+                        </h4>
+                        <p className="text-gray-600 mb-4">
+                          Please click below to add your trading rules
+                        </p>
+                        <AddRuleDialog onAddRule={addRule} />
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {rules.map((rule, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between"
+                          >
+                            <p>{rule}</p>
+                            <div>
+                              <EditRuleDialog
+                                rule={rule}
+                                onEditRule={(updatedRule) =>
+                                  editRule(index, updatedRule)
+                                }
+                              />
+                              <DeleteRuleDialog
+                                onDeleteRule={() => deleteRule(index)}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                        <AddRuleDialog onAddRule={addRule} />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -378,19 +455,39 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle>Trade Log</CardTitle>
             </CardHeader>
-            <CardContent className="text-center py-8">
-              <h3 className="text-xl font-semibold mb-2">Get Started!</h3>
-              <p className="text-gray-600 mb-4">
-                Please add your trades here or import them automatically using
-                your tradebook
-              </p>
-              <div className="space-x-4">
-                <Button>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Trade
-                </Button>
-                <Button variant="outline">Import Trade</Button>
-              </div>
+            <CardContent>
+              {trades.length === 0 ? (
+                <div className="text-center py-8">
+                  <h3 className="text-xl font-semibold mb-2">Get Started!</h3>
+                  <p className="text-gray-600 mb-4">
+                    Please add your trades here or import them automatically
+                    using your tradebook
+                  </p>
+                  <div className="space-x-4">
+                    <AddTradeDialog onAddTrade={addTrade} />
+                    <ImportTradeDialog onImportTrades={importTrades} />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {trades.map((trade, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between border-b pb-2"
+                    >
+                      <p>
+                        {trade.instrument} - {trade.tradeType} -{" "}
+                        {trade.quantity}
+                      </p>
+                      <p>{trade.buyingPrice}</p>
+                    </div>
+                  ))}
+                  <div className="space-x-4">
+                    <AddTradeDialog onAddTrade={addTrade} />
+                    <ImportTradeDialog onImportTrades={importTrades} />
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -425,5 +522,313 @@ export default function Dashboard() {
         )}
       </div>
     </MainLayout>
+  );
+}
+
+
+function AddRuleDialog({ onAddRule }) {
+  const [rule, setRule] = useState("");
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Rule
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add Rule</DialogTitle>
+          <DialogDescription>Here you can add your rules.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="rule">Rule</Label>
+            <Input
+              id="rule"
+              value={rule}
+              onChange={(e) => setRule(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => onAddRule(rule)}>Add</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditRuleDialog({ rule, onEditRule }) {
+  const [editedRule, setEditedRule] = useState(rule);
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          Edit
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Rule</DialogTitle>
+          <DialogDescription>Here you can edit your rules.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="rule">Rule</Label>
+            <Input
+              id="rule"
+              value={editedRule}
+              onChange={(e) => setEditedRule(e.target.value)}
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={() => onEditRule(editedRule)}>Save</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function DeleteRuleDialog({ onDeleteRule }) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="sm">
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Delete Rule</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete this rule permanently?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="destructive" onClick={onDeleteRule}>
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function AddTradeDialog({ onAddTrade }) {
+  const [trade, setTrade] = useState({
+    instrument: "",
+    quantity: "",
+    tradeType: "Buy",
+    buyingPrice: "",
+    equityType: "F&O - Options",
+    time: "",
+    exchangeCharges: "",
+    brokerage: "",
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setTrade({ ...trade, [name]: value });
+  };
+
+  const handleSubmit = () => {
+    onAddTrade(trade);
+    // Reset form
+    setTrade({
+      instrument: "",
+      quantity: "",
+      tradeType: "Buy",
+      buyingPrice: "",
+      equityType: "F&O - Options",
+      time: "",
+      exchangeCharges: "",
+      brokerage: "",
+    });
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Add Trade
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add Trade</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="instrument" className="text-right">
+              Instrument
+            </Label>
+            <Input
+              id="instrument"
+              name="instrument"
+              value={trade.instrument}
+              onChange={handleChange}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="quantity" className="text-right">
+              Quantity
+            </Label>
+            <Input
+              id="quantity"
+              name="quantity"
+              value={trade.quantity}
+              onChange={handleChange}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Trade Type</Label>
+            <RadioGroup
+              defaultValue="Buy"
+              onValueChange={(value) =>
+                setTrade({ ...trade, tradeType: value })
+              }
+              className="flex col-span-3"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="Buy" id="buy" />
+                <Label htmlFor="buy">Buy</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="Sell" id="sell" />
+                <Label htmlFor="sell">Sell</Label>
+              </div>
+            </RadioGroup>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="buyingPrice" className="text-right">
+              Buying price
+            </Label>
+            <Input
+              id="buyingPrice"
+              name="buyingPrice"
+              value={trade.buyingPrice}
+              onChange={handleChange}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="equityType" className="text-right">
+              Equity type
+            </Label>
+            <Select
+              onValueChange={(value) =>
+                setTrade({ ...trade, equityType: value })
+              }
+              defaultValue="F&O - Options"
+            >
+              <SelectTrigger className="col-span-3">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="F&O - Options">F&O - Options</SelectItem>
+                <SelectItem value="F&O - Futures">F&O - Futures</SelectItem>
+                <SelectItem value="Cash">Cash</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="time" className="text-right">
+              Time
+            </Label>
+            <Input
+              id="time"
+              name="time"
+              type="time"
+              value={trade.time}
+              onChange={handleChange}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="exchangeCharges" className="text-right">
+              Exchange charges (Rs)
+            </Label>
+            <Input
+              id="exchangeCharges"
+              name="exchangeCharges"
+              value={trade.exchangeCharges}
+              onChange={handleChange}
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="brokerage" className="text-right">
+              Brokerage (Rs)
+            </Label>
+            <Input
+              id="brokerage"
+              name="brokerage"
+              value={trade.brokerage}
+              onChange={handleChange}
+              className="col-span-3"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleSubmit}>Add</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ImportTradeDialog({ onImportTrades }) {
+  const [file, setFile] = useState(null);
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleImport = () => {
+    // In a real application, you would process the file here
+    // For this example, we'll just simulate importing some trades
+    const simulatedImportedTrades = [
+      { instrument: "AAPL", tradeType: "Buy", quantity: 100, buyingPrice: 150 },
+      {
+        instrument: "GOOGL",
+        tradeType: "Sell",
+        quantity: 50,
+        buyingPrice: 2800,
+      },
+    ];
+    onImportTrades(simulatedImportedTrades);
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline">Import Trade</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Import Trade</DialogTitle>
+          <DialogDescription>
+            Upload a CSV or Excel file to import your trades.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="flex items-center gap-4">
+            <Input id="picture" type="file" onChange={handleFileChange} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleImport} disabled={!file}>
+            Import
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,35 +9,88 @@ import { Label } from "@/components/ui/label";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import AuthLayout from "@/components/layouts/AuthLayout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [currentImage, setCurrentImage] = useState(0);
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    mobile: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-  const carouselImages = [
-    "/Images/Dashboard.png",
-    "/Images/Dashboard.png",
-    "/Images/Dashboard.png",
-  ];
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentImage((prevImage) => (prevImage + 1) % carouselImages.length);
-    }, 5000);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
-    return () => clearInterval(interval);
-  }, []);
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/register`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: formData.fullName,
+            email: formData.email,
+            phone: formData.mobile,
+            password: formData.password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Registration failed");
+      }
+
+      // Save email to localStorage
+      localStorage.setItem("userEmail", formData.email);
+
+      router.push("/sign-up/verify-otp");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="flex min-h-screen bg-background">
+    <AuthLayout>
       <div className="flex-1 flex items-center justify-center px-6 py-2">
         <Card className="w-full max-w-lg bg-transparent shadow-none">
           <CardContent className="px-2 py-3">
             <h1 className="text-3xl font-bold mb-2">Sign up</h1>
             <p className="text-gray-300 mb-6">Please create an account</p>
 
-            <Button variant="outline" className="w-full mb-4 bg-accent/50 h-10 shadow-lg border border-ring/25">
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              variant="outline"
+              className="w-full mb-4 bg-accent/50 h-10 shadow-lg border border-ring/25"
+            >
               <Image
                 src="/google-logo.svg"
                 alt="Google logo"
@@ -56,26 +110,53 @@ export default function SignUp() {
               </div>
             </div>
 
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
                 <Label htmlFor="fullName">Full Name</Label>
-                <Input className=" text-base h-10" id="fullName" placeholder="Full name" />
+                <Input
+                  className="text-base h-10"
+                  id="fullName"
+                  placeholder="Full name"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div>
                 <Label htmlFor="email">Email ID</Label>
-                <Input className=" text-base h-10" id="email" type="email" placeholder="Email ID" />
+                <Input
+                  className="text-base h-10"
+                  id="email"
+                  type="email"
+                  placeholder="Email ID"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div>
                 <Label htmlFor="mobile">Mobile Number</Label>
-                <Input className=" text-base h-10" id="mobile" type="tel" placeholder="Mobile number" />
+                <Input
+                  className="text-base h-10"
+                  id="mobile"
+                  type="tel"
+                  placeholder="Mobile number"
+                  value={formData.mobile}
+                  onChange={handleChange}
+                  required
+                />
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
-                  <Input className=" text-base h-10"
+                  <Input
+                    className="text-base h-10"
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
                   />
                   <Button
                     type="button"
@@ -95,10 +176,14 @@ export default function SignUp() {
               <div>
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
-                  <Input className=" text-base h-10"
+                  <Input
+                    className="text-base h-10"
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm Password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
                   />
                   <Button
                     type="button"
@@ -126,7 +211,13 @@ export default function SignUp() {
                 </Link>
                 .
               </div>
-              <Button className="w-full text-background">Sign up</Button>
+              <Button
+                className="w-full text-background"
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing up..." : "Sign up"}
+              </Button>
             </form>
 
             <p className="text-center mt-6">
@@ -138,35 +229,6 @@ export default function SignUp() {
           </CardContent>
         </Card>
       </div>
-
-      <div className="hidden lg:flex flex-1 bg-primary items-center justify-center p-12 rounded-l-[3.5rem]">
-        <div className="max-w-2xl">
-          <div className="relative w-full h-96 mb-8 rounded-xl overflow-hidden">
-            {carouselImages.map((src, index) => (
-              <Image
-                key={index}
-                src={src}
-                alt={`Carousel image ${index + 1}`}
-                layout="fill"
-                objectFit="contain"
-                className={`transition-opacity duration-500 ${
-                  index === currentImage ? "opacity-100" : "opacity-0"
-                }`}
-              />
-            ))}
-          </div>
-          <div className="text-center text-white">
-            <h2 className="text-3xl font-bold mb-4">
-              Welcome to Tradeboard! 👋
-            </h2>
-            <p className="text-xl">
-              Lorem Ipsum is simply dummy text of the printing and typesetting
-              industry. Lorem Ipsum has been the industry's standard dummy text
-              ever since the 1500s.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+    </AuthLayout>
   );
 }
