@@ -54,7 +54,7 @@ export default function Sidebar({ isOpen }) {
           </Link>
         ))}
       </nav>
-      <Card className="bg-gradient-to-b from-primary to-[#7886DD]">
+      <Card className="primary_gradient">
         <CardContent className="p-4 text-center flex flex-col items-center">
           <Image src="/images/diamond.png" width={70} height={70} />
           <p className="mt-2 font-semibold">Upcoming Level: Pearl</p>

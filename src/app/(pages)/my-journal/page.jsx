@@ -1,12 +1,12 @@
-import MainLayout from '@/components/layouts/MainLayout'
-import { ChevronsLeft, ChevronsRight } from 'lucide-react';
-import React from 'react'
+import MainLayout from "@/components/layouts/MainLayout";
+import { ChevronsLeft, ChevronsRight } from "lucide-react";
+import React from "react";
 
 const page = () => {
   return (
     <MainLayout>
       <main className="p-6">
-        <div className="bg-gradient-to-b from-primary to-[#7886DD] rounded-xl p-4">
+        <div className="primary_gradient rounded-xl p-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 text-background">
               <ChevronsLeft />
@@ -21,6 +21,6 @@ const page = () => {
       </main>
     </MainLayout>
   );
-}
+};
 
-export default page
+export default page;

@@ -180,12 +180,11 @@ export default function LandingPage() {
       <nav className=" flex items-center justify-between p-4 bg-primary text-background">
         <div className="flex items-center space-x-2">
           <Image
-            src="/placeholder.svg"
+            src="/images/home_logo.png"
             alt="Tradeboard.in Logo"
-            width={40}
+            width={180}
             height={40}
           />
-          <span className="text-xl font-bold">Tradeboard.in</span>
         </div>
         <div className="hidden md:flex space-x-4 text-sm">
           {navItems.map((item) => (
@@ -205,29 +204,28 @@ export default function LandingPage() {
       </nav>
 
       <main>
-          <section className="bg-primary text-background pt-16">
-            <div className="text-center">
-              <h1 className="text-4xl md:text-6xl font-bold mb-4">
-                Trade Better With Discipline
-              </h1>
-              <p className="text-md md:text-lg mb-8 max-w-3xl mx-auto">
-                We offer traders the tools to analyse their daily trading
-                patterns and learn from it to establish themselves as successful
-                traders.
-              </p>
-              <div className="bg-gradient-to-b from-primary from-50% to-background to-50% p-4">
-                <div className="relative w-full max-w-4xl mx-auto aspect-video">
-                  <img
-                    src="/images/Dashboard.png"
-                    alt="Tradeboard Dashboard"
-                    layout="fill"
-                    objectFit="contain"
-                    className="shadow-xl rounded-2xl"
-                  />
-                </div>
+        <section className="bg-primary text-background pt-16">
+          <div className="text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              Trade Better With Discipline
+            </h1>
+            <p className="text-md md:text-lg mb-8 max-w-3xl mx-auto">
+              We offer traders the tools to analyse their daily trading patterns
+              and learn from it to establish themselves as successful traders.
+            </p>
+            <div className="bg-gradient-to-b from-primary from-50% to-background to-50% p-4">
+              <div className="relative w-full max-w-4xl mx-auto aspect-video">
+                <img
+                  src="/images/Dashboard.png"
+                  alt="Tradeboard Dashboard"
+                  layout="fill"
+                  objectFit="contain"
+                  className=" rounded-2xl"
+                />
               </div>
             </div>
-          </section>
+          </div>
+        </section>
 
         <AnimatedSection>
           <section className="py-8 md:py-16">
@@ -411,7 +409,7 @@ export default function LandingPage() {
         </AnimatedSection>
 
         <AnimatedSection>
-          <section className="py-20 bg-primary text-background">
+          <section className="py-20 primary_gradient text-background">
             <div className="container mx-auto px-4">
               <h2 className="text-xl text-center mb-4">
                 Simple Pricing, Great Value
@@ -481,24 +479,23 @@ export default function LandingPage() {
           </section>
         </AnimatedSection>
 
-        
-          <div className="flex items-center justify-center bg-gradient-to-b from-background from-50% to-foreground to-50%">
-            <section className="py-16 bg-primary w-full md:w-fit rounded-3xl px-6 text-background my-8">
-              <div className="container mx-auto px-4 text-center">
-                <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  Ready to Get Started with{" "}
-                  <span className="text-foreground">TradeBoard?</span>
-                </h2>
-                <p className="text-base mb-8">
-                  Give trading psychology a chance in your trading journey. Best
-                  time to upgrade your trading game with us is NOW.
-                </p>
-                <Button variant="secondary" size="lg">
-                  Sign up with free
-                </Button>
-              </div>
-            </section>
-          </div>
+        <div className="flex items-center justify-center bg-gradient-to-b from-background from-50% to-foreground to-50%">
+          <section className="py-16 primary_gradient w-full md:w-fit rounded-3xl px-6 text-background my-8">
+            <div className="container mx-auto px-4 text-center">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Ready to Get Started with{" "}
+                <span className="text-foreground">TradeBoard?</span>
+              </h2>
+              <p className="text-base mb-8">
+                Give trading psychology a chance in your trading journey. Best
+                time to upgrade your trading game with us is NOW.
+              </p>
+              <Button variant="secondary" size="lg">
+                Sign up with free
+              </Button>
+            </div>
+          </section>
+        </div>
       </main>
 
       <footer className="bg-foreground text-background pt-8 px-4 md:pt-12 md:px-8 lg:px-24">

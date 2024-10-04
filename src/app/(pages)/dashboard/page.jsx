@@ -3,8 +3,24 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardFooter,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -49,25 +65,78 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   ChevronLeft,
   ChevronRight,
-  Image,
   PlusCircle,
   TrendingUp,
   Trash2,
+  ImageIcon,
+  SquarePen,
 } from "lucide-react";
+import Image from "next/image";
+import CustomCalendar from "@/components/ui/custom-calendar";
+import Cookies from "js-cookie";
+
+const calendarData = {
+  "2024-10-01": false,
+  "2024-10-05": true,
+  "2024-10-10": false,
+  "2024-10-15": true,
+  "2024-10-20": true,
+  "2024-10-25": false,
+};
 
 // Sample data for the charts
 const chartData = [
-  { day: "Mon", tradesTaken: 1, win: 2, loss: 1, profitLoss: -20, rulesFollowed: 2, rulesBroken: 1 },
-  { day: "Tue", tradesTaken: 2, win: 2, loss: 2, profitLoss: 30, rulesFollowed: 3, rulesBroken: 1 },
-  { day: "Wed", tradesTaken: 4, win: 3, loss: 1, profitLoss: 50, rulesFollowed: 3, rulesBroken: 0 },
-  { day: "Thu", tradesTaken: 3, win: 2, loss: 1, profitLoss: 40, rulesFollowed: 2, rulesBroken: 1 },
-  { day: "Fri", tradesTaken: 2, win: 2, loss: 1, profitLoss: 20, rulesFollowed: 3, rulesBroken: 0 },
+  {
+    day: "Mon",
+    tradesTaken: 1,
+    win: 2,
+    loss: 1,
+    profitLoss: -20,
+    rulesFollowed: 2,
+    rulesBroken: 1,
+  },
+  {
+    day: "Tue",
+    tradesTaken: 2,
+    win: 2,
+    loss: 2,
+    profitLoss: 30,
+    rulesFollowed: 3,
+    rulesBroken: 1,
+  },
+  {
+    day: "Wed",
+    tradesTaken: 4,
+    win: 3,
+    loss: 1,
+    profitLoss: 50,
+    rulesFollowed: 3,
+    rulesBroken: 0,
+  },
+  {
+    day: "Thu",
+    tradesTaken: 3,
+    win: 2,
+    loss: 1,
+    profitLoss: 40,
+    rulesFollowed: 2,
+    rulesBroken: 1,
+  },
+  {
+    day: "Fri",
+    tradesTaken: 2,
+    win: 2,
+    loss: 1,
+    profitLoss: 20,
+    rulesFollowed: 3,
+    rulesBroken: 0,
+  },
 ];
 
 const tradesTakenConfig = {
   tradesTaken: {
     label: "Trades Taken",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(var(--primary))",
   },
 };
 
@@ -85,7 +154,7 @@ const winRateConfig = {
 const profitLossConfig = {
   profitLoss: {
     label: "Profit & Loss",
-    color: "hsl(var(--chart-1))",
+    color: "hsl(var(--primary))",
   },
 };
 
@@ -292,11 +361,41 @@ function RulesChart() {
 }
 
 export default function Dashboard() {
-const [isMobile, setIsMobile] = useState(false);
-const [isLargeScreen, setIsLargeScreen] = useState(false);
-const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-const [rules, setRules] = useState([]);
-const [trades, setTrades] = useState([]);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
+  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
+  const [rules, setRules] = useState([]);
+const [selectedRules, setSelectedRules] = useState(new Set());
+  const [trades, setTrades] = useState([]);
+  const [username, setUsername] = useState("");
+    const [currentTime, setCurrentTime] = useState(new Date());
+
+    useEffect(() => {
+      const timer = setInterval(() => {
+        setCurrentTime(new Date());
+      }, 1000);
+
+      return () => {
+        clearInterval(timer);
+      };
+    }, []);
+
+    const formatTime = (date) => {
+      return date.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    };
+
+    const formatDate = (date) => {
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    };
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -311,6 +410,13 @@ const [trades, setTrades] = useState([]);
 
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
+
+    useEffect(() => {
+      const name = Cookies.get("userName");
+      if (name) {
+        setUsername(name);
+      }
+    }, []);
 
   const toggleSidebar = () => {
     setIsSidebarExpanded(!isSidebarExpanded);
@@ -331,6 +437,24 @@ const [trades, setTrades] = useState([]);
     setRules(newRules);
   };
 
+  const toggleSelectAll = () => {
+    if (selectedRules.size === rules.length) {
+      setSelectedRules(new Set());
+    } else {
+      setSelectedRules(new Set(rules.map((_, i) => i)));
+    }
+  };
+
+  const toggleSelectRule = (index) => {
+    const newSelectedRules = new Set(selectedRules);
+    if (newSelectedRules.has(index)) {
+      newSelectedRules.delete(index);
+    } else {
+      newSelectedRules.add(index);
+    }
+    setSelectedRules(newSelectedRules);
+  };
+
   const addTrade = (trade) => {
     setTrades([...trades, trade]);
   };
@@ -342,29 +466,28 @@ const [trades, setTrades] = useState([]);
   return (
     <MainLayout>
       <div className="flex h-full">
-        <div
-          className={`flex-1 p-6 overflow-auto ${
-            !isMobile && isSidebarExpanded
-              ? "lg:mr-80 md:mr-80"
-              : "lg:mr-12 md:mr-12"
-          }`}
-        >
+        <div className={`flex-1 p-6 overflow `}>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Welcome back, Json Taylor!</h2>
-            <p className="text-xl">3:15 PM</p>
+            <h2 className="text-2xl font-bold">Welcome back, {username}!</h2>
+            <p className="text-xl">{formatTime(currentTime)}</p>
           </div>
 
           <Card className="bg-transparent border-none shadow-none mb-6">
-            <CardHeader className="bg-gradient-to-b from-primary to-[#7886DD] rounded-xl p-4">
-              <div className="flex justify-between items-center">
-                <div className="bg-accent/40 text-xl text-background px-2 py-1 rounded-lg">
-                  <p>Monday, 31 May 2024</p>
+            <CardHeader className="primary_gradient rounded-xl p-2 sm:p-3 md:p-4">
+              <div className="flex flex-col sm:flex-row justify-between items-center relative">
+                <div className="flex-1 w-full sm:w-auto order-2 sm:order-1"></div>
+                <div className="w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 bg-accent/40 text-center text-background px-2 py-1 rounded-lg mb-2 sm:mb-0 order-1 sm:order-2">
+                  <p className="text-sm sm:text-base lg:text-xl">
+                    {formatDate(currentTime)}
+                  </p>
                 </div>
-                <p className="text-background text-lg">Capital: ₹ 00</p>
+                <p className="text-background text-sm sm:text-base lg:text-xl order-3">
+                  Capital: ₹ 1000
+                </p>
               </div>
             </CardHeader>
             <CardContent className="p-0 bg-transparent mt-4">
-              <div className="flex flex-col md:flex-row gap-8">
+              <div className="flex flex-col md:flex-row gap-8 h-2/3">
                 {/* Today's Journal */}
                 <Card className="flex-1">
                   <CardHeader className="px-5 py-4">
@@ -397,55 +520,112 @@ const [trades, setTrades] = useState([]);
                     </div>
                     <div className="flex w-full justify-end">
                       <Button variant="outline" className="text-primary">
-                        <Image className="mr-2 h-4 w-4" />
+                        <ImageIcon className="mr-2 h-4 w-4" />
                         Attach
                       </Button>
                     </div>
                   </CardContent>
                 </Card>
                 {/* Rules */}
+
                 <Card className="flex-1">
-                  <CardHeader className="px-5 py-4">
-                    <CardTitle className="text-lg font-semibold">
-                      Rules
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {rules.length === 0 ? (
-                      <div className="text-center py-8">
-                        <h4 className="text-xl font-semibold mb-2">
-                          Get Started!
-                        </h4>
-                        <p className="text-gray-600 mb-4">
-                          Please click below to add your trading rules
-                        </p>
+                  {rules.length === 0 ? (
+                    <>
+                      <CardHeader className="px-5 py-4">
+                        <CardTitle className="text-lg font-semibold">
+                          Rules
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-center py-8 flex flex-col items-center">
+                          <Image
+                            src="/images/no_rule.png"
+                            height={150}
+                            width={150}
+                            alt="No rules"
+                            className="mb-3"
+                          />
+                          <h4 className="text-xl font-semibold mb-2">
+                            Get Started!
+                          </h4>
+                          <p className="text-gray-600 mb-4">
+                            Please click below to add your trading rules
+                          </p>
+                          <AddRuleDialog onAddRule={addRule} />
+                        </div>
+                      </CardContent>
+                    </>
+                  ) : (
+                    <>
+                      <CardHeader className="px-5 py-3 flex flex-row items-center justify-between gap-5">
+                        <CardTitle className="text-lg font-semibold">
+                          Rules
+                        </CardTitle>
+                        <Input
+                          placeholder="Search Rules"
+                          className="max-w-xs"
+                        />
                         <AddRuleDialog onAddRule={addRule} />
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {rules.map((rule, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between"
-                          >
-                            <p>{rule}</p>
-                            <div>
-                              <EditRuleDialog
-                                rule={rule}
-                                onEditRule={(updatedRule) =>
-                                  editRule(index, updatedRule)
-                                }
-                              />
-                              <DeleteRuleDialog
-                                onDeleteRule={() => deleteRule(index)}
-                              />
-                            </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="relative overflow-hidden">
+                          <div className="max-h-[50vh] overflow-y-auto">
+                            <Table className="rounded-lg p-0 overflow-hidden border">
+                              <TableHeader className="sticky top-0 bg-primary/15 z-10">
+                                <TableRow>
+                                  <TableHead className="w-12">
+                                    <Checkbox
+                                      checked={
+                                        selectedRules.size === rules.length &&
+                                        rules.length > 0
+                                      }
+                                      onCheckedChange={toggleSelectAll}
+                                    />
+                                  </TableHead>
+                                  <TableHead className="max-w-[500px]">
+                                    My Rules
+                                  </TableHead>
+                                  <TableHead className="w-[100px]">
+                                    Actions
+                                  </TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {rules.map((rule, index) => (
+                                  <TableRow key={index}>
+                                    <TableCell className="align-top">
+                                      <Checkbox
+                                        checked={selectedRules.has(index)}
+                                        onCheckedChange={() =>
+                                          toggleSelectRule(index)
+                                        }
+                                      />
+                                    </TableCell>
+                                    <TableCell className="max-w-[500px] whitespace-normal break-words">
+                                      {rule}
+                                    </TableCell>
+                                    <TableCell className="align-top">
+                                      <div className="flex gap-2">
+                                        <EditRuleDialog
+                                          rule={rule}
+                                          onEditRule={(updatedRule) =>
+                                            editRule(index, updatedRule)
+                                          }
+                                        />
+                                        <DeleteRuleDialog
+                                          onDeleteRule={() => deleteRule(index)}
+                                        />
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
                           </div>
-                        ))}
-                        <AddRuleDialog onAddRule={addRule} />
-                      </div>
-                    )}
-                  </CardContent>
+                        </div>
+                      </CardContent>
+                    </>
+                  )}
                 </Card>
               </div>
             </CardContent>
@@ -457,13 +637,19 @@ const [trades, setTrades] = useState([]);
             </CardHeader>
             <CardContent>
               {trades.length === 0 ? (
-                <div className="text-center py-8">
+                <div className="text-center py-8 flex flex-col items-center">
+                  <Image
+                    src="/images/no_trade.png"
+                    height={150}
+                    width={150}
+                    className="mb-3"
+                  />
                   <h3 className="text-xl font-semibold mb-2">Get Started!</h3>
-                  <p className="text-gray-600 mb-4">
+                  <p className="text-accent-foreground/50 text-sm mb-4">
                     Please add your trades here or import them automatically
                     using your tradebook
                   </p>
-                  <div className="space-x-4">
+                  <div className="flex items-center justify-center gap-4">
                     <AddTradeDialog onAddTrade={addTrade} />
                     <ImportTradeDialog onImportTrades={importTrades} />
                   </div>
@@ -495,8 +681,10 @@ const [trades, setTrades] = useState([]);
         {/* Right Sidebar */}
         {!isMobile && (
           <div
-            className={`fixed right-0 top-12 h-full bg-white p-4 space-y-6 border-l overflow-y-auto transition-all duration-300 ease-in-out ${
-              isSidebarExpanded ? "w-80" : "w-12"
+            className={`relative  h-fit  p-4 space-y-6   transition-all duration-300 ease-in-out ${
+              isSidebarExpanded
+                ? "w-80 border-l bg-white/50 dark:bg-black/50 "
+                : "w-12  border-0 bg-none"
             }`}
           >
             <Button
@@ -510,7 +698,7 @@ const [trades, setTrades] = useState([]);
             {isSidebarExpanded && (
               <>
                 <div className="mt-12">
-                  <Calendar />
+                  <CustomCalendar data={calendarData} />
                 </div>
                 <TradesTakenChart />
                 <WinRateChart />
@@ -524,7 +712,6 @@ const [trades, setTrades] = useState([]);
     </MainLayout>
   );
 }
-
 
 function AddRuleDialog({ onAddRule }) {
   const [rule, setRule] = useState("");
@@ -567,7 +754,7 @@ function EditRuleDialog({ rule, onEditRule }) {
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm">
-          Edit
+          <SquarePen className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent>

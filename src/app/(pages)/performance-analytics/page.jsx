@@ -182,7 +182,11 @@ function JournalCard({
 }) {
   return (
     <Card
-      className={`${isLoss ? "bg-red-100 border-red-300" : "bg-green-100 border-green-300"} border  `}
+      className={`${
+        isLoss
+          ? "bg-red-400 rounded-md bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-50 border border-red-600"
+          : "bg-green-400 rounded-md bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-50 border border-green-600"
+      } border  `}
     >
       <CardHeader className="flex flex-row justify-between items-center">
         <CardTitle className="text-sm font-medium">{date}</CardTitle>

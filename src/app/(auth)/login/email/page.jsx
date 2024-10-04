@@ -8,21 +8,56 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import AuthLayout from "@/components/layouts/AuthLayout";
+import Cookies from "js-cookie";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login attempted with:", email, password);
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/login-email`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Login failed");
+      }
+
+      // Set cookies
+      Cookies.set("token", data.token, { expires: 0.5 }); // 12 hours
+      Cookies.set("userId", data.user._id, { expires: 0.5 });
+      Cookies.set("userName", data.user.name, { expires: 0.5 });
+      Cookies.set("userEmail", data.user.email, { expires: 0.5 });
+
+      // Redirect to dashboard
+      router.push("/dashboard");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <AuthLayout>
-      <div className="w-full max-w-lg p-8 space-y-8 ">
+      <div className="w-full max-w-lg p-8 space-y-8">
         <Button
           variant="outline"
           className="mb-8 rounded-full size-10 p-0 absolute left-10 lg:left-32 top-20"
@@ -65,8 +100,13 @@ export default function LoginPage() {
           >
             Forgot Password?
           </Link>
-          <Button type="submit" className="w-full text-background">
-            Log in
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <Button
+            type="submit"
+            className="w-full text-background"
+            disabled={isLoading}
+          >
+            {isLoading ? "Logging in..." : "Log in"}
           </Button>
         </form>
         <p className="text-center text-sm text-muted-foreground">
