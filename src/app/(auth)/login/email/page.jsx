@@ -48,7 +48,7 @@ export default function LoginPage() {
       Cookies.set("expiry", data.user.expiresIn);
 
       // Redirect to dashboard
-      router.push("/dashboard");
+      router.push("/subscription-plan");
     } catch (err) {
       setError(err.message);
     } finally {

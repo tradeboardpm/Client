@@ -14,9 +14,22 @@ import {
 } from "@/components/ui/dialog";
 import { Eye, EyeOff } from "lucide-react";
 import MainLayout from "@/components/layouts/MainLayout";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 export default function MyAccount() {
   const [showPassword, setShowPassword] = React.useState(false);
+  const router = useRouter(); // Initialize the useRouter hook
+
+  const handleLogout = () => {
+    // Remove all cookies
+    Cookies.remove("userName");
+    Cookies.remove("token");
+    Cookies.remove("expiry");
+    Cookies.remove("userEmail");
+    Cookies.remove("userId");
+    router.push("/login");
+  };
 
   return (
     <MainLayout>
@@ -38,7 +51,9 @@ export default function MyAccount() {
                 </DialogHeader>
                 <div className="flex justify-end space-x-2">
                   <Button variant="outline">Cancel</Button>
-                  <Button>Logout</Button>
+                  <Button onClick={handleLogout}>
+                    <span >Logout</span>
+                  </Button>
                 </div>
               </DialogContent>
             </Dialog>

@@ -1,6 +1,14 @@
-import { ArrowLeft, Check } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+'use client'
+import { ArrowLeft, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useRouter } from "next/navigation"; // Import useRouter
 
 const features = [
   "Dashboard",
@@ -9,7 +17,7 @@ const features = [
   "Auto Import Logs",
   "Performance Analytics",
   "Accountability Partner",
-]
+];
 
 const plans = [
   {
@@ -17,33 +25,41 @@ const plans = [
     price: "Free",
     period: "",
     buttonText: "Get Started Now",
-    buttonVariant: "outline" ,
+    buttonVariant: "outline",
   },
   {
     name: "6 month plan",
     price: "₹ 199",
     period: "per month",
     buttonText: "Get Started Now",
-    buttonVariant: "outline" ,
+    buttonVariant: "outline",
   },
   {
     name: "12 month plan",
     price: "₹ 149",
     period: "per month",
     buttonText: "Get Started Now",
-    buttonVariant: "default" ,
+    buttonVariant: "default",
     highlight: true,
   },
-]
+];
 
 export default function PricingPage() {
+  const router = useRouter(); // Initialize the router
+
+  const handleButtonClick = () => {
+    router.push("/dashboard"); // Redirect to the dashboard route
+  };
+
   return (
     <div className="min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-6xl">
         <Button variant="outline" className="mb-8 rounded-full size-12 p-0">
-          <ArrowLeft className=" h-6 w-6" />
+          <ArrowLeft className="h-6 w-6" />
         </Button>
-        <h1 className="mb-2 text-center text-xl">Simple Pricing, Great Value</h1>
+        <h1 className="mb-2 text-center text-xl">
+          Simple Pricing, Great Value
+        </h1>
         <p className="mb-14 text-center text-2xl font-extrabold">
           Every plan offers complete features access
         </p>
@@ -51,7 +67,9 @@ export default function PricingPage() {
           {plans.map((plan, index) => (
             <Card
               key={plan.name}
-              className={`relative overflow-hidden ${plan.highlight ? "border-purple-400 shadow-lg" : ""}`}
+              className={`relative overflow-hidden ${
+                plan.highlight ? "border-purple-400 shadow-lg" : ""
+              }`}
             >
               {plan.highlight && (
                 <div className="absolute right-0 top-0 bg-green-400 px-3 py-1 text-sm font-semibold text-white">
@@ -64,7 +82,9 @@ export default function PricingPage() {
               <CardContent>
                 <div className="mb-6 text-3xl font-bold">
                   {plan.price}
-                  <span className="text-base font-normal text-gray-600">{plan.period}</span>
+                  <span className="text-base font-normal text-gray-600">
+                    {plan.period}
+                  </span>
                 </div>
                 <ul className="space-y-2">
                   {features.map((feature) => (
@@ -76,7 +96,11 @@ export default function PricingPage() {
                 </ul>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" variant={plan.buttonVariant}>
+                <Button
+                  className="w-full"
+                  variant={plan.buttonVariant}
+                  onClick={handleButtonClick}
+                >
                   {plan.buttonText}
                 </Button>
               </CardFooter>
@@ -85,5 +109,5 @@ export default function PricingPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
