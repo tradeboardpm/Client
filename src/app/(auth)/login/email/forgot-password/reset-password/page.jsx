@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,15 +9,21 @@ import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import { toast } from "sonner";
 
-export default function SetNewPasswordPage() {
+// Fallback component to show while the suspense resolves
+function LoadingComponent() {
+  return <div>Loading...</div>;
+}
+
+function SetNewPasswordContent() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [resetToken, setResetToken] = useState("");
+
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // Using useSearchParams for client-side routing
 
   useEffect(() => {
     const token = searchParams.get("token");
@@ -158,5 +164,14 @@ export default function SetNewPasswordPage() {
         </form>
       </div>
     </AuthLayout>
+  );
+}
+
+// Wrapping the content in Suspense to fix the Next.js requirement
+export default function SetNewPasswordPage() {
+  return (
+    <Suspense fallback={<LoadingComponent />}>
+      <SetNewPasswordContent />
+    </Suspense>
   );
 }

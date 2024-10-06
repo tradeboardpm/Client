@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,24 +9,28 @@ import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/layouts/AuthLayout";
 import { toast } from "sonner";
 
-export default function VerifyOTPPage() {
+function VerifyOTPContent() {
   const [otp, setOTP] = useState("");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
+  // Handle email extraction from URL query params on client-side
   useEffect(() => {
-    const emailParam = searchParams.get("email");
-    if (emailParam) {
-      setEmail(decodeURIComponent(emailParam));
-    } else {
-      router.push("/login/email/forgot-password");
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const emailParam = searchParams.get("email");
+      if (emailParam) {
+        setEmail(decodeURIComponent(emailParam));
+      } else {
+        router.push("/login/email/forgot-password");
+      }
     }
-  }, [searchParams, router]);
+  }, [router]);
 
+  // Handle resend OTP timer
   useEffect(() => {
     let timer;
     if (resendTimer > 0) {
@@ -152,5 +156,13 @@ export default function VerifyOTPPage() {
         </div>
       </div>
     </AuthLayout>
+  );
+}
+
+export default function VerifyOTPPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <VerifyOTPContent />
+    </Suspense>
   );
 }
