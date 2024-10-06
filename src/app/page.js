@@ -191,15 +191,21 @@ export default function LandingPage() {
             <Link
               key={item.name}
               href={item.href}
-              className="hover:text-primary"
+              className="hover:text-foreground transition-all duration-300 ease-in-out"
             >
               {item.name}
             </Link>
           ))}
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="ghost">Login</Button>
-          <Button className="bg-background hover:bg-secondary">Sign up</Button>
+          <Link href="/login">
+            <Button variant="ghost">Login</Button>
+          </Link>
+          <Link href="/sign-up">
+            <Button className="bg-background hover:bg-secondary">
+              Sign up
+            </Button>
+          </Link>
         </div>
       </nav>
 
@@ -490,9 +496,14 @@ export default function LandingPage() {
                 Give trading psychology a chance in your trading journey. Best
                 time to upgrade your trading game with us is NOW.
               </p>
-              <Button variant="secondary" size="lg">
-                Sign up with free
-              </Button>
+              <Link href="/sign-up">
+                <Button
+                  size="lg"
+                  className="bg-background hover:bg-secondary hover:text-primary"
+                >
+                  Sign up with free
+                </Button>
+              </Link>
             </div>
           </section>
         </div>

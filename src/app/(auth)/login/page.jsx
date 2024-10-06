@@ -20,7 +20,7 @@ export default function LoginOptionsPage() {
         </div>
         <div className="space-y-4">
           <Button
-            variant="outline"
+            variant="secondary"
             className="w-full justify-start"
             onClick={() => console.log("Log in with Google")}
           >
@@ -45,7 +45,7 @@ export default function LoginOptionsPage() {
             Log in with Google
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             className="w-full justify-start"
             onClick={() => router.push("/login/email")}
           >
@@ -65,7 +65,7 @@ export default function LoginOptionsPage() {
             Log in with Email
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             className="w-full justify-start"
             onClick={() => router.push("/login/phone")}
           >

@@ -1,21 +1,104 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
+import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/layouts/AuthLayout";
+import { toast } from "sonner";
 
-export default function OTPVerificationPage() {
-  const [otp, setOtp] = useState("");
+export default function VerifyOTPPage() {
+  const [otp, setOTP] = useState("");
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const emailParam = searchParams.get("email");
+    if (emailParam) {
+      setEmail(decodeURIComponent(emailParam));
+    } else {
+      router.push("/login/email/forgot-password");
+    }
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    let timer;
+    if (resendTimer > 0) {
+      timer = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendTimer]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle OTP verification logic here
-    console.log("OTP verification attempted with:", otp);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, otp }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("OTP verified successfully");
+        router.push(
+          `/login/email/forgot-password/reset-password?email=${encodeURIComponent(
+            email
+          )}&token=${encodeURIComponent(data.token)}`
+        );
+      } else {
+        throw new Error(data.error || "Failed to verify OTP");
+      }
+    } catch (error) {
+      console.error("Error verifying OTP:", error);
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setIsResending(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/resend-otp`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("New OTP sent successfully");
+        setResendTimer(60); // Set a 60-second cooldown
+      } else {
+        throw new Error(data.error || "Failed to resend OTP");
+      }
+    } catch (error) {
+      console.error("Error resending OTP:", error);
+      toast.error(error.message);
+    } finally {
+      setIsResending(false);
+    }
   };
 
   return (
@@ -28,43 +111,45 @@ export default function OTPVerificationPage() {
         >
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="space-y-2 ">
-          <h1 className="text-3xl font-bold">OTP Verification</h1>
-          <p className="text-muted-foreground text-sm ">
-            We have sent 4-digit code to your registered email
-            ank*****@gmail.com{" "}
-            
+        <div className="space-y-2 text-center">
+          <h1 className="text-3xl font-bold">Verify OTP</h1>
+          <p className="text-muted-foreground text-sm">
+            Please enter the OTP sent to your email
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <label htmlFor="otp" className="sr-only">
-              Enter OTP
-            </label>
+            <Label htmlFor="otp">OTP</Label>
             <Input
               id="otp"
               type="text"
               placeholder="Enter OTP"
               value={otp}
-              onChange={(e) => setOtp(e.target.value)}
+              onChange={(e) => setOTP(e.target.value)}
               required
-              className="text-center text-lg"
-              maxLength={4}
             />
           </div>
           <Button
             type="submit"
-            className="w-full text-background bg-primary hover:bg-primary/90"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={isLoading}
           >
-            Verify OTP
+            {isLoading ? "Verifying..." : "Verify OTP"}
           </Button>
         </form>
-        <p className="text-center text-sm text-muted-foreground">
-          Didn't Get OTP?{" "}
-          <Button variant="link" className="text-primary p-0 h-auto">
-            Resend OTP
+        <div className="text-center">
+          <Button
+            variant="link"
+            onClick={handleResendOTP}
+            disabled={isResending || resendTimer > 0}
+          >
+            {resendTimer > 0
+              ? `Resend OTP in ${resendTimer}s`
+              : isResending
+              ? "Resending..."
+              : "Resend OTP"}
           </Button>
-        </p>
+        </div>
       </div>
     </AuthLayout>
   );

@@ -1,30 +1,81 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/layouts/AuthLayout";
+import { toast } from "sonner";
 
 export default function SetNewPasswordPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [resetToken, setResetToken] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (token) {
+      setResetToken(token);
+    } else {
+      toast.error("Invalid reset token");
+      router.push("/login/email/forgot-password");
+    }
+  }, [searchParams, router]);
+
+  const validatePassword = (password) => {
+    return password.length >= 8;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle password update logic here
-    console.log(
-      "Password update attempted with:",
-      newPassword,
-      confirmPassword
-    );
-    // Redirect to password reset confirmation page
-    router.push("/password-reset-confirmation");
+    setIsLoading(true);
+
+    if (!validatePassword(newPassword)) {
+      toast.error("Password must be at least 8 characters long");
+      setIsLoading(false);
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ resetToken, newPassword }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to reset password");
+      }
+
+      toast.success("Password reset successfully");
+      router.push("/login");
+    } catch (error) {
+      console.error("Error resetting password:", error);
+      toast.error(
+        error instanceof Error ? error.message : "An unknown error occurred"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -100,8 +151,9 @@ export default function SetNewPasswordPage() {
           <Button
             type="submit"
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={isLoading}
           >
-            Update Password
+            {isLoading ? "Updating Password..." : "Update Password"}
           </Button>
         </form>
       </div>

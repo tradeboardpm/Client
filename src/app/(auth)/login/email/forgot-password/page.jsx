@@ -7,17 +7,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import AuthLayout from "@/components/layouts/AuthLayout";
+import { toast } from "sonner";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle sending OTP logic here
-    console.log("OTP send attempted for email:", email);
-    // Redirect to OTP verification page
-    router.push("/otp-verification");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/forgot-password`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success("OTP sent successfully");
+        router.push(
+          `/login/email/forgot-password/verify-otp?email=${encodeURIComponent(email)}`
+        );
+      } else {
+        throw new Error(data.error || "Failed to send OTP");
+      }
+    } catch (error) {
+      console.error("Error sending OTP:", error);
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -51,8 +79,9 @@ export default function ForgotPasswordPage() {
           <Button
             type="submit"
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+            disabled={isLoading}
           >
-            Send OTP
+            {isLoading ? "Sending OTP..." : "Send OTP"}
           </Button>
         </form>
       </div>

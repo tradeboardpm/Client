@@ -41,10 +41,10 @@ export default function LoginPage() {
       }
 
       // Set cookies
-      Cookies.set("token", data.token, { expires: 0.5 }); // 12 hours
-      Cookies.set("userId", data.user._id, { expires: 0.5 });
-      Cookies.set("userName", data.user.name, { expires: 0.5 });
-      Cookies.set("userEmail", data.user.email, { expires: 0.5 });
+      Cookies.set("token", data.token); // 12 hours
+      Cookies.set("userId", data.user._id);
+      Cookies.set("userName", data.user.name);
+      Cookies.set("userEmail", data.user.email);
 
       // Redirect to dashboard
       router.push("/dashboard");
