@@ -45,6 +45,7 @@ export default function LoginPage() {
       Cookies.set("userId", data.user._id);
       Cookies.set("userName", data.user.name);
       Cookies.set("userEmail", data.user.email);
+      Cookies.set("expiry", data.user.expiresIn);
 
       // Redirect to dashboard
       router.push("/dashboard");

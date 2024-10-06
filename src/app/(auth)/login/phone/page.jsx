@@ -11,7 +11,6 @@ import AuthLayout from "@/components/layouts/AuthLayout";
 
 export default function LoginPage() {
   const [mobile, setMobile] = useState("");
-  const [password, setPassword] = useState("");
   const router = useRouter();
 
   const handleSubmit = (e) => {
@@ -33,7 +32,7 @@ export default function LoginPage() {
         <div className="space-y-2 text-start">
           <h1 className="text-3xl font-bold">Log in with Mobile Number </h1>
           <p className="text-muted-foreground text-sm">
-            Please enter your registered mobile no. and password
+            Please enter your registered mobile no.
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -48,23 +47,6 @@ export default function LoginPage() {
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-          <Link
-            href="/forgot-password"
-            className="text-sm text-primary hover:underline block text-right"
-          >
-            Forgot Password?
-          </Link>
           <Button type="submit" className="w-full text-background">
             Log in
           </Button>

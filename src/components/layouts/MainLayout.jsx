@@ -42,11 +42,11 @@ export default function MainLayout({ children }) {
    }, [router]);
 
    const clearAuthCookies = () => {
-     Cookies.remove("token");
-     Cookies.remove("name");
-     Cookies.remove("role");
-     Cookies.remove("expiry");
-     Cookies.remove("email");
+    Cookies.remove("userName");
+    Cookies.remove("token");
+    Cookies.remove("expiry");
+    Cookies.remove("userEmail");
+    Cookies.remove("userId");
    };
 
    const handleLoginRedirect = () => {

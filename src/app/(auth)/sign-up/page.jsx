@@ -92,7 +92,7 @@ export default function SignUp() {
               className="w-full mb-4 bg-accent/50 h-10 shadow-lg border border-ring/25"
             >
               <Image
-                src="/google-logo.svg"
+                src="/images/google.svg"
                 alt="Google logo"
                 width={20}
                 height={20}

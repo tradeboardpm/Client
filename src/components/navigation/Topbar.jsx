@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Cookies from "js-cookie";
+import { useRouter } from "next/navigation"; // Import useRouter from Next.js
 
 const NotificationItem = ({ title, description, time, onDelete }) => (
   <div className="mb-4 p-3 bg-card rounded-lg relative">
@@ -69,6 +70,8 @@ export default function Topbar({ toggleSidebar }) {
     },
   ]);
 
+  const router = useRouter(); // Initialize the useRouter hook
+
   useEffect(() => {
     const name = Cookies.get("userName");
     if (name) {
@@ -116,6 +119,16 @@ export default function Topbar({ toggleSidebar }) {
       default:
         return <Laptop className="h-6 w-6" />;
     }
+  };
+
+  const handleLogout = () => {
+    // Remove all cookies
+    Cookies.remove("userName");
+     Cookies.remove("token");
+     Cookies.remove("expiry");
+     Cookies.remove("userEmail");
+     Cookies.remove("userId");
+    router.push("/login");
   };
 
   return (
@@ -173,6 +186,10 @@ export default function Topbar({ toggleSidebar }) {
             <DropdownMenuItem onClick={() => changeTheme("system")}>
               <Laptop className="mr-2 h-4 w-4" />
               <span>System</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleLogout}>
+              <span className="text-red-500">Logout</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
