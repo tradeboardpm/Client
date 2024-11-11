@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Topbar from "../navigation/Topbar";
-import Sidebar from "../navigation/Sidebar";
+import Topbar from "@/components/navigation/Topbar";
+import Sidebar from "@/components/navigation/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
@@ -18,41 +18,53 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export default function MainLayout({ children }) {
+export default function MainLayout({
+  children,
+}) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-   const [tokenExpired, setTokenExpired] = useState(false);
-   const router = useRouter();
+  const [tokenExpired, setTokenExpired] = useState(false);
+  const router = useRouter();
 
-   useEffect(() => {
-     const checkAuth = () => {
-       const token = Cookies.get("token");
-       const expiry = Cookies.get("expiry");
+  useEffect(() => {
+    const checkAuth = () => {
+      const token = Cookies.get("token");
+      const expiry = Cookies.get("expiry");
 
-       if (!token) {
-         // No token found, redirect to login
-         router.push("/login");
-       } else if (expiry && Date.now() > Number(expiry)) {
-         // Token expired
-         setTokenExpired(true);
-         clearAuthCookies();
-       }
-     };
+      if (!token || !expiry) {
+        // No token or expiry found, redirect to login
+        router.push("/login");
+      } else {
+        const expiryTime = Number(expiry);
+        if (Date.now() > expiryTime) {
+          // Token expired
+          setTokenExpired(true);
+          clearAuthCookies();
+        } else {
+          // Set up a timeout to clear cookies when they expire
+          const timeUntilExpiry = expiryTime - Date.now();
+          setTimeout(() => {
+            setTokenExpired(true);
+            clearAuthCookies();
+          }, timeUntilExpiry);
+        }
+      }
+    };
 
-     checkAuth();
-   }, [router]);
+    checkAuth();
+  }, [router]);
 
-   const clearAuthCookies = () => {
+  const clearAuthCookies = () => {
     Cookies.remove("userName");
     Cookies.remove("token");
     Cookies.remove("expiry");
     Cookies.remove("userEmail");
     Cookies.remove("userId");
-   };
+  };
 
-   const handleLoginRedirect = () => {
-     setTokenExpired(false);
-     router.push("/login");
-   };
+  const handleLoginRedirect = () => {
+    setTokenExpired(false);
+    router.push("/login");
+  };
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
@@ -65,18 +77,17 @@ export default function MainLayout({ children }) {
           <Toaster />
           {children}
           <AlertDialog open={tokenExpired} onOpenChange={setTokenExpired}>
-            <AlertDialogTrigger></AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Token Expired</AlertDialogTitle>
+                <AlertDialogTitle>Session Expired</AlertDialogTitle>
                 <AlertDialogDescription>
                   Your session has expired. Please log in again.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel onClick={handleLoginRedirect}>
+                <AlertDialogAction onClick={handleLoginRedirect}>
                   Login Again
-                </AlertDialogCancel>
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

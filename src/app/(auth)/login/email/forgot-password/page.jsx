@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import AuthLayout from "@/components/layouts/AuthLayout";
+
 import { toast } from "sonner";
 
 export default function ForgotPasswordPage() {
@@ -35,7 +35,9 @@ export default function ForgotPasswordPage() {
       if (response.ok) {
         toast.success("OTP sent successfully");
         router.push(
-          `/login/email/forgot-password/verify-otp?email=${encodeURIComponent(email)}`
+          `/login/email/forgot-password/verify-otp?email=${encodeURIComponent(
+            email
+          )}`
         );
       } else {
         throw new Error(data.error || "Failed to send OTP");
@@ -49,42 +51,40 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <AuthLayout>
-      <div className="w-full max-w-lg p-8 space-y-8">
-        <Button
-          variant="outline"
-          className="mb-8 rounded-full size-10 p-0 absolute left-10 lg:left-32 top-20"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">Forgot Password?</h1>
-          <p className="text-muted-foreground text-sm">
-            Please enter your email to reset the password
-          </p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email ID</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Email ID"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-            disabled={isLoading}
-          >
-            {isLoading ? "Sending OTP..." : "Send OTP"}
-          </Button>
-        </form>
+    <div className="w-full max-w-lg p-8 space-y-8">
+      <Button
+        variant="outline"
+        className="mb-8 rounded-full size-10 p-0 absolute left-10 lg:left-32 top-20"
+        onClick={() => router.back()}
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
+      <div className="space-y-2 text-center">
+        <h1 className="text-3xl font-bold">Forgot Password?</h1>
+        <p className="text-muted-foreground text-sm">
+          Please enter your email to reset the password
+        </p>
       </div>
-    </AuthLayout>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email ID</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="Email ID"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+        <Button
+          type="submit"
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          disabled={isLoading}
+        >
+          {isLoading ? "Sending OTP..." : "Send OTP"}
+        </Button>
+      </form>
+    </div>
   );
 }

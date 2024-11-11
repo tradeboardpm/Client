@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import AuthLayout from "@/components/layouts/AuthLayout";
+
 import { toast } from "sonner";
 
 function VerifyOTPContent() {
@@ -106,56 +106,54 @@ function VerifyOTPContent() {
   };
 
   return (
-    <AuthLayout>
-      <div className="w-full max-w-lg p-8 space-y-8">
-        <Button
-          variant="outline"
-          className="mb-8 rounded-full size-10 p-0 absolute left-10 lg:left-32 top-20"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="space-y-2 text-center">
-          <h1 className="text-3xl font-bold">Verify OTP</h1>
-          <p className="text-muted-foreground text-sm">
-            Please enter the OTP sent to your email
-          </p>
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="otp">OTP</Label>
-            <Input
-              id="otp"
-              type="text"
-              placeholder="Enter OTP"
-              value={otp}
-              onChange={(e) => setOTP(e.target.value)}
-              required
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
-            disabled={isLoading}
-          >
-            {isLoading ? "Verifying..." : "Verify OTP"}
-          </Button>
-        </form>
-        <div className="text-center">
-          <Button
-            variant="link"
-            onClick={handleResendOTP}
-            disabled={isResending || resendTimer > 0}
-          >
-            {resendTimer > 0
-              ? `Resend OTP in ${resendTimer}s`
-              : isResending
-              ? "Resending..."
-              : "Resend OTP"}
-          </Button>
-        </div>
+    <div className="w-full max-w-lg p-8 space-y-8">
+      <Button
+        variant="outline"
+        className="mb-8 rounded-full size-10 p-0 absolute left-10 lg:left-32 top-20"
+        onClick={() => router.back()}
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
+      <div className="space-y-2 text-center">
+        <h1 className="text-3xl font-bold">Verify OTP</h1>
+        <p className="text-muted-foreground text-sm">
+          Please enter the OTP sent to your email
+        </p>
       </div>
-    </AuthLayout>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="otp">OTP</Label>
+          <Input
+            id="otp"
+            type="text"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOTP(e.target.value)}
+            required
+          />
+        </div>
+        <Button
+          type="submit"
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          disabled={isLoading}
+        >
+          {isLoading ? "Verifying..." : "Verify OTP"}
+        </Button>
+      </form>
+      <div className="text-center">
+        <Button
+          variant="link"
+          onClick={handleResendOTP}
+          disabled={isResending || resendTimer > 0}
+        >
+          {resendTimer > 0
+            ? `Resend OTP in ${resendTimer}s`
+            : isResending
+            ? "Resending..."
+            : "Resend OTP"}
+        </Button>
+      </div>
+    </div>
   );
 }
 

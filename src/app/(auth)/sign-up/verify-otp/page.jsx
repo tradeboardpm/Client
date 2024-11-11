@@ -6,7 +6,7 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
-import AuthLayout from "@/components/layouts/AuthLayout";
+
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function OTPVerificationPage() {
@@ -88,65 +88,63 @@ export default function OTPVerificationPage() {
   };
 
   return (
-    <AuthLayout>
-      <div className="w-full max-w-lg p-8 space-y-8">
-        <Button
-          variant="outline"
-          className="mb-8 rounded-full size-10 p-0 absolute left-10 lg:left-32 top-20"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="space-y-2 ">
-          <h1 className="text-3xl font-bold">OTP Verification</h1>
-          <p className="text-muted-foreground text-sm ">
-            We have sent a 6-digit code to your registered email
-            {userEmail && ` (${userEmail})`}
-          </p>
-        </div>
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <label htmlFor="otp" className="sr-only">
-              Enter OTP
-            </label>
-            <Input
-              id="otp"
-              type="text"
-              placeholder="Enter OTP"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value)}
-              required
-              className="text-center text-lg"
-              maxLength={6}
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full text-background bg-primary hover:bg-primary/90"
-            disabled={isLoading}
-          >
-            {isLoading ? "Verifying..." : "Verify OTP"}
-          </Button>
-        </form>
-        <p className="text-center text-sm text-muted-foreground">
-          Didn't Get OTP?{" "}
-          <Button
-            variant="link"
-            className="text-primary p-0 h-auto"
-            onClick={handleResendOTP}
-            disabled={isLoading}
-          >
-            Resend OTP
-          </Button>
+    <div className="w-full max-w-lg p-8 space-y-8">
+      <Button
+        variant="outline"
+        className="mb-8 rounded-full size-10 p-0 absolute left-10 lg:left-32 top-20"
+        onClick={() => router.back()}
+      >
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
+      <div className="space-y-2 ">
+        <h1 className="text-3xl font-bold">OTP Verification</h1>
+        <p className="text-muted-foreground text-sm ">
+          We have sent a 6-digit code to your registered email
+          {userEmail && ` (${userEmail})`}
         </p>
       </div>
-    </AuthLayout>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-2">
+          <label htmlFor="otp" className="sr-only">
+            Enter OTP
+          </label>
+          <Input
+            id="otp"
+            type="text"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            required
+            className="text-center text-lg"
+            maxLength={6}
+          />
+        </div>
+        <Button
+          type="submit"
+          className="w-full text-background bg-primary hover:bg-primary/90"
+          disabled={isLoading}
+        >
+          {isLoading ? "Verifying..." : "Verify OTP"}
+        </Button>
+      </form>
+      <p className="text-center text-sm text-muted-foreground">
+        Didn't Get OTP?{" "}
+        <Button
+          variant="link"
+          className="text-primary p-0 h-auto"
+          onClick={handleResendOTP}
+          disabled={isLoading}
+        >
+          Resend OTP
+        </Button>
+      </p>
+    </div>
   );
 }

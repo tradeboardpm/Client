@@ -15,9 +15,16 @@ import { PlusCircle } from "lucide-react";
 
 function AddRuleDialog({ onAddRule }) {
   const [rule, setRule] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const handleAddRule = () => {
+    onAddRule(rule);
+    setRule("");
+    setOpen(false);
+  };
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
@@ -31,16 +38,20 @@ function AddRuleDialog({ onAddRule }) {
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="rule">Rule</Label>
+            <Label htmlFor="rule">Rule (max 200 characters)</Label>
             <Input
               id="rule"
               value={rule}
-              onChange={(e) => setRule(e.target.value)}
+              onChange={(e) => setRule(e.target.value.slice(0, 200))}
+              maxLength={200}
             />
+            <p className="text-sm text-gray-500 mt-1">
+              {rule.length}/200 characters
+            </p>
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={() => onAddRule(rule)}>Add</Button>
+          <Button onClick={handleAddRule}>Add</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

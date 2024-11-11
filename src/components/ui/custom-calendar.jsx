@@ -31,6 +31,15 @@ const CustomCalendar = ({ data }) => {
     "December",
   ];
 
+  // Disable the next button if the currentDate is in the current month and year
+  const isCurrentMonth = () => {
+    const today = new Date();
+    return (
+      currentDate.getFullYear() === today.getFullYear() &&
+      currentDate.getMonth() === today.getMonth()
+    );
+  };
+
   const prevMonth = () => {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
@@ -38,9 +47,11 @@ const CustomCalendar = ({ data }) => {
   };
 
   const nextMonth = () => {
-    setCurrentDate(
-      new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
-    );
+    if (!isCurrentMonth()) {
+      setCurrentDate(
+        new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
+      );
+    }
   };
 
   const formatDate = (date) => {
@@ -95,15 +106,23 @@ const CustomCalendar = ({ data }) => {
     <Card className="w-full max-w-sm mx-auto overflow-hidden p-3">
       <div className="">
         <div className="flex items-center justify-between mb-2 pb-2 border-b border-accent">
-          <h2 className="text-xl font-bold t">
+          <h2 className="text-xl font-bold">
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h2>
-          <button onClick={prevMonth} className="text-accent-foreground">
-            <ChevronsLeft className="h-6 w-6" />
-          </button>
-          <button onClick={nextMonth} className="text-accent-foreground">
-            <ChevronsRight className="h-6 w-6" />
-          </button>
+          <div className=" space-x-4">
+            <button onClick={prevMonth} className="text-accent-foreground">
+              <ChevronsLeft className="h-6 w-6" />
+            </button>
+            <button
+              onClick={nextMonth}
+              className={`text-accent-foreground ${
+                isCurrentMonth() ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={isCurrentMonth()}
+            >
+              <ChevronsRight className="h-6 w-6" />
+            </button>
+          </div>
         </div>
         <div className="grid grid-cols-7 gap-2 text-center">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
@@ -117,7 +136,7 @@ const CustomCalendar = ({ data }) => {
           {renderCalendarDays()}
         </div>
       </div>
-      <div className=" pt-2  border-t mt-2">
+      <div className="pt-2 border-t mt-2">
         <div className="flex items-center justify-start space-x-2 text-xs">
           <div className="flex items-center">
             <div className="w-3 h-3 bg-primary rounded mr-2 shadow"></div>

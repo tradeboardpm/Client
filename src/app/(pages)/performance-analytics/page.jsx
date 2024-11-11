@@ -9,126 +9,123 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowUpRight, ChevronDown, ChevronUp } from "lucide-react";
-import MainLayout from "@/components/layouts/MainLayout";
 
 export default function TradeboardIntelligence() {
   return (
-    <MainLayout>
-      <div className="p-6 bg-background min-h-screen">
-        <div className=" mx-auto space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Tradeboard Intelligence</h1>
-            <Select defaultValue="this-week">
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="this-week">This Week</SelectItem>
-                <SelectItem value="last-week">Last Week</SelectItem>
-                <SelectItem value="this-month">This Month</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <StatisticsCard
-              title="On Profitable Days"
-              stats={{
-                rulesFollowed: { value: "80%", color: "text-green-500" },
-                wordsJournaled: { value: "100", color: "text-green-500" },
-                tradesTaken: { value: "4", color: "text-green-500" },
-                winRate: { value: "65%", color: "text-green-500" },
-              }}
-            />
-            <StatisticsCard
-              title="On Loss Making Days"
-              stats={{
-                rulesFollowed: { value: "40%", color: "text-red-500" },
-                wordsJournaled: { value: "20", color: "text-red-500" },
-                tradesTaken: { value: "8", color: "text-red-500" },
-                winRate: { value: "66%", color: "text-red-500" },
-              }}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <StatisticsCard
-              title="On Break-Even Days"
-              stats={{
-                rulesFollowed: { value: "60%", color: "text-blue-500" },
-                wordsJournaled: { value: "100", color: "text-blue-500" },
-                tradesTaken: { value: "2", color: "text-blue-500" },
-                winRate: { value: "50", color: "text-blue-500" },
-              }}
-            />
-            <RulesCard
-              title="Your Most Followed Rules"
-              content="Lorem Ipsum is simply dummy text"
-              count={15}
-              countText="times this week you followed"
-              className="bg-purple-100 border-purple-200"
-            />
-            <RulesCard
-              title="Your Most Broken Rules"
-              content="Lorem Ipsum is simply dummy text"
-              count={12}
-              countText="times this week you broken"
-              className="bg-red-100 border-red-200"
-            />
-          </div>
-
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Journal Analysis</CardTitle>
-                <div className="flex space-x-2">
-                  <Select defaultValue="month">
-                    <SelectTrigger className="w-[100px]">
-                      <SelectValue placeholder="Filter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="month">Month</SelectItem>
-                      <SelectItem value="week">Week</SelectItem>
-                      <SelectItem value="day">Day</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select defaultValue="win-rate">
-                    <SelectTrigger className="w-[120px]">
-                      <SelectValue placeholder="Filter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="win-rate">Win rate</SelectItem>
-                      <SelectItem value="trades-taken">Trades Taken</SelectItem>
-                      <SelectItem value="rules-followed">
-                        Rules Followed
-                      </SelectItem>
-                      <SelectItem value="profit">Profit</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {[...Array(8)].map((_, index) => (
-                  <JournalCard
-                    key={index}
-                    date="Mon, 1 June"
-                    notes="Lorem Ipsum is simply"
-                    mistakes="Lorem Ipsum is simply"
-                    lessons="Lorem Ipsum is simply"
-                    rulesFollowed="80%"
-                    winRate="75%"
-                    profit="₹ 7000"
-                    isLoss={index === 2 || index === 6}
-                  />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+    <div className="p-6 bg-background min-h-screen">
+      <div className=" mx-auto space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold">Tradeboard Intelligence</h1>
+          <Select defaultValue="this-week">
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select period" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="this-week">This Week</SelectItem>
+              <SelectItem value="last-week">Last Week</SelectItem>
+              <SelectItem value="this-month">This Month</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <StatisticsCard
+            title="On Profitable Days"
+            stats={{
+              rulesFollowed: { value: "80%", color: "text-green-500" },
+              wordsJournaled: { value: "100", color: "text-green-500" },
+              tradesTaken: { value: "4", color: "text-green-500" },
+              winRate: { value: "65%", color: "text-green-500" },
+            }}
+          />
+          <StatisticsCard
+            title="On Loss Making Days"
+            stats={{
+              rulesFollowed: { value: "40%", color: "text-red-500" },
+              wordsJournaled: { value: "20", color: "text-red-500" },
+              tradesTaken: { value: "8", color: "text-red-500" },
+              winRate: { value: "66%", color: "text-red-500" },
+            }}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <StatisticsCard
+            title="On Break-Even Days"
+            stats={{
+              rulesFollowed: { value: "60%", color: "text-blue-500" },
+              wordsJournaled: { value: "100", color: "text-blue-500" },
+              tradesTaken: { value: "2", color: "text-blue-500" },
+              winRate: { value: "50", color: "text-blue-500" },
+            }}
+          />
+          <RulesCard
+            title="Your Most Followed Rules"
+            content="Lorem Ipsum is simply dummy text"
+            count={15}
+            countText="times this week you followed"
+            className="bg-purple-100 border-purple-200"
+          />
+          <RulesCard
+            title="Your Most Broken Rules"
+            content="Lorem Ipsum is simply dummy text"
+            count={12}
+            countText="times this week you broken"
+            className="bg-red-100 border-red-200"
+          />
+        </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle>Journal Analysis</CardTitle>
+              <div className="flex space-x-2">
+                <Select defaultValue="month">
+                  <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="Filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="month">Month</SelectItem>
+                    <SelectItem value="week">Week</SelectItem>
+                    <SelectItem value="day">Day</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select defaultValue="win-rate">
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="win-rate">Win rate</SelectItem>
+                    <SelectItem value="trades-taken">Trades Taken</SelectItem>
+                    <SelectItem value="rules-followed">
+                      Rules Followed
+                    </SelectItem>
+                    <SelectItem value="profit">Profit</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {[...Array(8)].map((_, index) => (
+                <JournalCard
+                  key={index}
+                  date="Mon, 1 June"
+                  notes="Lorem Ipsum is simply"
+                  mistakes="Lorem Ipsum is simply"
+                  lessons="Lorem Ipsum is simply"
+                  rulesFollowed="80%"
+                  winRate="75%"
+                  profit="₹ 7000"
+                  isLoss={index === 2 || index === 6}
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </MainLayout>
+    </div>
   );
 }
 

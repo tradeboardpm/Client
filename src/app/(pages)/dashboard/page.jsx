@@ -1,121 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
-import MainLayout from "@/components/layouts/MainLayout";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ImageIcon,
-  Pencil,
-  Trash2,
-} from "lucide-react";
-import Image from "next/image";
-import CustomCalendar from "@/components/ui/custom-calendar";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import axios from "axios";
+import { format } from "date-fns";
 import Cookies from "js-cookie";
-import RulesChart from "@/components/charts/RulesChart";
-import ProfitLossChart from "@/components/charts/ProfitLossChart";
-import TradesTakenChart from "@/components/charts/TradesTakenChart";
-import WinRateChart from "@/components/charts/WinRateChart";
-import AddRuleDialog from "@/components/dialogs/AddRuleDialog";
-import EditRuleDialog from "@/components/dialogs/EditRuleDialog";
-import DeleteRuleDialog from "@/components/dialogs/DeleteRuleDialog";
-import AddTradeDialog from "@/components/dialogs/AddTradeDialog";
-import ImportTradeDialog from "@/components/dialogs/ImportTradeDialog";
-import EditTradeDialog from "@/components/dialogs/EditTradeDialog";
-import DeleteTradeDialog from "@/components/dialogs/DeleteTradeDialog";
+import { CalendarAndCharts } from "./CalendarAndCharts";
+import { Journals } from "./Journals";
+import { Rules } from "./Rules";
+import { TradeLog } from "./TradeLog";
+import { Spinner } from "@/components/ui/spinner";
+import { debounce } from "lodash";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useDateStore } from "@/stores/DateStore";
 
-const calendarData = {
-  "2024-10-01": false,
-  "2024-10-05": true,
-  "2024-10-10": false,
-  "2024-10-15": true,
-  "2024-10-20": true,
-  "2024-10-25": false,
-};
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
 
-const chartData = [
-  {
-    day: "Mon",
-    tradesTaken: 1,
-    win: 2,
-    loss: 1,
-    profitLoss: -20,
-    rulesFollowed: 2,
-    rulesBroken: 1,
-  },
-  {
-    day: "Tue",
-    tradesTaken: 2,
-    win: 2,
-    loss: 2,
-    profitLoss: 30,
-    rulesFollowed: 3,
-    rulesBroken: 1,
-  },
-  {
-    day: "Wed",
-    tradesTaken: 4,
-    win: 3,
-    loss: 1,
-    profitLoss: 50,
-    rulesFollowed: 3,
-    rulesBroken: 0,
-  },
-  {
-    day: "Thu",
-    tradesTaken: 3,
-    win: 2,
-    loss: 1,
-    profitLoss: 40,
-    rulesFollowed: 2,
-    rulesBroken: 1,
-  },
-  {
-    day: "Fri",
-    tradesTaken: 2,
-    win: 2,
-    loss: 1,
-    profitLoss: 20,
-    rulesFollowed: 3,
-    rulesBroken: 0,
-  },
-];
-
-export default function Dashboard() {
+export default function MainDashboard() {
+  const { selectedDate } = useDateStore();
   const [isMobile, setIsMobile] = useState(false);
   const [isLargeScreen, setIsLargeScreen] = useState(false);
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-  const [rules, setRules] = useState([]);
-  const [selectedRules, setSelectedRules] = useState(new Set());
-  const [trades, setTrades] = useState([]);
-  const [username, setUsername] = useState("");
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [journals, setJournals] = useState([]);
-  const [journalData, setJournalData] = useState({
+  const [journal, setJournal] = useState({
     notes: "",
-    mistakes: "",
     lessons: "",
+    mistakes: "",
+    rules: [],
+    attachments: [],
   });
-  const [file, setFile] = useState(null);
-  const [checkedRules, setCheckedRules] = useState([]);
-  const [todayJournal, setTodayJournal] = useState(null);
-  const [totalProfit, setTotalProfit] = useState(null);
-  const [totalCharges, setTotalCharges] = useState(null);
-  const [totalRealizedPL, setTotalRealizedPL] = useState(null);
+  const [rules, setRules] = useState([]);
+  const [trades, setTrades] = useState([]);
+  const [profitLossDates, setProfitLossDates] = useState([]);
+  const [isJournalSaving, setIsJournalSaving] = useState(false);
+  const [tradeSummary, setTradeSummary] = useState(null);
+  const [weeklyStats, setWeeklyStats] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [settings, setSettings] = useState({
+    capital: 0,
+    brokerage: 0,
+    orderLimit: 0,
+  });
+  const token = Cookies.get("token");
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -131,6 +56,303 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
+  const axiosInstance = useMemo(
+    () =>
+      axios.create({
+        baseURL: API_URL,
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    [token]
+  );
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get("/settings");
+      setSettings(response.data);
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+    }
+  }, [axiosInstance]);
+
+  const fetchProfitLossDates = useCallback(async () => {
+    try {
+      const year = selectedDate.getFullYear();
+      const month = selectedDate.getMonth() + 1;
+      const response = await axiosInstance.get(
+        `/journal/profit-loss-dates/${year}/${month}`
+      );
+      setProfitLossDates(response.data);
+    } catch (error) {
+      console.error("Error fetching profit/loss dates:", error);
+    }
+  }, [selectedDate, axiosInstance]);
+
+const fetchJournalData = useCallback(async () => {
+  try {
+    setIsLoading(true);
+    const [
+      journalResponse,
+      rulesResponse,
+      weeklyStatsResponse,
+      tradeSummaryResponse,
+      settingsResponse,
+    ] = await Promise.all([
+      axiosInstance.get(`/journal/${format(selectedDate, "yyyy-MM-dd")}`),
+      axiosInstance.get("/rules"),
+      axiosInstance.get(
+        `/journal/weekly-stats/${format(selectedDate, "yyyy-MM-dd")}`
+      ),
+      axiosInstance.get(
+        `/trades/trade-summary/${format(selectedDate, "yyyy-MM-dd")}`
+      ),
+      axiosInstance.get("/settings"),
+    ]);
+
+    // If no journal exists for this date, create one
+    if (!journalResponse.data.journal) {
+      const newJournalResponse = await axiosInstance.post(
+        `/journal/${format(selectedDate, "yyyy-MM-dd")}`,
+        {
+          notes: "",
+          lessons: "",
+          mistakes: "",
+          attachments: [],
+          rules: [],
+        }
+      );
+      setJournal(newJournalResponse.data);
+    } else {
+      setJournal(journalResponse.data.journal);
+    }
+
+    setTrades(journalResponse.data.trades);
+    setRules(rulesResponse.data);
+    setWeeklyStats(weeklyStatsResponse.data);
+    setTradeSummary(tradeSummaryResponse.data);
+    setSettings(settingsResponse.data);
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  } finally {
+    setIsLoading(false);
+  }
+}, [selectedDate, axiosInstance]);
+
+
+
+  useEffect(() => {
+    fetchProfitLossDates();
+    fetchJournalData();
+  }, [fetchProfitLossDates, fetchJournalData]);
+
+  const updateJournal = useMemo(
+    () =>
+      debounce(async (field, value) => {
+        setIsJournalSaving(true);
+        try {
+          await axiosInstance.put(
+            `/journal/update/${format(selectedDate, "yyyy-MM-dd")}`,
+            {
+              [field]: value,
+            }
+          );
+        } catch (error) {
+          console.error("Error updating journal:", error);
+        } finally {
+          setIsJournalSaving(false);
+        }
+      }, 1000),
+    [selectedDate, axiosInstance]
+  );
+
+const handleJournalChange = useCallback(
+  (field) => (e) => {
+    const value = e.target.value;
+    setJournal((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    updateJournal(field, value);
+  },
+  [updateJournal]
+);
+
+  const handleAttachFile = async (e) => {
+    const file = e.target.files[0];
+    if (file && journal.attachments.length < 3) {
+      const formData = new FormData();
+      formData.append("file", file);
+      try {
+        const response = await axiosInstance.post(
+          `/journal/${format(selectedDate, "yyyy-MM-dd")}/attach`,
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
+        );
+        setJournal((prev) => ({
+          ...prev,
+          attachments: response.data.attachments,
+        }));
+      } catch (error) {
+        console.error("Error attaching file:", error);
+      }
+    }
+  };
+
+  const handleDeleteAttachment = async (fileKey) => {
+    try {
+      await axiosInstance.delete(
+        `/journal/${format(selectedDate, "yyyy-MM-dd")}/attach/${fileKey}`
+      );
+      setJournal((prev) => ({
+        ...prev,
+        attachments: prev.attachments.filter(
+          (attachment) => attachment !== fileKey
+        ),
+      }));
+    } catch (error) {
+      console.error("Error deleting attachment:", error);
+    }
+  };
+
+  const handleRuleToggle = async (ruleId) => {
+    try {
+      const isAttached = journal.rules.includes(ruleId);
+      if (isAttached) {
+        await axiosInstance.post("/rules/detach", {
+          ruleId,
+          journalId: journal._id,
+        });
+        setJournal((prev) => ({
+          ...prev,
+          rules: prev.rules.filter((id) => id !== ruleId),
+        }));
+      } else {
+        await axiosInstance.post("/rules/attach", {
+          ruleId,
+          journalId: journal._id,
+        });
+        setJournal((prev) => ({
+          ...prev,
+          rules: [...prev.rules, ruleId],
+        }));
+      }
+    } catch (error) {
+      console.error("Error toggling rule:", error);
+      // Optionally, revert the local state change if the API call fails
+      fetchJournalData();
+    }
+  };
+
+  const handleCreateRule = async (content) => {
+    try {
+      const response = await axiosInstance.post("/rules", { content });
+      setRules((prev) => [...prev, response.data]);
+    } catch (error) {
+      console.error("Error creating rule:", error);
+    }
+  };
+
+  const handleUpdateRule = async (id, content) => {
+    try {
+      const response = await axiosInstance.put(`/rules/${id}`, { content });
+      setRules((prev) =>
+        prev.map((rule) => (rule._id === id ? { ...rule, content } : rule))
+      );
+    } catch (error) {
+      console.error("Error updating rule:", error);
+    }
+  };
+
+  const handleDeleteRule = async (id) => {
+    try {
+      await axiosInstance.delete(`/rules/${id}`);
+      setRules((prev) => prev.filter((rule) => rule._id !== id));
+      setJournal((prev) => ({
+        ...prev,
+        rules: prev.rules.filter((ruleId) => ruleId !== id),
+      }));
+    } catch (error) {
+      console.error("Error deleting rule:", error);
+    }
+  };
+
+  const handleLoadSampleRules = async () => {
+    try {
+      await axiosInstance.post("/rules/load-samples");
+      fetchJournalData();
+    } catch (error) {
+      console.error("Error loading sample rules:", error);
+    }
+  };
+
+  const handleAddTrade = async (newTrade) => {
+    try {
+      await axiosInstance.post("/trades", newTrade);
+      fetchJournalData();
+    } catch (error) {
+      console.error("Error adding trade:", error);
+    }
+  };
+
+  const handleUpdateTrade = async (id, updatedTrade) => {
+    try {
+      await axiosInstance.put(`/trades/${id}`, updatedTrade);
+      fetchJournalData();
+    } catch (error) {
+      console.error("Error updating trade:", error);
+    }
+  };
+
+  const handleDeleteTrade = async (id) => {
+    try {
+      await axiosInstance.delete(`/trades/${id}`);
+      fetchJournalData();
+    } catch (error) {
+      console.error("Error deleting trade:", error);
+    }
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarExpanded(!isSidebarExpanded);
+  };
+
+  const formatTime = (date) => {
+    if (!date) return "";
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "Select a date";
+    try {
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "Invalid date";
+    }
+  };
+
+  // Calculate available capital
+  const calculateAvailableCapital = () => {
+    const initialCapital = settings.capital || 0;
+    const netPnL = tradeSummary?.netPnL || 0;
+    const total = initialCapital + netPnL;
+    return Number(total.toFixed(2)).toLocaleString("en-IN", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  const [username, setUsername] = useState("");
+  const [currentTime, setCurrentTime] = useState(new Date());
+
   useEffect(() => {
     const name = Cookies.get("userName");
     if (name) {
@@ -141,679 +363,106 @@ export default function Dashboard() {
       setCurrentTime(new Date());
     }, 1000);
 
-    fetchJournals();
-    fetchRules();
-    fetchTrades();
-
     return () => {
       clearInterval(timer);
     };
   }, []);
 
-  useEffect(() => {
-    if (journals.length > 0) {
-      const today = new Date().toISOString().split("T")[0];
-      const journalForToday = journals.find((journal) =>
-        journal.date.startsWith(today)
-      );
-      if (journalForToday) {
-        setTodayJournal(journalForToday);
-        setJournalData({
-          notes: journalForToday.notes,
-          mistakes: journalForToday.mistakes,
-          lessons: journalForToday.lessons,
-        });
-        setCheckedRules(journalForToday.rules.map((rule) => rule._id));
-      }
-    }
-  }, [journals]);
-
-  const formatTime = (date) => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
-  const formatDate = (date) => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarExpanded(!isSidebarExpanded);
-  };
-
-  const fetchJournals = async () => {
-    try {
-      const token = Cookies.get("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/journal`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch journals");
-      }
-      const data = await response.json();
-      setJournals(data);
-    } catch (error) {
-      console.error("Error fetching journals:", error);
-    }
-  };
-
-  const fetchRules = async () => {
-    try {
-      const token = Cookies.get("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rules`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch rules");
-      }
-      const data = await response.json();
-      setRules(data);
-    } catch (error) {
-      console.error("Error fetching rules:", error);
-    }
-  };
-
-  const fetchTrades = async () => {
-    try {
-      const token = Cookies.get("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/trades`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch trades");
-      }
-      const data = await response.json();
-      const trades = data.trades;
-      const totalProfit = data.totalProfit || 0;
-      const totalCharges = data.totalCharges || 0;
-      const totalRealizedPL = data.totalRealizedPL || 0;
-
-      setTrades(trades);
-      setTotalProfit(totalProfit);
-      setTotalCharges(totalCharges);
-      setTotalRealizedPL(totalRealizedPL);
-    } catch (error) {
-      console.error("Error fetching trades:", error);
-    }
-  };
-
-  const handleJournalChange = (e) => {
-    setJournalData({ ...journalData, [e.target.name]: e.target.value });
-  };
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  const handleSubmitJournal = async (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append("notes", journalData.notes);
-    formData.append("mistakes", journalData.mistakes);
-    formData.append("lessons", journalData.lessons);
-    if (file) {
-      formData.append("file", file);
-    }
-    checkedRules.forEach((ruleId) => {
-      formData.append("checkedRules[]", ruleId);
-    });
-
-    try {
-      const token = Cookies.get("token");
-      const method = todayJournal ? "PUT" : "POST";
-      const url = todayJournal
-        ? `${process.env.NEXT_PUBLIC_API_URL}/journal/${todayJournal._id}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/journal`;
-
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-      if (!response.ok) {
-        throw new Error(
-          `Failed to ${todayJournal ? "update" : "create"} journal`
-        );
-      }
-      fetchJournals();
-      setFile(null);
-    } catch (error) {
-      console.error(
-        `Error ${todayJournal ? "updating" : "creating"} journal:`,
-        error
-      );
-    }
-  };
-
-  const addRule = async (rule) => {
-    try {
-      const token = Cookies.get("token");
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/rules`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ description: rule }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to create rule");
-      }
-      fetchRules();
-    } catch (error) {
-      console.error("Error creating rule:", error);
-    }
-  };
-
-  const editRule = async (id, updatedRule) => {
-    try {
-      const token = Cookies.get("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/rules/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ description: updatedRule }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to update rule");
-      }
-      fetchRules();
-    } catch (error) {
-      console.error("Error updating rule:", error);
-    }
-  };
-
-  const deleteRule = async (id) => {
-    try {
-      const token = Cookies.get("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/rules/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to delete rule");
-      }
-      fetchRules();
-    } catch (error) {
-      console.error("Error deleting rule:", error);
-    }
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedRules.size === rules.length) {
-      setSelectedRules(new Set());
-      setCheckedRules([]);
-    } else {
-      setSelectedRules(new Set(rules.map((rule) => rule._id)));
-      setCheckedRules(rules.map((rule) => rule._id));
-    }
-  };
-
-  const toggleSelectRule = (id) => {
-    const newSelectedRules = new Set(selectedRules);
-    const newCheckedRules = [...checkedRules];
-    if (newSelectedRules.has(id)) {
-      newSelectedRules.delete(id);
-      const index = newCheckedRules.indexOf(id);
-      if (index > -1) {
-        newCheckedRules.splice(index, 1);
-      }
-    } else {
-      newSelectedRules.add(id);
-      newCheckedRules.push(id);
-    }
-    setSelectedRules(newSelectedRules);
-    setCheckedRules(newCheckedRules);
-  };
-
-  const addTrade = async (trade) => {
-    try {
-      const token = Cookies.get("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/trades`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(trade),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to add trade");
-      }
-      fetchTrades();
-    } catch (error) {
-      console.error("Error adding trade:", error);
-    }
-  };
-
-  const updateTrade = async (id, updatedTrade) => {
-    try {
-      const token = Cookies.get("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/trades`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ id, ...updatedTrade }),
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to update trade");
-      }
-      fetchTrades();
-    } catch (error) {
-      console.error("Error updating trade:", error);
-    }
-  };
-
-  const deleteTrade = async (id) => {
-    try {
-      const token = Cookies.get("token");
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/trades/${id}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (!response.ok) {
-        throw new Error("Failed to delete trade");
-      }
-      fetchTrades();
-    } catch (error) {
-      console.error("Error deleting trade:", error);
-    }
-  };
-
-  const importTrades = (importedTrades) => {
-    setTrades([...trades, ...importedTrades]);
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Spinner className="w-8 h-8" />
+      </div>
+    );
+  }
 
   return (
-    <MainLayout>
-      <div className="flex h-full">
-        <div className={`flex-1 p-6 `}>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Welcome back, {username}!</h2>
-            <p className="text-xl">{formatTime(currentTime)}</p>
-          </div>
-
-          <Card className="bg-transparent border-none shadow-none mb-6">
-            <CardHeader className="primary_gradient rounded-xl p-2 sm:p-3 md:p-4">
-              <div className="flex flex-col sm:flex-row justify-between items-center relative">
-                <div className="flex-1 w-full sm:w-auto order-2 sm:order-1"></div>
-                <div className="w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 bg-accent/40 text-center text-background px-2 py-1 rounded-lg mb-2 sm:mb-0 order-1 sm:order-2">
-                  <p className="text-sm sm:text-base lg:text-xl">
-                    {formatDate(currentTime)}
-                  </p>
-                </div>
-                <p className="text-background text-sm sm:text-base lg:text-xl order-3">
-                  Capital: ₹ 1000
-                </p>
-              </div>
-            </CardHeader>
-            <CardContent className="p-0 bg-transparent mt-4">
-              <div className="flex flex-col md:flex-row gap-8 h-2/3">
-                {/* Today's Journal */}
-                <Card className="flex-1">
-                  <CardHeader className="px-5 py-4">
-                    <CardTitle className="text-lg font-semibold">
-                      Today's Journal{" "}
-                      <span className="text-sm font-light">(Saving)</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <form onSubmit={handleSubmitJournal}>
-                      <div>
-                        <Label htmlFor="notes">Notes</Label>
-                        <Textarea
-                          id="notes"
-                          name="notes"
-                          value={journalData.notes}
-                          onChange={handleJournalChange}
-                          placeholder="Type your notes here..."
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="mistakes">Mistake</Label>
-                        <Textarea
-                          id="mistakes"
-                          name="mistakes"
-                          value={journalData.mistakes}
-                          onChange={handleJournalChange}
-                          placeholder="Type your mistakes here..."
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="lessons">Lesson</Label>
-                        <Textarea
-                          id="lessons"
-                          name="lessons"
-                          value={journalData.lessons}
-                          onChange={handleJournalChange}
-                          placeholder="Type your lessons here..."
-                        />
-                      </div>
-                      <div className="flex w-full justify-between mt-4">
-                        <Input type="file" onChange={handleFileChange} />
-                        <Button type="submit">
-                          {todayJournal ? "Update Journal" : "Create Journal"}
-                        </Button>
-                      </div>
-                    </form>
-                  </CardContent>
-                </Card>
-
-                {/* Rules */}
-                <Card className="flex-1">
-                  {rules.length === 0 ? (
-                    <>
-                      <CardHeader className="px-5 py-4">
-                        <CardTitle className="text-lg font-semibold">
-                          Rules
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-center py-8 flex flex-col items-center">
-                          <Image
-                            src="/images/no_rule.png"
-                            height={150}
-                            width={150}
-                            alt="No rules"
-                            className="mb-3"
-                          />
-                          <h4 className="text-xl font-semibold mb-2">
-                            Get Started!
-                          </h4>
-                          <p className="text-gray-600 mb-4">
-                            Please click below to add your trading rules
-                          </p>
-                          <AddRuleDialog onAddRule={addRule} />
-                        </div>
-                      </CardContent>
-                    </>
-                  ) : (
-                    <>
-                      <CardHeader className="px-5 py-3 flex flex-row items-center justify-between gap-5">
-                        <CardTitle className="text-lg font-semibold">
-                          Rules
-                        </CardTitle>
-                        <Input
-                          placeholder="Search Rules"
-                          className="max-w-xs"
-                        />
-                        <AddRuleDialog onAddRule={addRule} />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="relative overflow-hidden">
-                          <div className="max-h-[50vh] overflow-y-auto">
-                            <Table className="rounded-lg p-0 overflow-hidden border">
-                              <TableHeader className="sticky top-0 bg-primary/15 z-10">
-                                <TableRow>
-                                  <TableHead className="w-12">
-                                    <Checkbox
-                                      checked={
-                                        selectedRules.size === rules.length &&
-                                        rules.length > 0
-                                      }
-                                      onCheckedChange={toggleSelectAll}
-                                    />
-                                  </TableHead>
-                                  <TableHead className="max-w-[500px]">
-                                    My Rules
-                                  </TableHead>
-                                  <TableHead className="w-[100px]">
-                                    Actions
-                                  </TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {rules.map((rule) => (
-                                  <TableRow key={rule._id}>
-                                    <TableCell className="align-top">
-                                      <Checkbox
-                                        checked={selectedRules.has(rule._id)}
-                                        onCheckedChange={() =>
-                                          toggleSelectRule(rule._id)
-                                        }
-                                      />
-                                    </TableCell>
-                                    <TableCell className="max-w-[500px] whitespace-normal break-words">
-                                      {rule.description}
-                                    </TableCell>
-                                    <TableCell className="align-top">
-                                      <div className="flex gap-2">
-                                        <EditRuleDialog
-                                          rule={rule.description}
-                                          onEditRule={(updatedRule) =>
-                                            editRule(rule._id, updatedRule)
-                                          }
-                                        />
-                                        <DeleteRuleDialog
-                                          onDeleteRule={() =>
-                                            deleteRule(rule._id)
-                                          }
-                                        />
-                                      </div>
-                                    </TableCell>
-                                  </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </>
-                  )}
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            {trades.length === 0 ? (
-              <>
-                <CardHeader>
-                  <CardTitle>Trade Log</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center py-8 flex flex-col items-center">
-                    <Image
-                      src="/images/no_trade.png"
-                      height={150}
-                      width={150}
-                      alt="No trades"
-                      className="mb-3"
-                    />
-                    <h3 className="text-xl font-semibold mb-2">Get Started!</h3>
-                    <p className="text-accent-foreground/50 text-sm mb-4">
-                      Please add your trades here or import them automatically
-                      using your tradebook
-                    </p>
-                    <div className="flex items-center justify-center gap-4">
-                      <AddTradeDialog onAddTrade={addTrade} />
-                      <ImportTradeDialog onImportTrades={fetchTrades} />
-                    </div>
-                  </div>
-                </CardContent>
-              </>
-            ) : (
-              <>
-
-                <CardHeader className="px-5 py-3 flex flex-row items-center justify-between gap-5">
-                  <CardTitle className="text-lg font-semibold">
-                    Trade Log
-                  </CardTitle>
-                  <div className="flex items-center gap-4">
-                    <AddTradeDialog onAddTrade={addTrade} />
-                    <ImportTradeDialog onImportTrades={fetchTrades} />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <Table className="rounded-lg p-0 overflow-hidden border">
-                      <TableHeader className="sticky top-0 bg-primary/15 z-10">
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Instrument</TableHead>
-                          <TableHead>Equity Type</TableHead>
-                          <TableHead>Quantity</TableHead>
-                          <TableHead>Buying Price</TableHead>
-                          <TableHead>Selling Price</TableHead>
-                          <TableHead>Exchange charges</TableHead>
-                          <TableHead>Brokerage</TableHead>
-                          <TableHead>Action</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {trades.map((trade, index) => (
-                          <TableRow key={index}>
-                            <TableCell className="text-sm">
-                              {trade.time}
-                            </TableCell>
-                            <TableCell
-                              className={`text-sm ${
-                                trade.buyingPrice < trade.sellingPrice
-                                  ? "text-green-500"
-                                  : "text-red-500"
-                              }`}
-                            >
-                              {trade.instrument}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {trade.equityType}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              {trade.quantity}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              ₹ {trade.buyingPrice}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              ₹ {trade.sellingPrice}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              ₹ {trade.exchangeCharges}
-                            </TableCell>
-                            <TableCell className="text-sm">
-                              ₹ {trade.brokerage}
-                            </TableCell>
-                            <TableCell className="space-x-2 flex">
-                              <EditTradeDialog
-                                trade={trade.description}
-                                onEditTrade={(updatedTrade) =>
-                                  editTrade(trade._id, updatedTrade)
-                                }
-                              />
-                              <DeleteTradeDialog
-                                onDeletetrade={() => deleteTrade(trade._id)}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-
-                    <div className="flex justify-between mt-6 px-4">
-                      <div className="flex items-center gap-2 bg-green-500/15 text-green-600 px-4 py-2 rounded-md">
-                        <Pencil size={16} />
-                        <span>
-                          Today's Profit:{" "}
-                          {totalProfit ? `₹ ${totalProfit}` : "N/A"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2 bg-purple-500/15 text-purple-600 px-4 py-2 rounded-md">
-                        <Pencil size={16} />
-                        <span>Today's Charges: ₹ {totalCharges}</span>
-                      </div>
-
-                      <div className="flex items-center gap-2 bg-red-500/15 text-red-600 px-4 py-2 rounded-md">
-                        <Pencil size={16} />
-                        <span>
-                          Net Realised P&L:{" "}
-                          {totalRealizedPL ? `₹ ${totalRealizedPL}` : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </>
-            )}
-          </Card>
+    <div className="flex h-full flex-row">
+      <div className="flex-1 p-6 w-full ">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-2xl font-bold">Welcome back, {username}!</h2>
+          <p className="text-xl">{formatTime(currentTime)}</p>
         </div>
 
-        {/* Right Sidebar */}
-        {!isMobile && (
-          <div
-            className={`relative h-fit p-4 space-y-6 transition-all duration-300 ease-in-out ${
-              isSidebarExpanded
-                ? "w-80 border-l bg-white/50 dark:bg-black/50"
-                : "w-12 border-0 bg-none"
-            }`}
-          >
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 left-1"
-              onClick={toggleSidebar}
-            >
-              {isSidebarExpanded ? <ChevronRight /> : <ChevronLeft />}
-            </Button>
-            {isSidebarExpanded && (
-              <>
-                <div className="mt-12">
-                  <CustomCalendar data={calendarData} />
-                </div>
-                <TradesTakenChart chartData={chartData} />
-                <WinRateChart chartData={chartData} />
-                <ProfitLossChart chartData={chartData} />
-                <RulesChart chartData={chartData} />
-              </>
-            )}
+        <div className="primary_gradient rounded-xl p-2 sm:p-3 md:p-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center relative">
+            <div className="flex-1 w-full sm:w-auto order-2 sm:order-1"></div>
+            <div className="w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 bg-accent/40 text-center text-background px-2 py-1 rounded-lg mb-2 sm:mb-0 order-1 sm:order-2">
+              <p className="text-sm sm:text-base lg:text-xl">
+                {formatDate(selectedDate)}
+              </p>
+            </div>
+            <p className="text-background text-sm sm:text-base lg:text-xl order-3">
+              Capital: ₹ {calculateAvailableCapital().toLocaleString()}
+            </p>
           </div>
-        )}
+        </div>
+        <div className="flex  flex-col md:flex-row gap-4 mt-4">
+          <div className="w-full space-y-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Journals
+                  journal={journal}
+                  handleJournalChange={handleJournalChange}
+                  handleAttachFile={handleAttachFile}
+                  handleDeleteAttachment={handleDeleteAttachment}
+                  isJournalSaving={isJournalSaving}
+                />
+              </div>
+              <div className="flex-1">
+                <Rules
+                  rules={rules}
+                  journal={journal}
+                  handleRuleToggle={handleRuleToggle}
+                  handleCreateRule={handleCreateRule}
+                  handleUpdateRule={handleUpdateRule}
+                  handleDeleteRule={handleDeleteRule}
+                  handleLoadSampleRules={handleLoadSampleRules}
+                />
+              </div>
+            </div>
+            <TradeLog
+              trades={trades}
+              handleAddTrade={handleAddTrade}
+              handleUpdateTrade={handleUpdateTrade}
+              handleDeleteTrade={handleDeleteTrade}
+              tradeSummary={tradeSummary}
+            />
+          </div>
+        </div>
       </div>
-    </MainLayout>
+      {/* Right Sidebar */}
+      {!isMobile && (
+        <div
+          className={`relative h-fit p-4 space-y-6 transition-all duration-300 ease-in-out ${
+            isSidebarExpanded
+              ? "w-[19rem] border-l bg-white/50 dark:bg-black/50"
+              : "w-12 border-0 bg-none"
+          }`}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 left-1"
+            onClick={toggleSidebar}
+          >
+            {isSidebarExpanded ? <ChevronRight /> : <ChevronLeft />}
+          </Button>
+          {isSidebarExpanded && (
+            <div className="w-full md:w-1/4">
+              <CalendarAndCharts
+                profitLossDates={profitLossDates}
+                weeklyStats={weeklyStats}
+              />
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
+
+
+
+
+
