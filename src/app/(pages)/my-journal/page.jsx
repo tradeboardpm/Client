@@ -83,7 +83,7 @@ export default function JournalList() {
     );
 
   return (
-    <main className="p-6 max-w-7xl mx-auto">
+    <main className="p-6">
       <div className="primary_gradient rounded-xl p-3 mb-8 shadow-lg">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">

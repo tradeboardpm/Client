@@ -14,7 +14,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDateStore } from "@/stores/DateStore";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 export default function MainDashboard() {
   const { selectedDate } = useDateStore();
@@ -87,57 +87,55 @@ export default function MainDashboard() {
     }
   }, [selectedDate, axiosInstance]);
 
-const fetchJournalData = useCallback(async () => {
-  try {
-    setIsLoading(true);
-    const [
-      journalResponse,
-      rulesResponse,
-      weeklyStatsResponse,
-      tradeSummaryResponse,
-      settingsResponse,
-    ] = await Promise.all([
-      axiosInstance.get(`/journal/${format(selectedDate, "yyyy-MM-dd")}`),
-      axiosInstance.get("/rules"),
-      axiosInstance.get(
-        `/journal/weekly-stats/${format(selectedDate, "yyyy-MM-dd")}`
-      ),
-      axiosInstance.get(
-        `/trades/trade-summary/${format(selectedDate, "yyyy-MM-dd")}`
-      ),
-      axiosInstance.get("/settings"),
-    ]);
+  const fetchJournalData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [
+        journalResponse,
+        rulesResponse,
+        weeklyStatsResponse,
+        tradeSummaryResponse,
+        settingsResponse,
+      ] = await Promise.all([
+        axiosInstance.get(`/journal/${format(selectedDate, "yyyy-MM-dd")}`),
+        axiosInstance.get("/rules"),
+        axiosInstance.get(
+          `/journal/weekly-stats/${format(selectedDate, "yyyy-MM-dd")}`
+        ),
+        axiosInstance.get(
+          `/trades/trade-summary/${format(selectedDate, "yyyy-MM-dd")}`
+        ),
+        axiosInstance.get("/settings"),
+      ]);
 
-    // If no journal exists for this date, create one
-    if (!journalResponse.data.journal) {
-      const newJournalResponse = await axiosInstance.post(
-        `/journal/${format(selectedDate, "yyyy-MM-dd")}`,
-        {
-          notes: "",
-          lessons: "",
-          mistakes: "",
-          attachments: [],
-          rules: [],
-        }
-      );
-      setJournal(newJournalResponse.data);
-    } else {
-      setJournal(journalResponse.data.journal);
+      // If no journal exists for this date, create one
+      if (!journalResponse.data.journal) {
+        const newJournalResponse = await axiosInstance.post(
+          `/journal/${format(selectedDate, "yyyy-MM-dd")}`,
+          {
+            notes: "",
+            lessons: "",
+            mistakes: "",
+            attachments: [],
+            rules: [],
+          }
+        );
+        setJournal(newJournalResponse.data);
+      } else {
+        setJournal(journalResponse.data.journal);
+      }
+
+      setTrades(journalResponse.data.trades);
+      setRules(rulesResponse.data);
+      setWeeklyStats(weeklyStatsResponse.data);
+      setTradeSummary(tradeSummaryResponse.data);
+      setSettings(settingsResponse.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setIsLoading(false);
     }
-
-    setTrades(journalResponse.data.trades);
-    setRules(rulesResponse.data);
-    setWeeklyStats(weeklyStatsResponse.data);
-    setTradeSummary(tradeSummaryResponse.data);
-    setSettings(settingsResponse.data);
-  } catch (error) {
-    console.error("Error fetching data:", error);
-  } finally {
-    setIsLoading(false);
-  }
-}, [selectedDate, axiosInstance]);
-
-
+  }, [selectedDate, axiosInstance]);
 
   useEffect(() => {
     fetchProfitLossDates();
@@ -164,17 +162,17 @@ const fetchJournalData = useCallback(async () => {
     [selectedDate, axiosInstance]
   );
 
-const handleJournalChange = useCallback(
-  (field) => (e) => {
-    const value = e.target.value;
-    setJournal((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-    updateJournal(field, value);
-  },
-  [updateJournal]
-);
+  const handleJournalChange = useCallback(
+    (field) => (e) => {
+      const value = e.target.value;
+      setJournal((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+      updateJournal(field, value);
+    },
+    [updateJournal]
+  );
 
   const handleAttachFile = async (e) => {
     const file = e.target.files[0];
@@ -427,6 +425,7 @@ const handleJournalChange = useCallback(
               handleUpdateTrade={handleUpdateTrade}
               handleDeleteTrade={handleDeleteTrade}
               tradeSummary={tradeSummary}
+              selectedDate={selectedDate}
             />
           </div>
         </div>
@@ -436,7 +435,7 @@ const handleJournalChange = useCallback(
         <div
           className={`relative h-fit p-4 space-y-6 transition-all duration-300 ease-in-out ${
             isSidebarExpanded
-              ? "w-[19rem] border-l bg-white/50 dark:bg-black/50"
+              ? "w-[19rem] border-l bg-popover   "
               : "w-12 border-0 bg-none"
           }`}
         >
@@ -461,8 +460,3 @@ const handleJournalChange = useCallback(
     </div>
   );
 }
-
-
-
-
-

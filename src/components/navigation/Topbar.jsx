@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Bell, Menu, Sun, Moon, Laptop, X } from "lucide-react";
+import { Bell, Menu, Sun, Moon, Laptop, X, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,15 +19,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Cookies from "js-cookie";
-import { useRouter } from "next/navigation"; // Import useRouter from Next.js
+import { useRouter } from "next/navigation";
 
 const NotificationItem = ({ title, description, time, onDelete }) => (
   <div className="mb-4 p-3 bg-card rounded-lg relative">
-    <button className="absolute top-2 right-2 " onClick={onDelete}>
+    <button className="absolute top-2 right-2" onClick={onDelete}>
       <X className="h-4 w-4" />
     </button>
     <h3 className="font-semibold">{title}</h3>
-    <p className="text-sm ">{description}</p>
+    <p className="text-sm">{description}</p>
     <p className="text-xs mt-1">{time}</p>
   </div>
 );
@@ -43,34 +43,10 @@ export default function Topbar({ toggleSidebar }) {
       time: "5 minutes ago",
       type: "trade",
     },
-    {
-      title: "Account milestone",
-      description: "Congratulations! You've completed 100 trades.",
-      time: "2 hours ago",
-      type: "milestone",
-    },
-    {
-      title: "Market update",
-      description:
-        "Major index has shown significant movement in the last hour.",
-      time: "3 hours ago",
-      type: "update",
-    },
-    {
-      title: "Subscription reminder",
-      description: "Your premium subscription will renew in 3 days.",
-      time: "1 day ago",
-      type: "reminder",
-    },
-    {
-      title: "New feature available",
-      description: "Check out our new risk management tools in the dashboard.",
-      time: "2 days ago",
-      type: "feature",
-    },
+    // Additional notification objects...
   ]);
 
-  const router = useRouter(); // Initialize the useRouter hook
+  const router = useRouter();
 
   useEffect(() => {
     const name = Cookies.get("userName");
@@ -122,12 +98,11 @@ export default function Topbar({ toggleSidebar }) {
   };
 
   const handleLogout = () => {
-    // Remove all cookies
     Cookies.remove("userName");
-     Cookies.remove("token");
-     Cookies.remove("expiry");
-     Cookies.remove("userEmail");
-     Cookies.remove("userId");
+    Cookies.remove("token");
+    Cookies.remove("expiry");
+    Cookies.remove("userEmail");
+    Cookies.remove("userId");
     router.push("/login");
   };
 
@@ -187,21 +162,31 @@ export default function Topbar({ toggleSidebar }) {
               <Laptop className="mr-2 h-4 w-4" />
               <span>System</span>
             </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <div className="flex items-center cursor-pointer">
+              <Avatar>
+                <AvatarImage src="/placeholder-avatar.jpg" />
+                <AvatarFallback>
+                  {username ? username.charAt(0).toUpperCase() : "U"}
+                </AvatarFallback>
+              </Avatar>
+              <span className="font-semibold hidden sm:inline ml-2">
+                {username || "User"}
+              </span>
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Choose theme</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
               <span className="text-red-500">Logout</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Avatar>
-          <AvatarImage src="/placeholder-avatar.jpg" />
-          <AvatarFallback>
-            {username ? username.charAt(0).toUpperCase() : "U"}
-          </AvatarFallback>
-        </Avatar>
-        <span className="font-semibold hidden sm:inline">
-          {username || "User"}
-        </span>
       </div>
     </div>
   );

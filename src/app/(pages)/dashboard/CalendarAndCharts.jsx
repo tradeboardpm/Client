@@ -128,7 +128,7 @@ export function CalendarAndCharts({
   const fromMonth = subMonths(today, 12); // Allow navigation up to 12 months in the past
 
   return (
-    <div className="space-y-4 bg-card">
+    <div className="space-y-4 ">
       <Card className="p-0 w-fit">
 
         <CardContent className="p-2">

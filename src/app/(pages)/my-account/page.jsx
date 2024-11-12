@@ -1,275 +1,530 @@
 "use client";
-import React from "react";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { Eye, EyeOff } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Eye, EyeOff } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
-import Cookies from "js-cookie";
-import { useRouter } from "next/navigation";
+export default function AccountPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
+  const [userDetails, setUserDetails] = useState();
+  const [settings, setSettings] = useState();
 
-export default function MyAccount() {
-  const [showPassword, setShowPassword] = React.useState(false);
-  const router = useRouter(); // Initialize the useRouter hook
+  // Dialog states
+  const [personalDetailsOpen, setPersonalDetailsOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  const [otpDialogOpen, setOtpDialogOpen] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+
+  // Form states
+  const [personalForm, setPersonalForm] = useState();
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+  });
+  const [settingsForm, setSettingsForm] = useState();
+  const [otpForm, setOtpForm] = useState({
+    emailOtp: "",
+    phoneOtp: "",
+  });
+
+  const token = Cookies.get("token");
+  const userId = Cookies.get("userId");
+
+  useEffect(() => {
+    if (!token || !userId) {
+      router.push("/login");
+      return;
+    }
+
+    const fetchData = async () => {
+      try {
+        const [userResponse, settingsResponse] = await Promise.all([
+          axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}/user/current-user/${userId}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          ),
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/settings`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        setUserDetails(userResponse.data.data);
+        setSettings(settingsResponse.data);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to fetch user data",
+        });
+      }
+    };
+
+    fetchData();
+  }, [token, userId, router, toast]);
 
   const handleLogout = () => {
-    // Remove all cookies
-    Cookies.remove("userName");
     Cookies.remove("token");
-    Cookies.remove("expiry");
-    Cookies.remove("userEmail");
     Cookies.remove("userId");
     router.push("/login");
   };
 
-  return (
-    <div className="p-6  min-h-screen">
-      <div className=" mx-auto space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">My Account</h1>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline">Logout</Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Confirm Logout</DialogTitle>
-                <DialogDescription>
-                  Are you sure you want to logout? You will need to login again
-                  to access your account.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline">Cancel</Button>
-                <Button onClick={handleLogout}>
-                  <span>Logout</span>
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+  const handlePersonalDetailsSubmit = async () => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/user/update-profile`,
+        personalForm,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+      if (response.data.verificationNeeded) {
+        setOtpDialogOpen(true);
+      } else {
+        setSuccessDialogOpen(true);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update profile",
+      });
+    }
+  };
+
+  const handlePasswordSubmit = async () => {
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/user/change-password`,
+        passwordForm,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setOtpDialogOpen(true);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to change password",
+      });
+    }
+  };
+
+  const handleSettingsSubmit = async () => {
+    try {
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API_URL}/settings`,
+        settingsForm,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setSettings(response.data);
+      setSettingsDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Settings updated successfully",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update settings",
+      });
+    }
+  };
+
+  const handleOtpSubmit = async () => {
+    try {
+      if (passwordDialogOpen) {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/user/verify-password-change`,
+          otpForm,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      } else {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/user/verify-profile-update`,
+          otpForm,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+      }
+      setSuccessDialogOpen(true);
+      setOtpDialogOpen(false);
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Invalid OTP",
+      });
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-6">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">My Account</h1>
+        <Button variant="outline" onClick={handleLogout}>
+          Logout
+        </Button>
+      </div>
+
+      {/* Personal Details Section */}
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
             <CardTitle>Personal Details</CardTitle>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">Edit</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Edit Personal Details</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="edit-name">Name</Label>
-                    <Input id="edit-name" defaultValue="Json Taylor" />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-email">Email</Label>
-                    <Input
-                      id="edit-email"
-                      defaultValue="jsontaylor@gmail.com"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-phone">Phone number</Label>
-                    <Input id="edit-phone" defaultValue="1234567890" />
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline">Cancel</Button>
-                  <Button>Save Changes</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <CardDescription>Manage your personal information</CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setPersonalForm(userDetails);
+              setPersonalDetailsOpen(true);
+            }}
+          >
+            Edit
+          </Button>
+        </CardHeader>
+        <CardContent className="grid gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label>Name</Label>
-              <Input readOnly value="Json Taylor" />
+              <Input value={userDetails?.name} readOnly />
             </div>
             <div>
               <Label>Email</Label>
-              <Input readOnly value="jsontaylor@gmail.com" />
+              <Input value={userDetails?.email} readOnly />
             </div>
             <div>
               <Label>Phone number</Label>
-              <Input readOnly value="1234567890" />
+              <Input value={userDetails?.phone} readOnly />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+      {/* Password Section */}
+      <Card className="mb-6">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
             <CardTitle>Password</CardTitle>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">Change Password</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Change Password</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="current-password">Current Password</Label>
-                    <Input id="current-password" type="password" />
-                  </div>
-                  <div>
-                    <Label htmlFor="new-password">New Password</Label>
-                    <Input id="new-password" type="password" />
-                  </div>
-                  <div>
-                    <Label htmlFor="confirm-password">
-                      Confirm New Password
-                    </Label>
-                    <Input id="confirm-password" type="password" />
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline">Cancel</Button>
-                  <Button>Update Password</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent>
-            <div className="relative">
-              <Label>Current password</Label>
-              <Input
-                type={showPassword ? "text" : "password"}
-                value="••••••••••••"
-                readOnly
-              />
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-6"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4" />
-                ) : (
-                  <Eye className="h-4 w-4" />
-                )}
-              </Button>
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              Password last changed on: 9 July 2024
-            </p>
-          </CardContent>
-        </Card>
+            <CardDescription>Manage your password</CardDescription>
+          </div>
+          <Button variant="outline" onClick={() => setPasswordDialogOpen(true)}>
+            Change Password
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              value="********"
+              readOnly
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+      {/* Dashboard Settings Section */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
             <CardTitle>Dashboard Settings</CardTitle>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">Edit</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Edit Dashboard Settings</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="edit-order-limit">
-                      Daily max order limit
-                    </Label>
-                    <Input
-                      id="edit-order-limit"
-                      type="number"
-                      defaultValue={4}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-brokerage">
-                      Brokerage of your broker (Rs)
-                    </Label>
-                    <Input
-                      id="edit-brokerage"
-                      type="number"
-                      defaultValue={20}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="edit-capital">Capital (Rs)</Label>
-                    <Input
-                      id="edit-capital"
-                      type="number"
-                      defaultValue={100000}
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline">Cancel</Button>
-                  <Button>Save Changes</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <CardDescription>Manage your trading preferences</CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSettingsForm(settings);
+              setSettingsDialogOpen(true);
+            }}
+          >
+            Edit
+          </Button>
+        </CardHeader>
+        <CardContent className="grid gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label>Daily max order limit</Label>
-              <Input readOnly value="4" />
+              <Input value={settings?.orderLimit} readOnly />
             </div>
             <div>
               <Label>Brokerage of your broker (Rs)</Label>
-              <Input readOnly value="20" />
+              <Input value={settings?.brokerage} readOnly />
             </div>
             <div>
               <Label>Capital (Rs)</Label>
-              <Input readOnly value="1,00,000" />
+              <Input value={settings?.capital} readOnly />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </CardContent>
+      </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Subscription Details</CardTitle>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline">Upgrade</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Upgrade Subscription</DialogTitle>
-                  <DialogDescription>
-                    Choose a new plan to upgrade your subscription.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  {/* Add subscription plan options here */}
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button variant="outline">Cancel</Button>
-                  <Button>Confirm Upgrade</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
+      {/* Personal Details Dialog */}
+      <Dialog open={personalDetailsOpen} onOpenChange={setPersonalDetailsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Personal Details</DialogTitle>
+            <DialogDescription>
+              Update your personal information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
             <div>
-              <Label>Active plan</Label>
-              <Input readOnly value="6 Month Plan" />
+              <Label>Name</Label>
+              <Input
+                value={personalForm?.name}
+                onChange={(e) =>
+                  setPersonalForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+              />
             </div>
             <div>
-              <Label>Expiration date</Label>
-              <Input readOnly value="12 June 2024" />
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={personalForm?.email}
+                onChange={(e) =>
+                  setPersonalForm((prev) => ({
+                    ...prev,
+                    email: e.target.value,
+                  }))
+                }
+              />
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div>
+              <Label>Phone</Label>
+              <Input
+                value={personalForm?.phone}
+                onChange={(e) =>
+                  setPersonalForm((prev) => ({
+                    ...prev,
+                    phone: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPersonalDetailsOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handlePersonalDetailsSubmit}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Password Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Enter your current and new password
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label>Current Password</Label>
+              <Input
+                type="password"
+                value={passwordForm.currentPassword}
+                onChange={(e) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    currentPassword: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div>
+              <Label>New Password</Label>
+              <Input
+                type="password"
+                value={passwordForm.newPassword}
+                onChange={(e) =>
+                  setPasswordForm((prev) => ({
+                    ...prev,
+                    newPassword: e.target.value,
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setPasswordDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handlePasswordSubmit}>Next</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Dashboard Settings</DialogTitle>
+            <DialogDescription>
+              Update your trading preferences
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label>Daily max order limit</Label>
+              <Input
+                type="number"
+                value={settingsForm?.orderLimit}
+                onChange={(e) =>
+                  setSettingsForm((prev) => ({
+                    ...prev,
+                    orderLimit: parseInt(e.target.value),
+                  }))
+                }
+              />
+            </div>
+            <div>
+              <Label>Brokerage (Rs)</Label>
+              <Input
+                type="number"
+                value={settingsForm?.brokerage}
+                onChange={(e) =>
+                  setSettingsForm((prev) => ({
+                    ...prev,
+                    brokerage: parseInt(e.target.value),
+                  }))
+                }
+              />
+            </div>
+            <div>
+              <Label>Capital (Rs)</Label>
+              <Input
+                type="number"
+                value={settingsForm?.capital}
+                onChange={(e) =>
+                  setSettingsForm((prev) => ({
+                    ...prev,
+                    capital: parseInt(e.target.value),
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setSettingsDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSettingsSubmit}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* OTP Dialog */}
+      <Dialog open={otpDialogOpen} onOpenChange={setOtpDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Verify OTP</DialogTitle>
+            <DialogDescription>
+              Enter the OTP sent to your email and phone
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div>
+              <Label>Email OTP</Label>
+              <Input
+                value={otpForm.emailOtp}
+                onChange={(e) =>
+                  setOtpForm((prev) => ({ ...prev, emailOtp: e.target.value }))
+                }
+              />
+            </div>
+            <div>
+              <Label>Phone OTP</Label>
+              <Input
+                value={otpForm.phoneOtp}
+                onChange={(e) =>
+                  setOtpForm((prev) => ({ ...prev, phoneOtp: e.target.value }))
+                }
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOtpDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleOtpSubmit}>Verify</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Dialog */}
+      <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Success</DialogTitle>
+            <DialogDescription>
+              Your changes have been saved successfully. Please log in again.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={handleLogout}>Okay</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useDateStore } from "@/stores/DateStore";
+import Cookies from "js-cookie";
 
 export function TradeLog({
   trades = [],
@@ -38,15 +38,16 @@ export function TradeLog({
   handleUpdateTrade,
   handleDeleteTrade,
   tradeSummary = { netPnL: 0, totalCharges: 0 },
+  selectedDate,
 }) {
-  const { selectedDate } = useDateStore();
   const [isAddingTrade, setIsAddingTrade] = useState(false);
   const [isEditingTrade, setIsEditingTrade] = useState(false);
   const [isDeletingTrade, setIsDeletingTrade] = useState(false);
   const [currentTrade, setCurrentTrade] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [defaultBrokerage, setDefaultBrokerage] = useState(20);
   const [newTrade, setNewTrade] = useState({
-    date: format(selectedDate, "yyyy-MM-dd"), // Initialize with selected date
+    date: format(selectedDate, "yyyy-MM-dd"),
     time: "",
     instrumentName: "",
     equityType: "Options",
@@ -54,8 +55,32 @@ export function TradeLog({
     quantity: 0,
     price: 0,
     exchangeRate: 1,
-    brokerage: 20,
+    brokerage: defaultBrokerage,
   });
+
+  const token = Cookies.get("token");
+
+  useEffect(() => {
+    const fetchBrokerage = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/settings`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const data = await response.json();
+        setDefaultBrokerage(data.brokerage);
+        setNewTrade((prev) => ({ ...prev, brokerage: data.brokerage }));
+      } catch (error) {
+        console.error("Error fetching brokerage:", error);
+      }
+    };
+
+    fetchBrokerage();
+  }, []);
 
   // Add useEffect to update newTrade.date when selectedDate changes
   useEffect(() => {
@@ -93,7 +118,7 @@ export function TradeLog({
 
   const resetForm = () => {
     setNewTrade({
-      date: format(selectedDate, "yyyy-MM-dd"), // Use selected date
+      date: format(selectedDate, "yyyy-MM-dd"),
       time: "",
       instrumentName: "",
       equityType: "Options",
@@ -101,7 +126,7 @@ export function TradeLog({
       quantity: 0,
       price: 0,
       exchangeRate: 1,
-      brokerage: 20,
+      brokerage: defaultBrokerage,
     });
     setCurrentTrade(null);
   };
@@ -221,7 +246,8 @@ export function TradeLog({
               <SelectContent>
                 <SelectItem value="Options">Options</SelectItem>
                 <SelectItem value="Futures">Futures</SelectItem>
-                <SelectItem value="Equity">Equity</SelectItem>
+                <SelectItem value="Equity Intraday">Equity Intraday</SelectItem>
+                <SelectItem value="Equity Delivery">Equity Delivery</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -292,6 +318,7 @@ export function TradeLog({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <h1>{format(selectedDate, "yyyy-MM-dd")}</h1>
         <CardTitle>Trade Log</CardTitle>
         {trades.length > 0 && (
           <div className="flex space-x-2">
