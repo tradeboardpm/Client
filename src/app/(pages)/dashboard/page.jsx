@@ -243,10 +243,10 @@ const fetchCapital = async () => {
         <div className="flex flex-col md:flex-row gap-6 items-start justify-evenly my-6 h-auto md:h-[65vh]">
           {journal ? (
             <>
-              <div className="w-full md:w-1/2 lg:w-[45%]">
+              <div className="w-full md:w-1/2 lg:h-[65vh]">
                 <JournalSection selectedDate={selectedDate} />
               </div>
-              <div className="w-full md:w-1/2 lg:w-[45%]">
+              <div className="w-full md:w-1/2 lg:h-[65vh]">
                 <RulesSection
                   journal={journal}
                   setJournal={setJournal}
@@ -256,10 +256,10 @@ const fetchCapital = async () => {
             </>
           ) : (
             <>
-              <div className="w-full md:w-1/2 lg:w-[45%]">
+              <div className="w-full md:w-1/2 lg:h-[65vh]">
                 <JournalSection selectedDate={selectedDate} />
               </div>
-              <div className="w-full md:w-1/2 lg:w-[45%]">
+              <div className="w-full md:w-1/2 lg:h-[65vh]">
                 <RulesSection
                   rules={rules}
                   onFollowRule={handleFollowRule}

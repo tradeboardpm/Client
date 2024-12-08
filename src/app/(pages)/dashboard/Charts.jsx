@@ -82,7 +82,7 @@ export function WeeklyCharts({
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/metrics/weekly?date=${formattedDate}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/metrics/weekly?date=${formattedDate}`,
         {
           method: "GET",
           headers: {
