@@ -191,46 +191,84 @@ export function RulesSection({ journal, setJournal, rules, onFollowRule }) {
     }
   };
 
-const handleEditRule = async () => {
-  setIsLoading(true);
-  try {
-    const token = Cookies.get("token");
-    const response = await axios.patch(
-      `${API_URL}/rules/${editingRule._id || editingRule.originalId}`, // Use rule._id or originalId
-      {
-        description: editingRule.description,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
+  const handleEditRule = async () => {
+    setIsLoading(true);
+    try {
+      const token = Cookies.get("token");
+      const isOriginalRule = !!editingRule.originalId;
+      const response = await axios.patch(
+        isOriginalRule
+          ? `${API_URL}/journals/delete-rule/${editingRule.originalId}`
+          : `${API_URL}/rules/${editingRule._id}`,
+        {
+          description: editingRule.description,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (journal) {
+        const updatedJournal = {
+          ...journal,
+          rulesFollowed: journal.rulesFollowed.map((rule) =>
+            rule._id === editingRule._id ||
+            rule.originalId === editingRule.originalId
+              ? response.data
+              : rule
+          ),
+          rulesUnfollowed: journal.rulesUnfollowed.map((rule) =>
+            rule._id === editingRule._id ||
+            rule.originalId === editingRule.originalId
+              ? response.data
+              : rule
+          ),
+        };
+        setJournal(updatedJournal);
+      } else if (rules) {
+        onFollowRule(response.data._id);
       }
-    );
-    if (journal) {
-      const updatedJournal = {
-        ...journal,
-        rulesFollowed: journal.rulesFollowed.map((rule) =>
-          rule._id === editingRule._id ||
-          rule.originalId === editingRule.originalId
-            ? response.data
-            : rule
-        ),
-        rulesUnfollowed: journal.rulesUnfollowed.map((rule) =>
-          rule._id === editingRule._id ||
-          rule.originalId === editingRule.originalId
-            ? response.data
-            : rule
-        ),
-      };
-      setJournal(updatedJournal);
-    } else if (rules) {
-      onFollowRule(response.data._id);
+      setEditingRule(null);
+    } catch (error) {
+      console.error("Error editing rule:", error);
+    } finally {
+      setIsLoading(false);
     }
-    setEditingRule(null);
-  } catch (error) {
-    console.error("Error editing rule:", error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
+
+  const handleDeleteRule = async (ruleId, isOriginalRule = false) => {
+    setIsLoading(true);
+    try {
+      const token = Cookies.get("token");
+      await axios.delete(
+        isOriginalRule
+          ? `${API_URL}/journals/delete-rule/${ruleId}`
+          : `${API_URL}/rules/${ruleId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (journal) {
+        const updatedJournal = {
+          ...journal,
+          rulesFollowed: journal.rulesFollowed.filter(
+            (rule) => rule._id !== ruleId && rule.originalId !== ruleId
+          ),
+          rulesUnfollowed: journal.rulesUnfollowed.filter(
+            (rule) => rule._id !== ruleId && rule.originalId !== ruleId
+          ),
+        };
+        setJournal(updatedJournal);
+      } else if (rules) {
+        onFollowRule(null); // Refresh rules after deletion
+      }
+      setIsDeleteDialogOpen(false);
+      setRuleToDelete(null);
+    } catch (error) {
+      console.error("Error deleting rule:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleToggleRuleFollow = async (ruleId, isFollowed) => {
     setIsLoading(true);
@@ -259,36 +297,6 @@ const handleEditRule = async () => {
     }
   };
 
-const handleDeleteRule = async (ruleId) => {
-  setIsLoading(true);
-  try {
-    const token = Cookies.get("token");
-    await axios.delete(`${API_URL}/rules/${ruleId}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (journal) {
-      const updatedJournal = {
-        ...journal,
-        rulesFollowed: journal.rulesFollowed.filter(
-          (rule) => rule._id !== ruleId && rule.originalId !== ruleId
-        ),
-        rulesUnfollowed: journal.rulesUnfollowed.filter(
-          (rule) => rule._id !== ruleId && rule.originalId !== ruleId
-        ),
-      };
-      setJournal(updatedJournal);
-    } else if (rules) {
-      onFollowRule(null); // Refresh rules after deletion
-    }
-    setIsDeleteDialogOpen(false);
-    setRuleToDelete(null);
-  } catch (error) {
-    console.error("Error deleting rule:", error);
-  } finally {
-    setIsLoading(false);
-  }
-};
-
   const handleFollowUnfollowAll = async (isFollowed) => {
     if (!journal) return;
     setIsLoading(true);
@@ -312,33 +320,32 @@ const handleDeleteRule = async (ruleId) => {
     }
   };
 
-const handleLoadSampleRules = async () => {
-  setIsLoading(true);
-  try {
-    const token = Cookies.get("token");
-    const response = await axios.post(
-      `${API_URL}/rules/load-sample`,
-      {},
-      {
-        headers: { Authorization: `Bearer ${token}` },
+  const handleLoadSampleRules = async () => {
+    setIsLoading(true);
+    try {
+      const token = Cookies.get("token");
+      const response = await axios.post(
+        `${API_URL}/rules/load-sample`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (journal) {
+        setJournal({
+          ...journal,
+          rulesUnfollowed: response.data,
+        });
+      } else if (rules) {
+        onFollowRule(response.data[0]._id);
       }
-    );
-    if (journal) {
-      setJournal({
-        ...journal,
-        rulesUnfollowed: response.data,
-      });
-    } else if (rules) {
-      onFollowRule(response.data[0]._id);
+    } catch (error) {
+      console.error("Error loading sample rules:", error);
+    } finally {
+      setIsLoading(false);
+      window.location.reload(); // Reload the window
     }
-  } catch (error) {
-    console.error("Error loading sample rules:", error);
-  } finally {
-    setIsLoading(false);
-    window.location.reload(); // Reload the window
-  }
-};
-
+  };
 
   const allRules = journal
     ? [
@@ -566,7 +573,10 @@ const handleLoadSampleRules = async () => {
             <Button
               variant="destructive"
               onClick={() =>
-                handleDeleteRule(ruleToDelete._id || ruleToDelete.originalId)
+                handleDeleteRule(
+                  ruleToDelete._id || ruleToDelete.originalId,
+                  !!ruleToDelete.originalId
+                )
               }
               disabled={isLoading}
             >
