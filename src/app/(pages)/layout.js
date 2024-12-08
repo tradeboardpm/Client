@@ -16,13 +16,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
+import AnnouncementManager from "@/components/AnnouncementManager";
 
 export default function MainLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tokenExpired, setTokenExpired] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [activePopover, setActivePopover] = useState(null);
-  const [showPopover, setShowPopover] = useState(false);
+  const [announcements, setAnnouncements] = useState([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -48,26 +48,23 @@ export default function MainLayout({ children }) {
       setIsLoading(false);
     };
 
-    checkAuth();
-    fetchActivePopovers();
-  }, [router]);
-
-  const fetchActivePopovers = async () => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/user/announcements`
-      );
-      if (response.ok) {
-        const popovers = await response.json();
-        if (popovers.length > 0) {
-          setActivePopover(popovers[0]);
-          setShowPopover(true);
+    const fetchAnnouncements = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/user/announcements`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setAnnouncements(data);
         }
+      } catch (error) {
+        console.error("Error fetching announcements:", error);
       }
-    } catch (error) {
-      console.error("Error fetching popovers:", error);
-    }
-  };
+    };
+
+    checkAuth();
+    fetchAnnouncements();
+  }, [router]);
 
   const clearAuthCookies = () => {
     Cookies.remove("userName");
@@ -82,6 +79,13 @@ export default function MainLayout({ children }) {
     router.push("/login");
   };
 
+  const handleCloseAnnouncement = (announcement) => {
+    // Remove the specific announcement from the list
+    setAnnouncements((prevAnnouncements) =>
+      prevAnnouncements.filter((a) => a._id !== announcement._id)
+    );
+  };
+
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
   if (isLoading) {
@@ -94,10 +98,15 @@ export default function MainLayout({ children }) {
 
   return (
     <div className="flex flex-col h-screen bg-background">
+      <AnnouncementManager
+        announcements={announcements}
+        onClose={handleCloseAnnouncement}
+      />
+
       <Topbar toggleSidebar={toggleSidebar} />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar isOpen={sidebarOpen} />
-        <div className="flex-1 overflow-auto ">
+        <div className="flex-1 overflow-auto">
           <Toaster />
           {children}
           <AlertDialog open={tokenExpired} onOpenChange={setTokenExpired}>
@@ -111,21 +120,6 @@ export default function MainLayout({ children }) {
               <AlertDialogFooter>
                 <AlertDialogAction onClick={handleLoginRedirect}>
                   Login Again
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-          <AlertDialog open={showPopover} onOpenChange={setShowPopover}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>{activePopover?.title}</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {activePopover?.content}
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogAction onClick={() => setShowPopover(false)}>
-                  Close
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
