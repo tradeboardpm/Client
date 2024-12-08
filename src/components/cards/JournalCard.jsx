@@ -1,118 +1,130 @@
-import { useState } from "react";
+import React from "react";
+import { format } from "date-fns";
 import { ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 
-const JournalCard = ({ date, stats }) => {
-  const [isHovered, setIsHovered] = useState(false);
+const JournalCard = ({
+  date,
+  note,
+  mistake,
+  lesson,
+  rulesFollowedPercentage,
+  winRate,
+  profit,
+  tradesTaken,
+}) => {
   const router = useRouter();
-  const isLoss = stats.profitLoss < 0;
 
-  const formattedDate = new Date(date).toLocaleDateString("en-US", {
-    weekday: "short",
-    day: "numeric",
-    month: "long",
-  });
-
-  const getGradientClass = (isLoss) => {
-    if (isLoss) {
-      return "bg-gradient-to-br from-red-100 to-red-200 dark:from-red-900/50 dark:to-red-800/50";
-    }
-    return "bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900/50 dark:to-green-800/50";
+  const getProfitColor = () => {
+    if (profit > 100)
+      return "bg-green-500/50 border border-2 border-green-500 ";
+    if (profit >= -100 && profit <= 100)
+      return "bg-yellow-500/50  border border-2 border-yellow-500";
+    return "bg-red-500/50  border border-2 border-red-500";
   };
 
-  const getBorderClass = (isLoss) => {
-    return isLoss
-      ? "border-red-300 dark:border-red-700"
-      : "border-green-300 dark:border-green-700";
+  const getProfitBorderColor = () => {
+    if (profit > 100) return "border-green-500/50  transition-all duration-300";
+    if (profit >= -100 && profit <= 100)
+      return " border-yellow-500/50 transition-all duration-300";
+    return "border-red-500/50 transition-all duration-300";
+  };
+
+  const getArrowColor = () => {
+    if (profit > 100) return "text-green-500 group-hover:text-green-700";
+    if (profit >= -100 && profit <= 100)
+      return "text-yellow-500 group-hover:text-yellow-700";
+    return "text-red-500 group-hover:text-red-700";
+  };
+
+  // Format date to "Mon, 01 Dec"
+  const formattedDate = format(new Date(date), "EEE, dd MMM");
+
+  // Truncate text to single line with ellipsis
+  const truncateText = (text, maxLength = 50) => {
+    if (!text) return "N/A";
+    return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+  };
+
+  const handleCardClick = () => {
+    router.push(`/my-journal/${date}`);
   };
 
   return (
     <Card
-      className={`group relative w-full transition-all duration-300 ease-in-out ${getGradientClass(
-        isLoss
-      )} border-2 ${getBorderClass(isLoss)} cursor-pointer`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={() => router.push(`/my-journal/${date}`)}
+      onClick={handleCardClick}
+      className={`transition-all duration-300 group hover:shadow-xl hover:scale-[1.02] cursor-pointer ${getProfitColor()}`}
     >
-      <div
-        className={`absolute top-3 right-3 transition-transform duration-300 ${
-          isHovered
-            ? `scale-125 border rounded-full ${
-                isLoss
-                  ? " border-red-600 bg-background/45"
-                  : " border-green-600 bg-background/45"
-              }`
-            : "scale-0 border-collapse"
-        }`}
-      >
-        <ArrowUpRight
-          className={`h-5 w-5 ${
-            isLoss
-              ? "text-red-600 dark:text-red-400"
-              : "text-green-600 dark:text-green-400"
-          }`}
-        />
-      </div>
-
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold">{formattedDate}</CardTitle>
+      <CardHeader className={`pb-2 border-b ${getProfitBorderColor()}`}>
+        <CardTitle className="text-base flex justify-between font-semibold">
+          {formattedDate}
+          <span
+            className={`border rounded-full p-1 transition-all duration-300 
+              group-hover:translate-x-5 group-hover:-translate-y-5 group-hover:scale-125 group-hover:rounded-lg
+              ${getProfitBorderColor()} 
+              ${getArrowColor()}`}
+          >
+            <ArrowUpRight size={16} />
+          </span>
+        </CardTitle>
       </CardHeader>
-
-      <CardContent className="flex flex-col justify-between h-[calc(100%-4rem)]">
-        <div className="space-y-3">
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Notes
-            </p>
-            <p className="text-sm line-clamp-2">
-              {stats.notes ? stats.notes : "—"}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Mistakes
-            </p>
-            <p className="text-sm line-clamp-2">
-              {stats.mistakes ? stats.mistakes : "—"}
-            </p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-              Lessons
-            </p>
-            <p className="text-sm line-clamp-2">
-              {stats.lessons ? stats.lessons : "—"}
-            </p>
-          </div>
+      <CardContent className="space-y-2 pb-4">
+        <div>
+          <span className="font-medium text-sm text-foreground/50">Note:</span>
+          <p className="whitespace-nowrap overflow-hidden text-ellipsis">
+            {truncateText(note)}
+          </p>
         </div>
-
-        <div className="grid grid-cols-3 gap-2 mt-2">
-          <div className="text-center p-2 rounded-lg bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm shadow-sm">
-            <p className="text-xs text-gray-600 dark:text-gray-400">Rules</p>
-            <p className="text-sm font-semibold mt-1">
-              {Math.round((stats.rulesFollowed / stats.totalRules) * 100)}%
-            </p>
-          </div>
-          <div className="text-center p-2 rounded-lg bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm shadow-sm">
-            <p className="text-xs text-gray-600 dark:text-gray-400">Win Rate</p>
-            <p className="text-sm font-semibold mt-1">{stats.winRate}%</p>
-          </div>
-          <div className="text-center p-2 rounded-lg bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm shadow-sm">
-            <p className="text-xs text-gray-600 dark:text-gray-400">
-              {isLoss ? "Loss" : "Profit"}
-            </p>
-            <p
-              className={`text-sm font-semibold mt-1 ${
-                isLoss ? "text-red-600" : "text-green-600"
-              }`}
-            >
-              ₹{Math.abs(stats.profitLoss).toLocaleString()}
-            </p>
-          </div>
+        <div>
+          <span className="font-medium text-sm text-foreground/50">
+            Mistake:
+          </span>
+          <p className="whitespace-nowrap overflow-hidden text-ellipsis">
+            {truncateText(mistake)}
+          </p>
+        </div>
+        <div>
+          <span className="font-medium text-sm text-foreground/50">
+            Lesson:
+          </span>
+          <p className="whitespace-nowrap overflow-hidden text-ellipsis">
+            {truncateText(lesson)}
+          </p>
         </div>
       </CardContent>
+      <CardFooter
+        className={`flex justify-between items-center  p-0 border-t ${getProfitBorderColor()}`}
+      >
+        <div className="flex justify-between space-x-4 w-full p-2">
+          <div className="flex flex-col items-center space-x-1 w-full">
+            <p className="text-xs">Rules</p>
+            <span className={`font-semibold`}>
+              {Number(rulesFollowedPercentage).toFixed(2)}%
+            </span>
+          </div>
+          <div
+            className={`flex flex-col items-center space-x-1 w-full border-x ${getProfitBorderColor()}`}
+          >
+            <p className="text-xs">Win Rate</p>
+            <span className={`font-semibold`}>
+              {Number(winRate).toFixed(2)}%
+            </span>
+          </div>
+          <div className="flex flex-col items-center space-x-1 w-full">
+            <p className="text-xs">Profit</p>
+            <span className={`font-semibold text-foreground`}>
+              {Number(profit).toFixed(2)}
+            </span>
+          </div>
+        </div>
+      </CardFooter>
     </Card>
   );
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -30,166 +30,132 @@ export default function AccountPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [userDetails, setUserDetails] = useState();
-  const [settings, setSettings] = useState();
+  const [user, setUser] = useState(null);
+  const [settings, setSettings] = useState(null);
 
   // Dialog states
   const [personalDetailsOpen, setPersonalDetailsOpen] = useState(false);
   const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
-  const [otpDialogOpen, setOtpDialogOpen] = useState(false);
-  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   // Form states
-  const [personalForm, setPersonalForm] = useState();
+  const [personalForm, setPersonalForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
   });
-  const [settingsForm, setSettingsForm] = useState();
-  const [otpForm, setOtpForm] = useState({
-    emailOtp: "",
-    phoneOtp: "",
+  const [settingsForm, setSettingsForm] = useState({
+    capital: 0,
+    brokerage: 0,
+    tradesPerDay: 0,
   });
 
-  const token = Cookies.get("token");
-  const userId = Cookies.get("userId");
+  // Axios instance with interceptor for bearer token
+  const api = axios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL, // Replace with your API base URL
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  // Add a request interceptor to include the bearer token
+  api.interceptors.request.use(
+    (config) => {
+      const token = Cookies.get("token");
+      if (token) {
+        config.headers["Authorization"] = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => {
+      return Promise.reject(error);
+    }
+  );
 
   useEffect(() => {
-    if (!token || !userId) {
-      router.push("/login");
-      return;
+    fetchUserData();
+    fetchSettings();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      const response = await api.get("/user/profile");
+      setUser(response.data);
+      setPersonalForm(response.data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch user data",
+        variant: "destructive",
+      });
     }
+  };
 
-    const fetchData = async () => {
-      try {
-        const [userResponse, settingsResponse] = await Promise.all([
-          axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}/user/current-user/${userId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ),
-          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/settings`, {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        setUserDetails(userResponse.data.data);
-        setSettings(settingsResponse.data);
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to fetch user data",
-        });
-      }
-    };
-
-    fetchData();
-  }, [token, userId, router, toast]);
-
-  const handleLogout = () => {
-    Cookies.remove("token");
-    Cookies.remove("userId");
-    router.push("/login");
+  const fetchSettings = async () => {
+    try {
+      const response = await api.get("/user/settings");
+      setSettings(response.data);
+      setSettingsForm(response.data);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch settings",
+        variant: "destructive",
+      });
+    }
   };
 
   const handlePersonalDetailsSubmit = async () => {
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/user/update-profile`,
-        personalForm,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (response.data.verificationNeeded) {
-        setOtpDialogOpen(true);
-      } else {
-        setSuccessDialogOpen(true);
-      }
+      await api.patch("/user/profile", personalForm);
+      setUser(personalForm);
+      setPersonalDetailsOpen(false);
+      toast({ title: "Success", description: "Profile updated successfully" });
     } catch (error) {
       toast({
-        variant: "destructive",
         title: "Error",
         description: "Failed to update profile",
+        variant: "destructive",
       });
     }
   };
 
   const handlePasswordSubmit = async () => {
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/user/change-password`,
-        passwordForm,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setOtpDialogOpen(true);
+      await api.patch("/user/change-password", passwordForm);
+      setPasswordDialogOpen(false);
+      toast({ title: "Success", description: "Password updated successfully" });
     } catch (error) {
       toast({
-        variant: "destructive",
         title: "Error",
-        description: "Failed to change password",
+        description: "Failed to update password",
+        variant: "destructive",
       });
     }
   };
 
   const handleSettingsSubmit = async () => {
     try {
-      const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API_URL}/settings`,
-        settingsForm,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await api.patch("/user/settings", settingsForm);
       setSettings(response.data);
       setSettingsDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Settings updated successfully",
-      });
+      toast({ title: "Success", description: "Settings updated successfully" });
     } catch (error) {
       toast({
-        variant: "destructive",
         title: "Error",
         description: "Failed to update settings",
+        variant: "destructive",
       });
     }
   };
 
-  const handleOtpSubmit = async () => {
-    try {
-      if (passwordDialogOpen) {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/user/verify-password-change`,
-          otpForm,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      } else {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/user/verify-profile-update`,
-          otpForm,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-      }
-      setSuccessDialogOpen(true);
-      setOtpDialogOpen(false);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Invalid OTP",
-      });
-    }
+  const handleLogout = () => {
+    Cookies.remove("token");
+    router.push("/login");
   };
 
   return (
@@ -210,10 +176,7 @@ export default function AccountPage() {
           </div>
           <Button
             variant="outline"
-            onClick={() => {
-              setPersonalForm(userDetails);
-              setPersonalDetailsOpen(true);
-            }}
+            onClick={() => setPersonalDetailsOpen(true)}
           >
             Edit
           </Button>
@@ -222,15 +185,15 @@ export default function AccountPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label>Name</Label>
-              <Input value={userDetails?.name} readOnly />
+              <Input value={user?.name} readOnly />
             </div>
             <div>
               <Label>Email</Label>
-              <Input value={userDetails?.email} readOnly />
+              <Input value={user?.email} readOnly />
             </div>
             <div>
               <Label>Phone number</Label>
-              <Input value={userDetails?.phone} readOnly />
+              <Input value={user?.phone} readOnly />
             </div>
           </div>
         </CardContent>
@@ -277,29 +240,23 @@ export default function AccountPage() {
             <CardTitle>Dashboard Settings</CardTitle>
             <CardDescription>Manage your trading preferences</CardDescription>
           </div>
-          <Button
-            variant="outline"
-            onClick={() => {
-              setSettingsForm(settings);
-              setSettingsDialogOpen(true);
-            }}
-          >
+          <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
             Edit
           </Button>
         </CardHeader>
         <CardContent className="grid gap-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label>Daily max order limit</Label>
-              <Input value={settings?.orderLimit} readOnly />
+              <Label>Capital</Label>
+              <Input value={settings?.capital} readOnly />
             </div>
             <div>
-              <Label>Brokerage of your broker (Rs)</Label>
+              <Label>Brokerage</Label>
               <Input value={settings?.brokerage} readOnly />
             </div>
             <div>
-              <Label>Capital (Rs)</Label>
-              <Input value={settings?.capital} readOnly />
+              <Label>Trades Per Day</Label>
+              <Input value={settings?.tradesPerDay} readOnly />
             </div>
           </div>
         </CardContent>
@@ -316,36 +273,33 @@ export default function AccountPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div>
-              <Label>Name</Label>
+              <Label htmlFor="name">Name</Label>
               <Input
-                value={personalForm?.name}
+                id="name"
+                value={personalForm.name}
                 onChange={(e) =>
-                  setPersonalForm((prev) => ({ ...prev, name: e.target.value }))
+                  setPersonalForm({ ...personalForm, name: e.target.value })
                 }
               />
             </div>
             <div>
-              <Label>Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
+                id="email"
                 type="email"
-                value={personalForm?.email}
+                value={personalForm.email}
                 onChange={(e) =>
-                  setPersonalForm((prev) => ({
-                    ...prev,
-                    email: e.target.value,
-                  }))
+                  setPersonalForm({ ...personalForm, email: e.target.value })
                 }
               />
             </div>
             <div>
-              <Label>Phone</Label>
+              <Label htmlFor="phone">Phone</Label>
               <Input
-                value={personalForm?.phone}
+                id="phone"
+                value={personalForm.phone}
                 onChange={(e) =>
-                  setPersonalForm((prev) => ({
-                    ...prev,
-                    phone: e.target.value,
-                  }))
+                  setPersonalForm({ ...personalForm, phone: e.target.value })
                 }
               />
             </div>
@@ -373,28 +327,30 @@ export default function AccountPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div>
-              <Label>Current Password</Label>
+              <Label htmlFor="currentPassword">Current Password</Label>
               <Input
+                id="currentPassword"
                 type="password"
                 value={passwordForm.currentPassword}
                 onChange={(e) =>
-                  setPasswordForm((prev) => ({
-                    ...prev,
+                  setPasswordForm({
+                    ...passwordForm,
                     currentPassword: e.target.value,
-                  }))
+                  })
                 }
               />
             </div>
             <div>
-              <Label>New Password</Label>
+              <Label htmlFor="newPassword">New Password</Label>
               <Input
+                id="newPassword"
                 type="password"
                 value={passwordForm.newPassword}
                 onChange={(e) =>
-                  setPasswordForm((prev) => ({
-                    ...prev,
+                  setPasswordForm({
+                    ...passwordForm,
                     newPassword: e.target.value,
-                  }))
+                  })
                 }
               />
             </div>
@@ -406,7 +362,7 @@ export default function AccountPage() {
             >
               Cancel
             </Button>
-            <Button onClick={handlePasswordSubmit}>Next</Button>
+            <Button onClick={handlePasswordSubmit}>Change Password</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -422,41 +378,44 @@ export default function AccountPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div>
-              <Label>Daily max order limit</Label>
+              <Label htmlFor="capital">Capital</Label>
               <Input
+                id="capital"
                 type="number"
-                value={settingsForm?.orderLimit}
+                value={settingsForm.capital}
                 onChange={(e) =>
-                  setSettingsForm((prev) => ({
-                    ...prev,
-                    orderLimit: parseInt(e.target.value),
-                  }))
+                  setSettingsForm({
+                    ...settingsForm,
+                    capital: Number(e.target.value),
+                  })
                 }
               />
             </div>
             <div>
-              <Label>Brokerage (Rs)</Label>
+              <Label htmlFor="brokerage">Brokerage</Label>
               <Input
+                id="brokerage"
                 type="number"
-                value={settingsForm?.brokerage}
+                value={settingsForm.brokerage}
                 onChange={(e) =>
-                  setSettingsForm((prev) => ({
-                    ...prev,
-                    brokerage: parseInt(e.target.value),
-                  }))
+                  setSettingsForm({
+                    ...settingsForm,
+                    brokerage: Number(e.target.value),
+                  })
                 }
               />
             </div>
             <div>
-              <Label>Capital (Rs)</Label>
+              <Label htmlFor="tradesPerDay">Trades Per Day</Label>
               <Input
+                id="tradesPerDay"
                 type="number"
-                value={settingsForm?.capital}
+                value={settingsForm.tradesPerDay}
                 onChange={(e) =>
-                  setSettingsForm((prev) => ({
-                    ...prev,
-                    capital: parseInt(e.target.value),
-                  }))
+                  setSettingsForm({
+                    ...settingsForm,
+                    tradesPerDay: Number(e.target.value),
+                  })
                 }
               />
             </div>
@@ -469,59 +428,6 @@ export default function AccountPage() {
               Cancel
             </Button>
             <Button onClick={handleSettingsSubmit}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* OTP Dialog */}
-      <Dialog open={otpDialogOpen} onOpenChange={setOtpDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Verify OTP</DialogTitle>
-            <DialogDescription>
-              Enter the OTP sent to your email and phone
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div>
-              <Label>Email OTP</Label>
-              <Input
-                value={otpForm.emailOtp}
-                onChange={(e) =>
-                  setOtpForm((prev) => ({ ...prev, emailOtp: e.target.value }))
-                }
-              />
-            </div>
-            <div>
-              <Label>Phone OTP</Label>
-              <Input
-                value={otpForm.phoneOtp}
-                onChange={(e) =>
-                  setOtpForm((prev) => ({ ...prev, phoneOtp: e.target.value }))
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOtpDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleOtpSubmit}>Verify</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Success Dialog */}
-      <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Success</DialogTitle>
-            <DialogDescription>
-              Your changes have been saved successfully. Please log in again.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={handleLogout}>Okay</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

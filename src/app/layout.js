@@ -1,3 +1,4 @@
+import { Toast, ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
 export const metadata = {
@@ -11,7 +12,12 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={` antialiased dar`}>{children}</body>
+      <body className={` antialiased dar`}>
+        <ToastProvider>
+          {children}
+          <Toast />
+        </ToastProvider>
+      </body>
     </html>
   );
 }

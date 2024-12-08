@@ -5,6 +5,12 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -29,20 +35,22 @@ import { toast } from "@/hooks/use-toast";
 export default function AccountabilityPartner() {
   const [partners, setPartners] = useState([]);
   const [selectedDetails, setSelectedDetails] = useState([]);
+  const [showDialog, setShowDialog] = useState(true); // Dialog visibility state
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     relation: "",
-    shareDuration: "weekly",
+    shareFrequency: "weekly", // Updated to match backend
   });
 
+  // Detailed options for sharing
   const detailOptions = [
-    { value: "trades", label: "No. of Trades taken" },
-    { value: "winrate", label: "Win Rate" },
-    { value: "rules", label: "Rules Followed" },
-    { value: "pnl", label: "Profit/Loss Chart" },
+    { value: "tradesTaken", label: "No. of Trades taken" },
+    { value: "winRate", label: "Win Rate" },
+    { value: "rulesFollowed", label: "Rules Followed" },
+    { value: "profitLoss", label: "Profit/Loss Chart" },
     { value: "capital", label: "Current Capital" },
-    { value: "journaling", label: "Journaling Trend" },
+    { value: "currentPoints", label: "Current Points" },
   ];
 
   // Create axios instance with default headers
@@ -64,13 +72,15 @@ export default function AccountabilityPartner() {
     }
   );
 
+  // Fetch partners on component mount
   useEffect(() => {
     fetchPartners();
   }, []);
 
+  // Fetch accountability partners
   const fetchPartners = async () => {
     try {
-      const response = await api.get("/accountability-partner/list");
+      const response = await api.get("/accountability-partner");
       setPartners(response.data);
     } catch (error) {
       toast({
@@ -81,35 +91,53 @@ export default function AccountabilityPartner() {
     }
   };
 
+  // Handle input changes
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
+  // Submit new accountability partner
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post("/accountability-partner/add", {
-        ...formData,
-        detailsToShare: selectedDetails,
-      });
+      // Prepare data to match backend schema
+      const submitData = {
+        name: formData.name,
+        email: formData.email,
+        relation: formData.relation,
+        shareFrequency: formData.shareFrequency,
+        dataToShare: {
+          tradesTaken: selectedDetails.includes("tradesTaken"),
+          winRate: selectedDetails.includes("winRate"),
+          rulesFollowed: selectedDetails.includes("rulesFollowed"),
+          profitLoss: selectedDetails.includes("profitLoss"),
+          capital: selectedDetails.includes("capital"),
+          currentPoints: selectedDetails.includes("currentPoints"),
+        },
+      };
+
+      await api.post("/accountability-partner", submitData);
+
       toast({
         title: "Success",
         description: "Accountability partner added successfully",
       });
+
       fetchPartners();
       resetForm();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to add partner",
+        description: error.response?.data?.error || "Failed to add partner",
         variant: "destructive",
       });
     }
   };
 
+  // Remove an accountability partner
   const handleRemovePartner = async (partnerId) => {
     try {
-      await api.delete(`/accountability-partner/remove/${partnerId}`);
+      await api.delete(`/accountability-partner/${partnerId}`);
       toast({
         title: "Success",
         description: "Accountability partner removed successfully",
@@ -124,18 +152,54 @@ export default function AccountabilityPartner() {
     }
   };
 
+  // Reset form to initial state
   const resetForm = () => {
     setFormData({
       name: "",
       email: "",
       relation: "",
-      shareDuration: "weekly",
+      shareFrequency: "weekly",
     });
     setSelectedDetails([]);
   };
 
   return (
     <div className="flex flex-col lg:flex-row h-full">
+      {/* Dialog to show information about Accountability Partner */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Accountability Partner</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p>
+              An Accountability Partner is someone who supports another person
+              to keep a commitment or maintain progress on a desired goal. They
+              will often be a trusted acquaintance who will regularly ask an
+              individual about their progress.
+            </p>
+            <p>
+              Add details of such a person and we will share your progress with
+              them. You can also choose what details the accountability partner
+              can view.
+            </p>
+            <p className="text-sm text-gray-500">
+              Accountability Partners cannot make any changes to your data or
+              your account.
+            </p>
+            <div className="w-full flex justify-end items-end">
+              <Button
+                variant="outline"
+                className="text-primary"
+                onClick={() => setShowDialog(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* Add Accountability Partner Form */}
       <Card className="bg-transparent border-none shadow-none flex-1 lg:flex-[2] h-full">
         <CardHeader>
           <CardTitle className="text-2xl">Add Accountability Partner</CardTitle>
@@ -192,9 +256,9 @@ export default function AccountabilityPartner() {
                 <MultiSelector
                   values={selectedDetails}
                   onValuesChange={setSelectedDetails}
-                  className="w-full -mt-2 h-fit "
+                  className="w-full -mt-2 h-fit"
                 >
-                  <MultiSelectorTrigger className="w-full rounded  bg-card border border-input/25 shadow-sm  p-2">
+                  <MultiSelectorTrigger className="w-full rounded bg-card border border-input/25 shadow-sm p-2">
                     <MultiSelectorInput
                       placeholder="Select details..."
                       className="bg-card text-sm"
@@ -218,9 +282,9 @@ export default function AccountabilityPartner() {
             <div>
               <Label>Share my progress*</Label>
               <RadioGroup
-                value={formData.shareDuration}
+                value={formData.shareFrequency}
                 onValueChange={(value) =>
-                  setFormData({ ...formData, shareDuration: value })
+                  setFormData({ ...formData, shareFrequency: value })
                 }
                 className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
               >
@@ -248,6 +312,7 @@ export default function AccountabilityPartner() {
         </CardContent>
       </Card>
 
+      {/* List of Accountability Partners */}
       <Card className="rounded-none border-none shadow-none flex-1 h-full bg-accent mt-4 lg:mt-0">
         <CardHeader>
           <CardTitle className="text-2xl">My Accountability Partners</CardTitle>
@@ -261,7 +326,7 @@ export default function AccountabilityPartner() {
                     <div>
                       <h3 className="font-semibold">{partner.name}</h3>
                       <p className="text-sm text-gray-500">
-                        Last viewed:{" "}
+                        Last updated:{" "}
                         {new Date(partner.updatedAt).toLocaleString()}
                       </p>
                     </div>
@@ -280,10 +345,10 @@ export default function AccountabilityPartner() {
             <div className="text-center py-8">
               <Package className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-2 text-sm font-semibold text-gray-900">
-                No data
+                No Accountability Partners
               </h3>
               <p className="mt-1 text-sm text-gray-500">
-                Please add your Accountability Partner
+                Please add your first Accountability Partner
               </p>
             </div>
           )}

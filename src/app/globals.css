@@ -7,12 +7,27 @@
   src: url("/fonts/Poppins-Regular.ttf");
 }
 
-/* .poppins{
-  font-family: "Poppins";
-} */
+@font-face {
+  font-family: "Poppins-Black";
+  src: url("/fonts/Poppins-Black.ttf");
+}
+
+@font-face {
+  font-family: "Poppins-Bold";
+  src: url("/fonts/Poppins-Bold.ttf");
+}
+
+.poppins-black{
+  font-family: "Poppins-Black";
+}
+
+.poppins-bold{
+  font-family: "Poppins-Bold";
+}
 
 body {
   font-family: "Poppins";
+  /* color: rgb(251, 255, 0); */
 }
 
 
@@ -71,6 +86,11 @@ body {
     --input: 262 20% 50%;
     --ring: 262 80.6% 69.6%;
     --radius: 0.5rem;
+        --chart-1: 120 70% 40%; /* More green */
+    --chart-2: 0 80% 50%; /* More red */
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
   }
 }
 

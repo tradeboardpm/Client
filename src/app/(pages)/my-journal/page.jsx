@@ -1,154 +1,122 @@
 // app/my-journal/page.jsx
 "use client";
 
-import { useState, useEffect } from "react";
-import { ChevronsLeft, ChevronsRight } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Cookies from "js-cookie";
+import { ArrowUpRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import JournalCard from "@/components/cards/JournalCard";
 
-export default function JournalList() {
-  const [journalData, setJournalData] = useState({
-    dailyStats: {},
-    monthlyStats: {},
-  });
+
+
+
+const JournalPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [journalData, setJournalData] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    fetchJournals();
+    const fetchJournalData = async () => {
+      try {
+        setIsLoading(true);
+        const token = Cookies.get("token");
+        const response = await axios.get(
+          `${
+            process.env.NEXT_PUBLIC_API_URL
+          }/journals/monthly?year=${currentDate.getFullYear()}&month=${
+            currentDate.getMonth() + 1
+          }`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setJournalData(response.data);
+      } catch (error) {
+        console.error("Error fetching journal data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchJournalData();
   }, [currentDate]);
 
-  const fetchJournals = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const token = Cookies.get("token");
-
-      if (!token) {
-        throw new Error("Authentication token not found");
-      }
-
-      const response = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL
-        }/journal/stats/${currentDate.getFullYear()}/${
-          currentDate.getMonth() + 1
-        }`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch journals");
-      }
-
-      const data = await response.json();
-      setJournalData(data);
-    } catch (error) {
-      console.error("Error fetching journals:", error);
-      setError(error instanceof Error ? error.message : String(error));
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const changeMonth = (increment) => {
+  const changeMonth = (direction) => {
     setCurrentDate((prevDate) => {
       const newDate = new Date(prevDate);
-      newDate.setMonth(newDate.getMonth() + increment);
+      newDate.setMonth(prevDate.getMonth() + direction);
       return newDate;
     });
   };
 
-  const hasData = (stats) => {
-    return (
-      stats.tradeCount > 0 ||
-      stats.notes.trim() !== "" ||
-      stats.mistakes.trim() !== "" ||
-      stats.lessons.trim() !== "" ||
-      stats.rulesFollowed > 0 ||
-      stats.profitLoss !== 0
-    );
-  };
-
-  const filteredDailyStats = Object.entries(journalData.dailyStats)
-    .filter(([_, stats]) => hasData(stats))
-    .sort(
-      ([dateA], [dateB]) =>
-        new Date(dateB).getTime() - new Date(dateA).getTime()
-    );
-
-  return (
-    <main className="p-6">
-      <div className="primary_gradient rounded-xl p-3 mb-8 shadow-lg">
-        <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => changeMonth(-1)}
-              className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
-              disabled={isLoading}
-            >
-              <ChevronsLeft className="h-5 w-5" />
-            </button>
-            <h2 className="text-xl font-medium text-white px-4 py-2 rounded-lg bg-white/10">
-              {currentDate.toLocaleString("default", {
-                month: "long",
-                year: "numeric",
-              })}
-            </h2>
-            <button
-              onClick={() => changeMonth(1)}
-              className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
-              disabled={isLoading}
-            >
-              <ChevronsRight className="h-5 w-5" />
-            </button>
-          </div>
-          <div className="flex gap-6 text-white">
-            <div className="text-center">
-              <p className="text-sm opacity-80">Total P&L</p>
-              <p className="text-lg font-semibold">
-                ₹
-                {(
-                  journalData.monthlyStats.totalProfitLoss || 0
-                ).toLocaleString()}
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-sm opacity-80">Win Rate</p>
-              <p className="text-lg font-semibold">
-                {journalData.monthlyStats.overallWinRate || 0}%
-              </p>
-            </div>
-          </div>
-        </div>
+return (
+  <div className="py-8 px-4 sm:px-6 lg:px-8">
+    <div className="flex justify-between items-center mb-6 primary_gradient p-3 rounded-2xl">
+      <div className="flex flex-1 items-center justify-center ">
+        <button
+          onClick={() => changeMonth(-1)}
+          className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
+          disabled={isLoading}
+        >
+          <ChevronsLeft className="h-5 w-5" />
+        </button>
+        <h2 className="text-xl font-medium text-white px-4 py-2 rounded-lg bg-white/10">
+          {currentDate.toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+          })}
+        </h2>
+        <button
+          onClick={() => changeMonth(1)}
+          className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
+          disabled={isLoading}
+        >
+          <ChevronsRight className="h-5 w-5" />
+        </button>
       </div>
-
-      {isLoading && (
-        <div className="text-center py-8 text-gray-600">
-          Loading your journals...
+    </div>
+    <div className="flex flex-wrap justify-center gap-4">
+      {Object.keys(journalData).length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Object.keys(journalData).map((date) => (
+            <JournalCard
+              key={date}
+              date={date}
+              note={journalData[date].note}
+              mistake={journalData[date].mistake}
+              lesson={journalData[date].lesson}
+              rulesFollowedPercentage={
+                journalData[date].rulesFollowedPercentage
+              }
+              winRate={journalData[date].winRate}
+              profit={journalData[date].profit}
+              tradesTaken={journalData[date].tradesTaken}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center w-full h-[55vh]">
+          <img
+            src="/images/no_box.png"
+            alt="No Data"
+            className="w-36 h-36 mb-4"
+          />
+          <p className="text-foreground/40 text-lg text-center">
+            <span className="font-extrabold text-xl text-foreground">
+              No Data
+            </span>
+            <br />
+            Please start journaling daily to see your monthly journals here.
+          </p>
         </div>
       )}
+    </div>
+  </div>
+);
 
-      {error && (
-        <div className="text-center py-8 text-red-500">Error: {error}</div>
-      )}
 
-      {!isLoading && !error && filteredDailyStats.length === 0 && (
-        <div className="text-center py-8 text-gray-600">
-          No journals found for this month.
-        </div>
-      )}
+};
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredDailyStats.map(([date, stats]) => (
-          <JournalCard key={date} date={date} stats={stats} />
-        ))}
-      </div>
-    </main>
-  );
-}
+export default JournalPage;

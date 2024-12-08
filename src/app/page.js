@@ -177,56 +177,58 @@ const AnimatedSection = ({ children }) => {
 export default function LandingPage() {
   return (
     <div className="min-h-screen">
-      <nav className=" flex items-center justify-between p-4 bg-primary text-background">
-        <div className="flex items-center space-x-2">
-          <Image
-            src="/images/home_logo.png"
-            alt="Tradeboard.in Logo"
-            width={180}
-            height={40}
-          />
-        </div>
-        <div className="hidden md:flex space-x-4 text-sm">
-          {navItems.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="hover:text-foreground transition-all duration-300 ease-in-out"
-            >
-              {item.name}
+      <div className="bg-primary ">
+        <nav className=" flex items-center justify-between p-4 text-background  mx-auto container max-w-7xl">
+          <div className="flex items-center space-x-2">
+            <Image
+              src="/images/home_logo.png"
+              alt="Tradeboard.in Logo"
+              width={220}
+              height={40}
+            />
+          </div>
+          <div className="hidden md:flex space-x-4 text-sm">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="hover:text-foreground transition-all duration-300 ease-in-out"
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Link href="/login">
+              <Button variant="ghost">Login</Button>
             </Link>
-          ))}
-        </div>
-        <div className="flex items-center space-x-2">
-          <Link href="/login">
-            <Button variant="ghost">Login</Button>
-          </Link>
-          <Link href="/sign-up">
-            <Button className="bg-background hover:bg-secondary">
-              Sign up
-            </Button>
-          </Link>
-        </div>
-      </nav>
+            <Link href="/sign-up">
+              <Button className="bg-background hover:bg-secondary">
+                Sign up
+              </Button>
+            </Link>
+          </div>
+        </nav>
+      </div>
 
       <main>
-        <section className="bg-primary text-background pt-16">
+        <section className=" primary_gradient text-background pt-16 ">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+            <h1 className="text-5xl md:text-6xl mb-8 poppins-bold">
               Trade Better With Discipline
             </h1>
-            <p className="text-md md:text-lg mb-8 max-w-3xl mx-auto">
+            <p className="text-xl mb-8 max-w-3xl mx-auto">
               We offer traders the tools to analyse their daily trading patterns
               and learn from it to establish themselves as successful traders.
             </p>
-            <div className="bg-gradient-to-b from-primary from-50% to-background to-50% p-4">
+            <div className="bg-gradient-to-b from-primary from-50% to-background to-50% p-4 ">
               <div className="relative w-full max-w-4xl mx-auto aspect-video">
                 <img
                   src="/images/Dashboard.png"
                   alt="Tradeboard Dashboard"
                   layout="fill"
                   objectFit="contain"
-                  className=" rounded-2xl"
+                  className=" rounded-3xl"
                 />
               </div>
             </div>

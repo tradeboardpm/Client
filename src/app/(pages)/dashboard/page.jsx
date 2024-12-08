@@ -1,388 +1,232 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect } from "react";
+import { ChevronRight, ChevronLeft, Menu, X } from "lucide-react";
 import axios from "axios";
-import { format } from "date-fns";
 import Cookies from "js-cookie";
-import { CalendarAndCharts } from "./CalendarAndCharts";
-import { Journals } from "./Journals";
-import { Rules } from "./Rules";
-import { TradeLog } from "./TradeLog";
-import { Spinner } from "@/components/ui/spinner";
-import { debounce } from "lodash";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useDateStore } from "@/stores/DateStore";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+import { JournalSection } from "./journal-section";
+import { RulesSection } from "./rule-section";
+import { TradesSection } from "./trade-log-section";
+import { TradingCalendar } from "./Calendar";
+import { usePointsStore } from "@/stores/points-store";
 
-export default function MainDashboard() {
-  const { selectedDate } = useDateStore();
-  const [isMobile, setIsMobile] = useState(false);
-  const [isLargeScreen, setIsLargeScreen] = useState(false);
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-  const [journal, setJournal] = useState({
-    notes: "",
-    lessons: "",
-    mistakes: "",
-    rules: [],
-    attachments: [],
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const getUTCDate = (date) => {
+  return new Date(
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+  );
+};
+
+const formatDate = (date) => {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
-  const [rules, setRules] = useState([]);
-  const [trades, setTrades] = useState([]);
-  const [profitLossDates, setProfitLossDates] = useState([]);
-  const [isJournalSaving, setIsJournalSaving] = useState(false);
-  const [tradeSummary, setTradeSummary] = useState(null);
-  const [weeklyStats, setWeeklyStats] = useState(null);
+};
+
+const formatTime = (date) => {
+  return date.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    Authorization: `Bearer ${Cookies.get("token")}`,
+    "Content-Type": "application/json",
+  },
+});
+
+export default function JournalTradePage() {
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [journal, setJournal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [settings, setSettings] = useState({
-    capital: 0,
-    brokerage: 0,
-    orderLimit: 0,
-  });
-  const token = Cookies.get("token");
+  const [rules, setRules] = useState(null);
+  const [capital, setCapital] = useState(0);
+  const [brokerage, setBrokerage] = useState(0);
+  // const [points, setPoints] = useState(0);
+  const [tradesPerDay, setTradesPerDay] = useState(4);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  const [weeklyMetrics, setWeeklyMetrics] = useState({});
+  const [isSideSheetOpen, setIsSideSheetOpen] = useState(false);
 
+  const { setPoints } = usePointsStore();
+
+
+  const userName = Cookies.get("userName") || "Trader";
+
+  // Mobile detection
   useEffect(() => {
-    const checkScreenSize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 768);
-      setIsLargeScreen(width >= 1024);
-      setIsSidebarExpanded(width >= 1024);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
     };
 
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-
-    return () => window.removeEventListener("resize", checkScreenSize);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const axiosInstance = useMemo(
-    () =>
-      axios.create({
-        baseURL: API_URL,
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-    [token]
-  );
+  // Time update interval
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const fetchSettings = useCallback(async () => {
+  // Fetch data on date change
+  useEffect(() => {
+    fetchJournalData();
+    fetchCapital();
+    fetchWeeklyMetrics();
+  }, [selectedDate]);
+
+const fetchCapital = async () => {
+  try {
+    const response = await api.get("/user/settings");
+    setCapital(response.data.capital);
+
+    // Store additional user settings
+    setBrokerage(response.data.brokerage);
+    setPoints(response.data.points);
+    setTradesPerDay(response.data.tradesPerDay);
+
+    // Sync points with Zustand store
+    usePointsStore.getState().setPoints(response.data.points);
+  } catch (error) {
+    console.error("Error fetching user settings:", error);
+  }
+};
+
+  const fetchWeeklyMetrics = async () => {
     try {
-      const response = await axiosInstance.get("/settings");
-      setSettings(response.data);
+      const formattedDate = selectedDate.toISOString().split("T")[0];
+      const response = await api.get(`/metrics/weekly?date=${formattedDate}`);
+      setWeeklyMetrics(response.data || {});
     } catch (error) {
-      console.error("Error fetching settings:", error);
+      console.error("Error fetching weekly metrics:", error);
     }
-  }, [axiosInstance]);
+  };
 
-  const fetchProfitLossDates = useCallback(async () => {
+  const fetchJournalData = async () => {
+    setIsLoading(true);
+    const utcDate = getUTCDate(selectedDate);
+
     try {
-      const year = selectedDate.getFullYear();
-      const month = selectedDate.getMonth() + 1;
-      const response = await axiosInstance.get(
-        `/journal/profit-loss-dates/${year}/${month}`
-      );
-      setProfitLossDates(response.data);
+      const journalResponse = await api.get("/journals", {
+        params: { date: utcDate.toISOString() },
+      });
+      setJournal(journalResponse.data);
+      setRules(null);
     } catch (error) {
-      console.error("Error fetching profit/loss dates:", error);
-    }
-  }, [selectedDate, axiosInstance]);
+      console.error("Error fetching journal data:", error);
+      setJournal(null);
 
-  const fetchJournalData = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const [
-        journalResponse,
-        rulesResponse,
-        weeklyStatsResponse,
-        tradeSummaryResponse,
-        settingsResponse,
-      ] = await Promise.all([
-        axiosInstance.get(`/journal/${format(selectedDate, "yyyy-MM-dd")}`),
-        axiosInstance.get("/rules"),
-        axiosInstance.get(
-          `/journal/weekly-stats/${format(selectedDate, "yyyy-MM-dd")}`
-        ),
-        axiosInstance.get(
-          `/trades/trade-summary/${format(selectedDate, "yyyy-MM-dd")}`
-        ),
-        axiosInstance.get("/settings"),
-      ]);
-
-      // If no journal exists for this date, create one
-      if (!journalResponse.data.journal) {
-        const newJournalResponse = await axiosInstance.post(
-          `/journal/${format(selectedDate, "yyyy-MM-dd")}`,
-          {
-            notes: "",
-            lessons: "",
-            mistakes: "",
-            attachments: [],
-            rules: [],
-          }
-        );
-        setJournal(newJournalResponse.data);
-      } else {
-        setJournal(journalResponse.data.journal);
+      // If no journal found (404 error), fetch rules
+      if (error.response && error.response.status === 404) {
+        try {
+          const rulesResponse = await api.get("/rules");
+          setRules(rulesResponse.data);
+        } catch (rulesError) {
+          console.error("Error fetching rules:", rulesError);
+          setRules(null);
+        }
       }
-
-      setTrades(journalResponse.data.trades);
-      setRules(rulesResponse.data);
-      setWeeklyStats(weeklyStatsResponse.data);
-      setTradeSummary(tradeSummaryResponse.data);
-      setSettings(settingsResponse.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [selectedDate, axiosInstance]);
-
-  useEffect(() => {
-    fetchProfitLossDates();
-    fetchJournalData();
-  }, [fetchProfitLossDates, fetchJournalData]);
-
-  const updateJournal = useMemo(
-    () =>
-      debounce(async (field, value) => {
-        setIsJournalSaving(true);
-        try {
-          await axiosInstance.put(
-            `/journal/update/${format(selectedDate, "yyyy-MM-dd")}`,
-            {
-              [field]: value,
-            }
-          );
-        } catch (error) {
-          console.error("Error updating journal:", error);
-        } finally {
-          setIsJournalSaving(false);
-        }
-      }, 1000),
-    [selectedDate, axiosInstance]
-  );
-
-  const handleJournalChange = useCallback(
-    (field) => (e) => {
-      const value = e.target.value;
-      setJournal((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-      updateJournal(field, value);
-    },
-    [updateJournal]
-  );
-
-  const handleAttachFile = async (e) => {
-    const file = e.target.files[0];
-    if (file && journal.attachments.length < 3) {
-      const formData = new FormData();
-      formData.append("file", file);
-      try {
-        const response = await axiosInstance.post(
-          `/journal/${format(selectedDate, "yyyy-MM-dd")}/attach`,
-          formData,
-          { headers: { "Content-Type": "multipart/form-data" } }
-        );
-        setJournal((prev) => ({
-          ...prev,
-          attachments: response.data.attachments,
-        }));
-      } catch (error) {
-        console.error("Error attaching file:", error);
-      }
-    }
   };
 
-  const handleDeleteAttachment = async (fileKey) => {
+  const handleFollowRule = async (ruleId) => {
+    setIsLoading(true);
     try {
-      await axiosInstance.delete(
-        `/journal/${format(selectedDate, "yyyy-MM-dd")}/attach/${fileKey}`
-      );
-      setJournal((prev) => ({
-        ...prev,
-        attachments: prev.attachments.filter(
-          (attachment) => attachment !== fileKey
-        ),
-      }));
+      const utcDate = getUTCDate(selectedDate);
+      const response = await api.post("/rules/follow-no-journal", {
+        ruleId,
+        date: utcDate.toISOString(),
+      });
+      setJournal(response.data);
+      setRules(null);
     } catch (error) {
-      console.error("Error deleting attachment:", error);
-    }
-  };
-
-  const handleRuleToggle = async (ruleId) => {
-    try {
-      const isAttached = journal.rules.includes(ruleId);
-      if (isAttached) {
-        await axiosInstance.post("/rules/detach", {
-          ruleId,
-          journalId: journal._id,
-        });
-        setJournal((prev) => ({
-          ...prev,
-          rules: prev.rules.filter((id) => id !== ruleId),
-        }));
-      } else {
-        await axiosInstance.post("/rules/attach", {
-          ruleId,
-          journalId: journal._id,
-        });
-        setJournal((prev) => ({
-          ...prev,
-          rules: [...prev.rules, ruleId],
-        }));
-      }
-    } catch (error) {
-      console.error("Error toggling rule:", error);
-      // Optionally, revert the local state change if the API call fails
-      fetchJournalData();
-    }
-  };
-
-  const handleCreateRule = async (content) => {
-    try {
-      const response = await axiosInstance.post("/rules", { content });
-      setRules((prev) => [...prev, response.data]);
-    } catch (error) {
-      console.error("Error creating rule:", error);
-    }
-  };
-
-  const handleUpdateRule = async (id, content) => {
-    try {
-      const response = await axiosInstance.put(`/rules/${id}`, { content });
-      setRules((prev) =>
-        prev.map((rule) => (rule._id === id ? { ...rule, content } : rule))
-      );
-    } catch (error) {
-      console.error("Error updating rule:", error);
-    }
-  };
-
-  const handleDeleteRule = async (id) => {
-    try {
-      await axiosInstance.delete(`/rules/${id}`);
-      setRules((prev) => prev.filter((rule) => rule._id !== id));
-      setJournal((prev) => ({
-        ...prev,
-        rules: prev.rules.filter((ruleId) => ruleId !== id),
-      }));
-    } catch (error) {
-      console.error("Error deleting rule:", error);
-    }
-  };
-
-  const handleLoadSampleRules = async () => {
-    try {
-      await axiosInstance.post("/rules/load-samples");
-      fetchJournalData();
-    } catch (error) {
-      console.error("Error loading sample rules:", error);
-    }
-  };
-
-  const handleAddTrade = async (newTrade) => {
-    try {
-      await axiosInstance.post("/trades", newTrade);
-      fetchJournalData();
-    } catch (error) {
-      console.error("Error adding trade:", error);
-    }
-  };
-
-  const handleUpdateTrade = async (id, updatedTrade) => {
-    try {
-      await axiosInstance.put(`/trades/${id}`, updatedTrade);
-      fetchJournalData();
-    } catch (error) {
-      console.error("Error updating trade:", error);
-    }
-  };
-
-  const handleDeleteTrade = async (id) => {
-    try {
-      await axiosInstance.delete(`/trades/${id}`);
-      fetchJournalData();
-    } catch (error) {
-      console.error("Error deleting trade:", error);
+      console.error("Error following rule:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const toggleSidebar = () => {
-    setIsSidebarExpanded(!isSidebarExpanded);
+    setSidebarExpanded(!sidebarExpanded);
   };
 
-  const formatTime = (date) => {
-    if (!date) return "";
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  const handleDateChange = (date) => {
+    const adjustedDate = new Date(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    );
+    setSelectedDate(adjustedDate);
 
-  const formatDate = (date) => {
-    if (!date) return "Select a date";
-    try {
-      return date.toLocaleDateString("en-US", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "Invalid date";
+    // Close sheet on mobile after date selection
+    if (isMobile) {
+      setIsSideSheetOpen(false);
     }
   };
-
-  // Calculate available capital
-  const calculateAvailableCapital = () => {
-    const initialCapital = settings.capital || 0;
-    const netPnL = tradeSummary?.netPnL || 0;
-    const total = initialCapital + netPnL;
-    return Number(total.toFixed(2)).toLocaleString("en-IN", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
-
-  const [username, setUsername] = useState("");
-  const [currentTime, setCurrentTime] = useState(new Date());
-
-  useEffect(() => {
-    const name = Cookies.get("userName");
-    if (name) {
-      setUsername(name);
-    }
-
-    const timer = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 1000);
-
-    return () => {
-      clearInterval(timer);
-    };
-  }, []);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <Spinner className="w-8 h-8" />
+      <div className="flex justify-center items-center h-screen">
+        <Spinner />
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-row">
-      <div className="flex-1 p-6 w-full ">
+    <div className="flex flex-col md:flex-row min-h-screen">
+      <main className="flex-1 overflow-y-auto p-4 w-full">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Welcome back, {username}!</h2>
-          <p className="text-xl">{formatTime(currentTime)}</p>
+          <div className="flex items-center space-x-2">
+            {isMobile && (
+              <Sheet open={isSideSheetOpen} onOpenChange={setIsSideSheetOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Menu />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-[300px]">
+                  <SheetHeader>
+                    <SheetTitle>Calendar</SheetTitle>
+                  </SheetHeader>
+                  <div className="mt-4">
+                    <TradingCalendar
+                      selectedDate={selectedDate}
+                      onSelect={handleDateChange}
+                      tradesPerDay={tradesPerDay}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            )}
+            <h2 className="text-xl md:text-2xl font-bold">
+              Welcome back, {userName}!
+            </h2>
+          </div>
+          <p className="text-lg">{formatTime(currentTime)}</p>
         </div>
 
-        <div className="primary_gradient rounded-xl p-2 sm:p-3 md:p-4">
+        <div className="primary_gradient rounded-xl p-2 sm:p-3 md:p-4 mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-center relative">
             <div className="flex-1 w-full sm:w-auto order-2 sm:order-1"></div>
             <div className="w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 bg-accent/40 text-center text-background px-2 py-1 rounded-lg mb-2 sm:mb-0 order-1 sm:order-2">
@@ -391,70 +235,74 @@ export default function MainDashboard() {
               </p>
             </div>
             <p className="text-background text-sm sm:text-base lg:text-xl order-3">
-              Capital: ₹ {calculateAvailableCapital().toLocaleString()}
+              Capital: ₹ {capital.toFixed(2)}
             </p>
           </div>
         </div>
-        <div className="flex  flex-col md:flex-row gap-4 mt-4">
-          <div className="w-full space-y-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <Journals
+
+        <div className="flex flex-col md:flex-row gap-6 items-start justify-evenly my-6 h-auto md:h-[65vh]">
+          {journal ? (
+            <>
+              <div className="w-full md:w-1/2 lg:w-[45%]">
+                <JournalSection selectedDate={selectedDate} />
+              </div>
+              <div className="w-full md:w-1/2 lg:w-[45%]">
+                <RulesSection
                   journal={journal}
-                  handleJournalChange={handleJournalChange}
-                  handleAttachFile={handleAttachFile}
-                  handleDeleteAttachment={handleDeleteAttachment}
-                  isJournalSaving={isJournalSaving}
+                  setJournal={setJournal}
+                  onUpdate={fetchCapital}
                 />
               </div>
-              <div className="flex-1">
-                <Rules
+            </>
+          ) : (
+            <>
+              <div className="w-full md:w-1/2 lg:w-[45%]">
+                <JournalSection selectedDate={selectedDate} />
+              </div>
+              <div className="w-full md:w-1/2 lg:w-[45%]">
+                <RulesSection
                   rules={rules}
-                  journal={journal}
-                  handleRuleToggle={handleRuleToggle}
-                  handleCreateRule={handleCreateRule}
-                  handleUpdateRule={handleUpdateRule}
-                  handleDeleteRule={handleDeleteRule}
-                  handleLoadSampleRules={handleLoadSampleRules}
+                  onFollowRule={handleFollowRule}
+                  onUpdate={fetchCapital}
                 />
               </div>
-            </div>
-            <TradeLog
-              trades={trades}
-              handleAddTrade={handleAddTrade}
-              handleUpdateTrade={handleUpdateTrade}
-              handleDeleteTrade={handleDeleteTrade}
-              tradeSummary={tradeSummary}
-              selectedDate={selectedDate}
-            />
-          </div>
+            </>
+          )}
         </div>
-      </div>
-      {/* Right Sidebar */}
+
+        <TradesSection
+          selectedDate={selectedDate}
+          onUpdate={fetchCapital}
+          brokerage={brokerage}
+        />
+      </main>
+
       {!isMobile && (
         <div
-          className={`relative h-fit p-4 space-y-6 transition-all duration-300 ease-in-out ${
-            isSidebarExpanded
-              ? "w-[19rem] border-l bg-popover   "
-              : "w-12 border-0 bg-none"
+          className={`relative h-full transition-all duration-300 ease-in-out ${
+            sidebarExpanded
+              ? "w-[19rem] border-l bg-popover"
+              : "w-12 border-0 bg-transparent"
           }`}
         >
           <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 left-1"
+            className="absolute top-2 left-1 z-10"
             onClick={toggleSidebar}
           >
-            {isSidebarExpanded ? <ChevronRight /> : <ChevronLeft />}
+            {sidebarExpanded ? <ChevronRight /> : <ChevronLeft />}
           </Button>
-          {isSidebarExpanded && (
-            <div className="w-full md:w-1/4">
-              <CalendarAndCharts
-                profitLossDates={profitLossDates}
-                weeklyStats={weeklyStats}
+
+          {sidebarExpanded ? (
+            <div className="p-4 space-y-6">
+              <TradingCalendar
+                selectedDate={selectedDate}
+                onSelect={handleDateChange}
+                tradesPerDay={tradesPerDay}
               />
             </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>

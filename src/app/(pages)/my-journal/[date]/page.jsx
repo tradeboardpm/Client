@@ -1,19 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { format, addDays } from "date-fns";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import Cookies from "js-cookie";
+import { format, addDays, parseISO } from "date-fns";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
 import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
-  CardDescription,
   CardFooter,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -22,474 +21,329 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-} from "@/components/ui/chart";
-import {
-  LineChart,
-  BarChart,
-  AreaChart,
-  Line,
-  Bar,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-} from "recharts";
-import {
-  ChevronsLeft,
-  ChevronsRight,
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
-import { Spinner } from "@/components/ui/spinner";
+import { WeeklyCharts } from "../../dashboard/Charts";
+import { Checkbox } from "@/components/ui/checkbox";
 
-export default function JournalPage({ params }) {
+const JournalDetailsPage = () => {
   const router = useRouter();
-  const [journalData, setJournalData] = useState(null);
-  const [weeklyStats, setWeeklyStats] = useState(null);
+  const params = useParams();
+  const [journalDetails, setJournalDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentDate, setCurrentDate] = useState(new Date(params.date));
-  const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [currentDate, setCurrentDate] = useState(parseISO(params.date));
 
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768);
-      setIsSidebarExpanded(window.innerWidth >= 1024);
-    };
-
-    checkScreenSize();
-    window.addEventListener("resize", checkScreenSize);
-
-    return () => window.removeEventListener("resize", checkScreenSize);
-  }, []);
-
-  useEffect(() => {
-    const fetchData = async () => {
+    const fetchJournalDetails = async () => {
       try {
         setIsLoading(true);
-        setError(null);
-
         const token = Cookies.get("token");
-        if (!token) {
-          throw new Error("Authentication token not found");
-        }
-
-        const [journalResponse, statsResponse] = await Promise.all([
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/journal/${format(
-              currentDate,
-              "yyyy-MM-dd"
-            )}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ),
-          fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/journal/weekly-stats/${format(
-              currentDate,
-              "yyyy-MM-dd"
-            )}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          ),
-        ]);
-
-        if (!journalResponse.ok || !statsResponse.ok) {
-          throw new Error("Failed to fetch data");
-        }
-
-        const [journalResult, statsResult] = await Promise.all([
-          journalResponse.json(),
-          statsResponse.json(),
-        ]);
-
-        setJournalData(journalResult);
-        setWeeklyStats(statsResult);
+        const formattedDate = format(currentDate, "yyyy-MM-dd");
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/journals/details?date=${formattedDate}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setJournalDetails(response.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
-        setError(error instanceof Error ? error.message : String(error));
+        console.error("Error fetching journal details:", error);
+        setJournalDetails(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchData();
-  }, [currentDate]);
+    fetchJournalDetails();
+  }, [currentDate, params.date]);
 
-  const changeDate = (increment) => {
-    const newDate = addDays(currentDate, increment);
+  const changeDate = (days) => {
+    const newDate = addDays(currentDate, days);
+    const formattedDate = format(newDate, "yyyy-MM-dd");
+    router.push(`/my-journal/${formattedDate}`);
     setCurrentDate(newDate);
-    router.push(`/my-journal/${format(newDate, "yyyy-MM-dd")}`);
   };
 
-  const prepareChartData = () => {
-    if (!weeklyStats) return [];
-
-    return Object.entries(weeklyStats).map(([date, stats]) => ({
-      date: format(new Date(date), "EEE"),
-      tradeCount: stats.tradeCount,
-      wins: parseInt(stats.winsVsLosses.split(":")[0]),
-      losses: parseInt(stats.winsVsLosses.split(":")[1]),
-      profitLoss: stats.profitLoss,
-      rulesFollowed: parseInt(stats.rulesFollowedVsBroken.split(":")[0]),
-      rulesBroken:
-        stats.rulesFollowedVsBroken === "N/A"
-          ? 0
-          : parseInt(stats.rulesFollowedVsBroken.split(":")[1]),
-    }));
-  };
-
-  const chartData = prepareChartData();
-
-  const chartConfig = {
-    tradeCount: {
-      label: "Trades",
-      color: "hsl(var(--primary))",
-    },
-    wins: {
-      label: "Wins",
-      color: "hsl(var(--chart-1))",
-    },
-    losses: {
-      label: "Losses",
-      color: "hsl(var(--chart-2))",
-    },
-    profitLoss: {
-      label: "P&L",
-      color: "hsl(var(--primary))",
-    },
-    rulesFollowed: {
-      label: "Rules Followed",
-      color: "hsl(var(--chart-1))",
-    },
-    rulesBroken: {
-      label: "Rules Broken",
-      color: "hsl(var(--chart-2))",
-    },
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarExpanded(!isSidebarExpanded);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Spinner className="w-8 h-8" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center py-4">Error: {error}</div>;
-  }
-
-  return (
-    <main className="flex h-full">
-      <div className="flex-1 p-6 ">
-        <div className="mb-6 flex items-center">
-          <Button
-            variant="ghost"
-            className="mr-4"
-            onClick={() => router.push("/my-journal")}
+  const renderDateNavigation = () => (
+    <nav aria-label="Journal Date Navigation">
+      <button
+        onClick={() => router.push("/my-journal")}
+        className="flex items-center text-foreground/70 hover:text-foreground transition-colors mb-4 rounded-full border size-10 justify-center"
+        aria-label="Back to Journal List"
+      >
+        <ArrowLeft className="h-5 w-5" />
+      </button>
+      <div className="flex items-center mb-6 space-x-4 primary_gradient rounded-xl">
+        <div className="flex flex-1 bg-accent/20 p-2 rounded-lg items-center justify-center gap-4">
+          <button
+            onClick={() => changeDate(-1)}
+            className="p-1 hover:bg-accent/50 rounded-full transition-colors"
+            aria-label="Previous Day"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-        </div>
-
-        <div className="primary_gradient rounded-xl p-4 mb-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2 text-background">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => changeDate(-1)}
-              >
-                <ChevronsLeft />
-              </Button>
-              <p className="bg-accent/40 text-xl text-background px-2 py-1 rounded-lg">
-                {format(currentDate, "EEEE, d MMMM yyyy")}
-              </p>
-              <Button variant="ghost" size="icon" onClick={() => changeDate(1)}>
-                <ChevronsRight />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {journalData && (
-          <div className="space-y-4">
-            <div className="flex flex-col lg:flex-row gap-4 min-h-[60vh]">
-              <Card className="flex-1 h-full">
-                <CardHeader>
-                  <CardTitle>Journal Entry</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <label
-                        htmlFor="notes"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        Notes
-                      </label>
-                      <Textarea
-                        id="notes"
-                        value={journalData.journal.notes}
-                        readOnly
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="mistakes"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        Mistakes
-                      </label>
-                      <Textarea
-                        id="mistakes"
-                        value={journalData.journal.mistakes}
-                        readOnly
-                        className="w-full"
-                      />
-                    </div>
-                    <div>
-                      <label
-                        htmlFor="lessons"
-                        className="block text-sm font-medium mb-1"
-                      >
-                        Lessons
-                      </label>
-                      <Textarea
-                        id="lessons"
-                        value={journalData.journal.lessons}
-                        readOnly
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  {" "}
-                  <div className="flex gap-2 items-center">
-                    {journalData.journal.attachments.map((attachment) => (
-                      <div
-                        key={attachment}
-                        className="relative w-20 rounded-lg border shadow-md "
-                      >
-                        <img
-                          src={`https://tradeboardjournals.s3.ap-south-1.amazonaws.com/${attachment}`}
-                          alt="attachment"
-                          className="h-10 w-full object-fill rounded-lg"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </CardFooter>
-              </Card>
-
-              <Card className="flex-1 h-full">
-                <CardHeader>
-                  <CardTitle>Rules</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Rule</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {journalData.allRules.map((rule) => (
-                        <TableRow key={rule._id}>
-                          <TableCell>{rule.content}</TableCell>
-                          <TableCell>{rule.status}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            </div>
-
-            {journalData.trades.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Trades</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Instrument</TableHead>
-                        <TableHead>Action</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Price</TableHead>
-                        <TableHead>Total Charges</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {journalData.trades.map((trade) => (
-                        <TableRow key={trade._id}>
-                          <TableCell>{trade.instrumentName}</TableCell>
-                          <TableCell>{trade.action}</TableCell>
-                          <TableCell>{trade.quantity}</TableCell>
-                          <TableCell>{trade.price}</TableCell>
-                          <TableCell>{trade.totalCharges}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-      </div>
-
-      {!isMobile && (
-        <div
-          className={`relative h-fit p-4 space-y-6 transition-all duration-300 ease-in-out ${
-            isSidebarExpanded
-              ? "w-80 border-l bg-popover"
-              : "w-12 border-0 bg-none"
-          }`}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 left-1"
-            onClick={toggleSidebar}
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <h2 className="text-xl font-medium bg-accent/50 px-4 py-2 rounded-lg">
+            {format(currentDate, "EEE, d MMM yyyy")}
+          </h2>
+          <button
+            onClick={() => changeDate(1)}
+            className="p-1 hover:bg-accent/50 rounded-full transition-colors"
+            aria-label="Next Day"
           >
-            {isSidebarExpanded ? <ChevronRight /> : <ChevronLeft />}
-          </Button>
-          {isSidebarExpanded && (
-            <div className="space-y-4">
-              <Card className="p-0 w-full">
-                <CardHeader className="p-2">
-                  <CardTitle>Trades Taken</CardTitle>
-                  <CardDescription>Daily trade count</CardDescription>
-                </CardHeader>
-                <CardContent className="p-2">
-                  <ChartContainer config={chartConfig} className="h-[150px]">
-                    <LineChart data={chartData}>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                      <XAxis dataKey="date" tickLine={false} axisLine={false} />
-                      <YAxis tickLine={false} axisLine={false} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Line
-                        type="monotone"
-                        dataKey="tradeCount"
-                        stroke="var(--color-tradeCount)"
-                        strokeWidth={2}
-                        dot={{ fill: "var(--color-tradeCount)" }}
-                      />
-                    </LineChart>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="p-0 w-full">
-                <CardHeader className="p-2">
-                  <CardTitle>Win Rate</CardTitle>
-                  <CardDescription>Wins vs Losses</CardDescription>
-                </CardHeader>
-                <CardContent className="p-2">
-                  <ChartContainer config={chartConfig} className="h-[150px]">
-                    <BarChart data={chartData}>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                      <XAxis dataKey="date" tickLine={false} axisLine={false} />
-                      <YAxis tickLine={false} axisLine={false} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <ChartLegend content={<ChartLegendContent />} />
-                      <Bar
-                        dataKey="wins"
-                        stackId="a"
-                        fill="var(--color-wins)"
-                        radius={[4, 4, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="losses"
-                        stackId="a"
-                        fill="var(--color-losses)"
-                        radius={[0, 0, 4, 4]}
-                      />
-                    </BarChart>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="p-0 w-full">
-                <CardHeader className="p-2">
-                  <CardTitle>Profit & Loss</CardTitle>
-                  <CardDescription>Daily P&L</CardDescription>
-                </CardHeader>
-                <CardContent className="p-2">
-                  <ChartContainer config={chartConfig} className="h-[150px]">
-                    <AreaChart data={chartData}>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                      <XAxis dataKey="date" tickLine={false} axisLine={false} />
-                      <YAxis tickLine={false} axisLine={false} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <Area
-                        type="monotone"
-                        dataKey="profitLoss"
-                        fill="var(--color-profitLoss)"
-                        fillOpacity={0.2}
-                        stroke="var(--color-profitLoss)"
-                        strokeWidth={2}
-                      />
-                    </AreaChart>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-
-              <Card className="p-0 w-full">
-                <CardHeader className="p-2">
-                  <CardTitle>Rules Adherence</CardTitle>
-                  <CardDescription>Followed vs Broken</CardDescription>
-                </CardHeader>
-                <CardContent className="p-2">
-                  <ChartContainer config={chartConfig} className="h-[150px]">
-                    <BarChart data={chartData}>
-                      <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                      <XAxis dataKey="date" tickLine={false} axisLine={false} />
-                      <YAxis tickLine={false} axisLine={false} />
-                      <ChartTooltip content={<ChartTooltipContent />} />
-                      <ChartLegend content={<ChartLegendContent />} />
-                      <Bar
-                        dataKey="rulesFollowed"
-                        stackId="a"
-                        fill="var(--color-rulesFollowed)"
-                        radius={[4, 4, 0, 0]}
-                      />
-                      <Bar
-                        dataKey="rulesBroken"
-                        stackId="a"
-                        fill="var(--color-rulesBroken)"
-                        radius={[0, 0, 4, 4]}
-                      />
-                    </BarChart>
-                  </ChartContainer>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+            <ChevronRight className="h-5 w-5" />
+          </button>
         </div>
-      )}
+      </div>
+    </nav>
+  );
+
+  const renderLoadingState = () => (
+    <main className="grid grid-cols-[1fr_18rem]">
+      <section className="container p-6">
+        {renderDateNavigation()}
+        <div className="flex justify-center items-center h-screen">
+          <p>Loading...</p>
+        </div>
+      </section>
     </main>
   );
-}
+
+  const renderNoJournalState = () => (
+    <main className="grid grid-cols-[1fr_18rem]">
+      <section className="container p-6">
+        {renderDateNavigation()}
+        <div className="flex justify-center items-center h-screen">
+          <p>No journal details found.</p>
+        </div>
+      </section>
+    </main>
+  );
+
+  const renderJournalDetails = () => {
+    const journalData = journalDetails?.journalDetails || {};
+    return (
+      <main className="grid grid-cols-[1fr_18rem]">
+        <section className="container p-6">
+          {renderDateNavigation()}
+          <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Journal</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <article>
+                  <h3 className="font-semibold mb-2">Notes</h3>
+                  <textarea
+                    readOnly
+                    className="w-full p-2 rounded-md resize-none bg-background border"
+                    value={journalData.note || "No notes"}
+                    rows={3}
+                  />
+                </article>
+                <article>
+                  <h3 className="font-semibold mb-2">Mistakes</h3>
+                  <textarea
+                    readOnly
+                    className="w-full p-2 rounded-md resize-none bg-background border"
+                    value={journalData.mistake || "No mistakes recorded"}
+                    rows={3}
+                  />
+                </article>
+                <article>
+                  <h3 className="font-semibold mb-2">Lessons</h3>
+                  <textarea
+                    readOnly
+                    className="w-full p-2 rounded-md resize-none bg-background border"
+                    value={journalData.lesson || "No lessons learned"}
+                    rows={3}
+                  />
+                </article>
+              </CardContent>
+              <CardFooter>
+                {journalData.attachedFiles?.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2">
+                    {journalData.attachedFiles.map((file) => (
+                      <figure
+                        key={file}
+                        className="relative group rounded-lg overflow-hidden shadow border"
+                      >
+                        <img
+                          src={file}
+                          alt="Attached file"
+                          className="w-full h-20 object-cover"
+                        />
+                      </figure>
+                    ))}
+                  </div>
+                )}
+              </CardFooter>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Rules</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[50px]">
+                        <Checkbox readOnly checked={false} />
+                      </TableHead>
+                      <TableHead>Rule Description</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {journalData.rulesFollowed?.map((rule) => (
+                      <TableRow key={rule.originalId}>
+                        <TableCell>
+                          <Checkbox checked={true} readOnly />
+                        </TableCell>
+                        <TableCell>{rule.description}</TableCell>
+                      </TableRow>
+                    ))}
+                    {journalData.rulesUnfollowed?.map((rule) => (
+                      <TableRow key={rule.originalId}>
+                        <TableCell>
+                          <Checkbox checked={false} readOnly />
+                        </TableCell>
+                        <TableCell>{rule.description}</TableCell>
+                      </TableRow>
+                    ))}
+                    {(!journalData.rulesFollowed ||
+                      journalData.rulesFollowed.length === 0) &&
+                      (!journalData.rulesUnfollowed ||
+                        journalData.rulesUnfollowed.length === 0) && (
+                        <TableRow>
+                          <TableCell
+                            colSpan={2}
+                            className="text-center text-muted-foreground"
+                          >
+                            No rules tracked
+                          </TableCell>
+                        </TableRow>
+                      )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+
+          {journalData.trades?.length > 0 && (
+            <Card className="mt-4">
+              <CardHeader>
+                <CardTitle className="text-xl">Trades</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Time</TableHead>
+                      <TableHead>Instrument</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Action</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Buying Price</TableHead>
+                      <TableHead>Selling Price</TableHead>
+                      <TableHead>Brokerage</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {journalData.trades.map((trade) => (
+                      <TableRow key={trade._id}>
+                        <TableCell>{trade.time}</TableCell>
+                        <TableCell>{trade.instrumentName}</TableCell>
+                        <TableCell>{trade.equityType}</TableCell>
+                        <TableCell>{trade.action}</TableCell>
+                        <TableCell>{trade.quantity}</TableCell>
+                        <TableCell>₹{trade.buyingPrice.toFixed(2)}</TableCell>
+                        <TableCell>₹{trade.sellingPrice.toFixed(2)}</TableCell>
+                        <TableCell>₹{trade.brokerage.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                <footer className="grid grid-cols-3 gap-4 mt-6">
+                  <div
+                    className={`rounded-lg p-2 flex items-center gap-2 ${
+                      journalDetails.summary?.totalPnL >= 0
+                        ? "bg-green-600/20"
+                        : "bg-red-600/20"
+                    }`}
+                  >
+                    <div
+                      className={`text-sm font-medium ${
+                        journalDetails.summary?.totalPnL >= 0
+                          ? "text-green-800"
+                          : "text-red-800"
+                      }`}
+                    >
+                      Today's Profit:
+                    </div>
+                    <div
+                      className={`text-lg font-bold ${
+                        journalDetails.summary?.totalPnL >= 0
+                          ? "text-green-900"
+                          : "text-red-900"
+                      }`}
+                    >
+                      ₹ {journalDetails.summary?.totalPnL.toFixed(2)}
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg bg-primary/20 flex items-center gap-2 p-2">
+                    <div className="text-sm font-medium text-primary">
+                      Today's Charges:
+                    </div>
+                    <div className="text-lg font-bold text-primary">
+                      ₹ {journalDetails.summary?.totalCharges.toFixed(2)}
+                    </div>
+                  </div>
+
+                  <div
+                    className={`rounded-lg p-2 flex items-center gap-2 ${
+                      journalDetails.summary?.netPnL >= 0
+                        ? "bg-green-600/20"
+                        : "bg-red-600/20"
+                    }`}
+                  >
+                    <div
+                      className={`text-sm font-medium ${
+                        journalDetails.summary?.netPnL >= 0
+                          ? "text-green-800"
+                          : "text-red-800"
+                      }`}
+                    >
+                      Net Realised P&L:
+                    </div>
+                    <div
+                      className={`text-lg font-bold ${
+                        journalDetails.summary?.netPnL >= 0
+                          ? "text-green-900"
+                          : "text-red-900"
+                      }`}
+                    >
+                      ₹ {journalDetails.summary?.netPnL.toFixed(2)}
+                    </div>
+                  </div>
+                </footer>
+              </CardContent>
+            </Card>
+          )}
+        </section>
+
+        <aside className="bg-card/75 p-4">
+          <h2 className="text-xl font-bold mb-2">Performance</h2>
+          <WeeklyCharts selectedDate={format(currentDate, "yyyy-MM-dd")} />
+        </aside>
+      </main>
+    );
+  };
+
+  if (isLoading) return renderLoadingState();
+  if (!journalDetails) return renderNoJournalState();
+
+  return renderJournalDetails();
+};
+
+export default JournalDetailsPage;

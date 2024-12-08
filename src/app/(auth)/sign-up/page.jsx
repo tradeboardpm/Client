@@ -8,9 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { GoogleLogin } from "@react-oauth/google";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import axios from "axios";
+import { toast } from "sonner";
+import Cookies from "js-cookie";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import GoogleLoginButton from "@/components/buttons/google-button";
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
@@ -73,160 +78,220 @@ export default function SignUp() {
     }
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      setIsLoading(true);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/google-signup`,
+        {
+          token: credentialResponse.credential,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const { token, user, expiresIn } = response.data;
+
+      // Store token and user info
+      Cookies.set("token", token, {
+        expires: expiresIn / 86400, // Convert seconds to days
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+
+      Cookies.set("expiry", String(Date.now() + expiresIn * 1000), {
+        expires: expiresIn / 86400,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+
+      Cookies.set("userEmail", user.email, {
+        expires: expiresIn / 86400,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+
+      Cookies.set("userName", user.name, {
+        expires: expiresIn / 86400,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+
+      Cookies.set("userId", user._id, {
+        expires: expiresIn / 86400,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+
+      toast.success("Log-in successful");
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Google signup error:", error);
+      toast.error("Signup failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    toast.error("Google signup failed");
+  };
+
   return (
-    <div className="flex-1 flex items-center justify-center px-6 py-2">
-      <Card className="w-full max-w-lg bg-transparent shadow-none">
-        <CardContent className="px-2 py-3">
-          <h1 className="text-3xl font-bold mb-2">Sign up</h1>
-          <p className="text-gray-300 mb-6">Please create an account</p>
+    <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
+      <div className="flex-1 flex items-center justify-center px-6 py-2">
+        <Card className="w-full max-w-lg bg-transparent shadow-none">
+          <CardContent className="px-2 py-3">
+            <h1 className="text-3xl font-bold mb-2">Sign up</h1>
+            <p className="text-gray-300 mb-6">Please create an account</p>
 
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+            {error && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-          <Button
-            variant="outline"
-            className="w-full mb-4 bg-accent/50 h-10 shadow-lg border border-ring/25"
-          >
-            <Image
-              src="/images/google.svg"
-              alt="Google logo"
-              width={20}
-              height={20}
-              className="mr-2"
-            />
-            Sign up with Google
-          </Button>
-
-          <div className="relative mb-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-background text-gray-500">OR</span>
-            </div>
-          </div>
-
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div>
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                className="text-base h-10"
-                id="fullName"
-                placeholder="Full name"
-                value={formData.fullName}
-                onChange={handleChange}
-                required
+            <div className="w-full mb-4">
+              <GoogleLoginButton
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                useOneTap
+                disabled={isLoading}
+                text="Sign up with google"
               />
             </div>
-            <div>
-              <Label htmlFor="email">Email ID</Label>
-              <Input
-                className="text-base h-10"
-                id="email"
-                type="email"
-                placeholder="Email ID"
-                value={formData.email}
-                onChange={handleChange}
-                required
-              />
+
+            <div className="relative mb-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-background text-gray-500">OR</span>
+              </div>
             </div>
-            <div>
-              <Label htmlFor="mobile">Mobile Number</Label>
-              <Input
-                className="text-base h-10"
-                id="mobile"
-                type="tel"
-                placeholder="Mobile number"
-                value={formData.mobile}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
+
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div>
+                <Label htmlFor="fullName">Full Name</Label>
                 <Input
                   className="text-base h-10"
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={formData.password}
+                  id="fullName"
+                  placeholder="Full name"
+                  value={formData.fullName}
                   onChange={handleChange}
                   required
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeOffIcon className="h-4 w-4" />
-                  ) : (
-                    <EyeIcon className="h-4 w-4" />
-                  )}
-                </Button>
               </div>
-            </div>
-            <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
+              <div>
+                <Label htmlFor="email">Email ID</Label>
                 <Input
                   className="text-base h-10"
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm Password"
-                  value={formData.confirmPassword}
+                  id="email"
+                  type="email"
+                  placeholder="Email ID"
+                  value={formData.email}
                   onChange={handleChange}
                   required
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-0 top-0 h-full px-3"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  {showConfirmPassword ? (
-                    <EyeOffIcon className="h-4 w-4" />
-                  ) : (
-                    <EyeIcon className="h-4 w-4" />
-                  )}
-                </Button>
               </div>
-            </div>
-            <div className="text-sm text-gray-600">
-              By creating an account you agree to our{" "}
-              <Link href="/terms" className="text-primary hover:underline">
-                Terms & Conditions
-              </Link>{" "}
-              and{" "}
-              <Link href="/privacy" className="text-primary hover:underline">
-                Privacy Policy
+              <div>
+                <Label htmlFor="mobile">Mobile Number</Label>
+                <Input
+                  className="text-base h-10"
+                  id="mobile"
+                  type="tel"
+                  placeholder="Mobile number"
+                  value={formData.mobile}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input
+                    className="text-base h-10"
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOffIcon className="h-4 w-4" />
+                    ) : (
+                      <EyeIcon className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <div className="relative">
+                  <Input
+                    className="text-base h-10"
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm Password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-0 top-0 h-full px-3"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOffIcon className="h-4 w-4" />
+                    ) : (
+                      <EyeIcon className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+              <div className="text-sm text-gray-600">
+                By creating an account you agree to our{" "}
+                <Link href="/terms" className="text-primary hover:underline">
+                  Terms & Conditions
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="text-primary hover:underline">
+                  Privacy Policy
+                </Link>
+                .
+              </div>
+              <Button
+                className="w-full text-background"
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing up..." : "Sign up"}
+              </Button>
+            </form>
+
+            <p className="text-center mt-6">
+              Already have an account?{" "}
+              <Link href="/login" className="text-primary hover:underline">
+                Log in
               </Link>
-              .
-            </div>
-            <Button
-              className="w-full text-background"
-              type="submit"
-              disabled={isLoading}
-            >
-              {isLoading ? "Signing up..." : "Sign up"}
-            </Button>
-          </form>
-
-          <p className="text-center mt-6">
-            Already have an account?{" "}
-            <Link href="/login" className="text-primary hover:underline">
-              Log in
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </GoogleOAuthProvider>
   );
 }

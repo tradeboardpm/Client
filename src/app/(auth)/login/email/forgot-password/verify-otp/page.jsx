@@ -45,7 +45,7 @@ function VerifyOTPContent() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`,
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-email-otp`,
         {
           method: "POST",
           headers: {
@@ -79,7 +79,7 @@ function VerifyOTPContent() {
     setIsResending(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/resend-otp`,
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/resend-email-otp`,
         {
           method: "POST",
           headers: {

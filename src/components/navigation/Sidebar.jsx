@@ -11,9 +11,12 @@ import {
   Users,
 } from "lucide-react";
 import Image from "next/image";
+import { usePointsStore } from "@/stores/points-store"; // Adjust the import path as needed
 
 export default function Sidebar({ isOpen }) {
   const pathname = usePathname();
+  const { points, currentLevel, nextLevel, pointsToNextLevel } =
+    usePointsStore();
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -55,15 +58,26 @@ export default function Sidebar({ isOpen }) {
         ))}
       </nav>
       <Card className="primary_gradient">
-        <CardContent className="p-4 text-center flex flex-col items-center">
-          <Image src="/images/diamond.png" width={70} height={70} />
-          <p className="mt-2 font-semibold">Upcoming Level: Pearl</p>
-          <p className="text-sm text-gray-600">Points: 0</p>
+        <CardContent className="py-4 text-center flex flex-col items-center">
+          <Image src="/images/diamond.png" width={70} height={70} alt="Level" />
+          <p className="mt-2 font-semibold text-base  text-white">
+            <span className="font-thin">Upcoming Level: </span> {nextLevel}
+            {/* {nextLevel && ` (Next: ${nextLevel})`} */}
+          </p>
+          <p className="text-sm text-gray-600">
+            Points: {points}
+            {/* {nextLevel && ` (${pointsToNextLevel} points to ${nextLevel})`} */}
+          </p>
         </CardContent>
       </Card>
       <Card className="bg-primary/25">
         <CardContent className="p-4 text-center flex flex-col items-center">
-          <Image src="/images/Feature.png" width={140} height={100} />
+          <Image
+            src="/images/Feature.png"
+            width={140}
+            height={100}
+            alt="Upgrade"
+          />
           <p className="mt-2 font-semibold">
             Upgrade to <span className="text-primary">PRO</span> for more
             features.

@@ -9,20 +9,20 @@ import Cookies from "js-cookie";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Spinner } from "@/components/ui/spinner";
 
-export default function MainLayout({
-  children,
-}) {
+export default function MainLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [tokenExpired, setTokenExpired] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activePopover, setActivePopover] = useState(null);
+  const [showPopover, setShowPopover] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -31,16 +31,13 @@ export default function MainLayout({
       const expiry = Cookies.get("expiry");
 
       if (!token || !expiry) {
-        // No token or expiry found, redirect to login
         router.push("/login");
       } else {
         const expiryTime = Number(expiry);
         if (Date.now() > expiryTime) {
-          // Token expired
           setTokenExpired(true);
           clearAuthCookies();
         } else {
-          // Set up a timeout to clear cookies when they expire
           const timeUntilExpiry = expiryTime - Date.now();
           setTimeout(() => {
             setTokenExpired(true);
@@ -48,10 +45,29 @@ export default function MainLayout({
           }, timeUntilExpiry);
         }
       }
+      setIsLoading(false);
     };
 
     checkAuth();
+    fetchActivePopovers();
   }, [router]);
+
+  const fetchActivePopovers = async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/user/announcements`
+      );
+      if (response.ok) {
+        const popovers = await response.json();
+        if (popovers.length > 0) {
+          setActivePopover(popovers[0]);
+          setShowPopover(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching popovers:", error);
+    }
+  };
 
   const clearAuthCookies = () => {
     Cookies.remove("userName");
@@ -67,6 +83,14 @@ export default function MainLayout({
   };
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -87,6 +111,21 @@ export default function MainLayout({
               <AlertDialogFooter>
                 <AlertDialogAction onClick={handleLoginRedirect}>
                   Login Again
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+          <AlertDialog open={showPopover} onOpenChange={setShowPopover}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{activePopover?.title}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {activePopover?.content}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogAction onClick={() => setShowPopover(false)}>
+                  Close
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

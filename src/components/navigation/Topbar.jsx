@@ -179,7 +179,7 @@ export default function Topbar({ toggleSidebar }) {
             </div>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Choose theme</DropdownMenuLabel>
+            <DropdownMenuLabel>Action</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
