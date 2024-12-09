@@ -6,9 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
-import { GoogleLogin } from "@react-oauth/google";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { toast } from "sonner";
@@ -17,12 +23,21 @@ import Cookies from "js-cookie";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import GoogleLoginButton from "@/components/buttons/google-button";
 
+const countryCodes = [
+  { value: "91", label: "India (+91)" },
+  { value: "1", label: "United States (+1)" },
+  { value: "44", label: "United Kingdom (+44)" },
+  { value: "81", label: "Japan (+81)" },
+  { value: "86", label: "China (+86)" },
+];
+
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
+    countryCode: "91",
     mobile: "",
     password: "",
     confirmPassword: "",
@@ -33,6 +48,10 @@ export default function SignUp() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
+  };
+
+  const handleCountryCodeChange = (value) => {
+    setFormData({ ...formData, countryCode: value });
   };
 
   const handleSubmit = async (e) => {
@@ -55,7 +74,7 @@ export default function SignUp() {
           body: JSON.stringify({
             name: formData.fullName,
             email: formData.email,
-            phone: formData.mobile,
+            phone: `+${formData.countryCode}${formData.mobile}`,
             password: formData.password,
           }),
         }
@@ -67,8 +86,12 @@ export default function SignUp() {
         throw new Error(data.error || "Registration failed");
       }
 
-      // Save email to localStorage
+      // Save email and phone to localStorage
       localStorage.setItem("userEmail", formData.email);
+      localStorage.setItem(
+        "userPhone",
+        `+${formData.countryCode}${formData.mobile}`
+      );
 
       router.push("/sign-up/verify-otp");
     } catch (err) {
@@ -126,7 +149,7 @@ export default function SignUp() {
         sameSite: "strict",
       });
 
-      toast.success("Log-in successful");
+      toast.success("Sign-up successful");
       router.push("/dashboard");
     } catch (error) {
       console.error("Google signup error:", error);
@@ -160,7 +183,7 @@ export default function SignUp() {
                 onError={handleGoogleError}
                 useOneTap
                 disabled={isLoading}
-                text="Sign up with google"
+                text="Sign up with Google"
               />
             </div>
 
@@ -199,15 +222,32 @@ export default function SignUp() {
               </div>
               <div>
                 <Label htmlFor="mobile">Mobile Number</Label>
-                <Input
-                  className="text-base h-10"
-                  id="mobile"
-                  type="tel"
-                  placeholder="Mobile number"
-                  value={formData.mobile}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="flex">
+                  <Select
+                    value={formData.countryCode}
+                    onValueChange={handleCountryCodeChange}
+                  >
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue placeholder="Country Code" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {countryCodes.map((code) => (
+                        <SelectItem key={code.value} value={code.value}>
+                          {code.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    className="text-base h-10 flex-1 ml-2"
+                    id="mobile"
+                    type="tel"
+                    placeholder="Mobile number"
+                    value={formData.mobile}
+                    onChange={handleChange}
+                    required
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="password">Password</Label>

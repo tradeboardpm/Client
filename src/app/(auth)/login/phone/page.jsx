@@ -6,10 +6,26 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import Link from "next/link";
 import axios from "axios";
 
+const countryCodes = [
+  { value: "91", label: "India (+91)" },
+  { value: "1", label: "United States (+1)" },
+  { value: "44", label: "United Kingdom (+44)" },
+  { value: "81", label: "Japan (+81)" },
+  { value: "86", label: "China (+86)" },
+];
+
 export default function LoginPage() {
+  const [countryCode, setCountryCode] = useState("91");
   const [mobile, setMobile] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -22,13 +38,15 @@ export default function LoginPage() {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/login-phone`,
         {
-          phone: mobile,
+          phone: `+${countryCode}${mobile}`,
         }
       );
 
       if (response.status === 200) {
         router.push(
-          `/login/phone/verify-otp?phone=${encodeURIComponent(mobile)}`
+          `/login/phone/verify-otp?phone=${encodeURIComponent(
+            `+${countryCode}${mobile}`
+          )}`
         );
       } else {
         // Handle error
@@ -59,14 +77,32 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="mobile">Mobile Number</Label>
-          <Input
-            id="mobile"
-            type="tel"
-            placeholder="Mobile Number"
-            value={mobile}
-            onChange={(e) => setMobile(e.target.value)}
-            required
-          />
+          <div className="flex space-x-2">
+            <Select
+              value={countryCode}
+              onValueChange={(value) => setCountryCode(value)}
+            >
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Country Code" />
+              </SelectTrigger>
+              <SelectContent>
+                {countryCodes.map((code) => (
+                  <SelectItem key={code.value} value={code.value}>
+                    {code.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              id="mobile"
+              type="tel"
+              placeholder="Mobile Number"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+              required
+              className="flex-1"
+            />
+          </div>
         </div>
         <Button
           type="submit"
@@ -78,7 +114,7 @@ export default function LoginPage() {
       </form>
       <p className="text-center text-sm text-muted-foreground">
         Don't have an account?{" "}
-        <Link href="/signup" className="text-primary hover:underline">
+        <Link href="/sign-up" className="text-primary hover:underline">
           Sign up
         </Link>
       </p>

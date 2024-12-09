@@ -2,55 +2,89 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import Link from "next/link";
-
+import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast } from "sonner";
 
-export default function OTPVerificationPage() {
-  const [otp, setOtp] = useState("");
+export default function OTPVerification() {
+  const [emailOTP, setEmailOTP] = useState("");
+  const [phoneOTP, setPhoneOTP] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
+  const [step, setStep] = useState("email");
   const router = useRouter();
 
   useEffect(() => {
     const email = localStorage.getItem("userEmail");
-    if (email) {
-      setUserEmail(email);
-    } else {
-      // Redirect to signup if email is not found
+    const phone = localStorage.getItem("userPhone");
+    if (!email || !phone) {
       router.push("/sign-up");
     }
   }, [router]);
 
-  const handleSubmit = async (e) => {
+  const handleVerifyEmailOTP = async (e) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-otp`,
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-email-otp`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: userEmail, otp }),
+          body: JSON.stringify({
+            email: localStorage.getItem("userEmail"),
+            otp: emailOTP,
+          }),
         }
       );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "OTP verification failed");
+        throw new Error(data.error || "Email OTP verification failed");
       }
 
-      // Clear the stored email
-      localStorage.removeItem("userEmail");
+      toast.success("Email verified successfully");
+      setStep("phone");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      // Redirect to login page on successful verification
+  const handleVerifyPhoneOTP = async (e) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-phone-otp`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            phone: localStorage.getItem("userPhone"),
+            otp: phoneOTP,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Phone OTP verification failed");
+      }
+
+      toast.success("Phone verified successfully");
+      localStorage.removeItem("userEmail");
+      localStorage.removeItem("userPhone");
       router.push("/login");
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -59,92 +93,66 @@ export default function OTPVerificationPage() {
     }
   };
 
-  const handleResendOTP = async () => {
-    setError("");
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/resend-otp`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: userEmail }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to resend OTP");
-      }
-
-      alert("New OTP sent successfully");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to resend OTP");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="w-full max-w-lg p-8 space-y-8">
-      <Button
-        variant="outline"
-        className="mb-8 rounded-full size-10 p-0 absolute left-10 lg:left-32 top-20"
-        onClick={() => router.back()}
-      >
-        <ArrowLeft className="h-4 w-4" />
-      </Button>
-      <div className="space-y-2 ">
-        <h1 className="text-3xl font-bold">OTP Verification</h1>
-        <p className="text-muted-foreground text-sm ">
-          We have sent a 6-digit code to your registered email
-          {userEmail && ` (${userEmail})`}
-        </p>
-      </div>
+    <div className="flex-1 flex items-center justify-center px-6 py-2">
+      <Card className="w-full max-w-lg bg-transparent shadow-none">
+        <CardContent className="px-2 py-3">
+          <h1 className="text-3xl font-bold mb-2">Verify OTP</h1>
+          <p className="text-gray-300 mb-6">
+            {step === "email"
+              ? "Please enter the OTP sent to your email"
+              : "Please enter the OTP sent to your phone"}
+          </p>
 
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <label htmlFor="otp" className="sr-only">
-            Enter OTP
-          </label>
-          <Input
-            id="otp"
-            type="text"
-            placeholder="Enter OTP"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            required
-            className="text-center text-lg"
-            maxLength={6}
-          />
-        </div>
-        <Button
-          type="submit"
-          className="w-full text-background bg-primary hover:bg-primary/90"
-          disabled={isLoading}
-        >
-          {isLoading ? "Verifying..." : "Verify OTP"}
-        </Button>
-      </form>
-      <p className="text-center text-sm text-muted-foreground">
-        Didn't Get OTP?{" "}
-        <Button
-          variant="link"
-          className="text-primary p-0 h-auto"
-          onClick={handleResendOTP}
-          disabled={isLoading}
-        >
-          Resend OTP
-        </Button>
-      </p>
+          {step === "email" ? (
+            <form className="space-y-4" onSubmit={handleVerifyEmailOTP}>
+              <div>
+                <Label htmlFor="emailOTP">Email OTP</Label>
+                <Input
+                  className="text-base h-10"
+                  id="emailOTP"
+                  value={emailOTP}
+                  onChange={(e) => setEmailOTP(e.target.value)}
+                  required
+                />
+              </div>
+              <Button
+                className="w-full text-background"
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? "Verifying..." : "Verify Email OTP"}
+              </Button>
+            </form>
+          ) : (
+            <form className="space-y-4" onSubmit={handleVerifyPhoneOTP}>
+              <div>
+                <Label htmlFor="phoneOTP">Phone OTP</Label>
+                <Input
+                  className="text-base h-10"
+                  id="phoneOTP"
+                  value={phoneOTP}
+                  onChange={(e) => setPhoneOTP(e.target.value)}
+                  required
+                />
+              </div>
+              <Button
+                className="w-full text-background"
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? "Verifying..." : "Verify Phone OTP"}
+              </Button>
+            </form>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

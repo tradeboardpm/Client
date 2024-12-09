@@ -35,15 +35,15 @@ import { toast } from "@/hooks/use-toast";
 export default function AccountabilityPartner() {
   const [partners, setPartners] = useState([]);
   const [selectedDetails, setSelectedDetails] = useState([]);
-  const [showDialog, setShowDialog] = useState(true); // Dialog visibility state
+  const [showDialog, setShowDialog] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     relation: "",
-    shareFrequency: "weekly", // Updated to match backend
+    shareFrequency: "weekly",
   });
 
-  // Detailed options for sharing
   const detailOptions = [
     { value: "tradesTaken", label: "No. of Trades taken" },
     { value: "winRate", label: "Win Rate" },
@@ -53,12 +53,10 @@ export default function AccountabilityPartner() {
     { value: "currentPoints", label: "Current Points" },
   ];
 
-  // Create axios instance with default headers
   const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
   });
 
-  // Add request interceptor to include token
   api.interceptors.request.use(
     (config) => {
       const token = Cookies.get("token");
@@ -72,12 +70,10 @@ export default function AccountabilityPartner() {
     }
   );
 
-  // Fetch partners on component mount
   useEffect(() => {
     fetchPartners();
   }, []);
 
-  // Fetch accountability partners
   const fetchPartners = async () => {
     try {
       const response = await api.get("/accountability-partner");
@@ -91,16 +87,14 @@ export default function AccountabilityPartner() {
     }
   };
 
-  // Handle input changes
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
-  // Submit new accountability partner
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
-      // Prepare data to match backend schema
       const submitData = {
         name: formData.name,
         email: formData.email,
@@ -131,10 +125,11 @@ export default function AccountabilityPartner() {
         description: error.response?.data?.error || "Failed to add partner",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Remove an accountability partner
   const handleRemovePartner = async (partnerId) => {
     try {
       await api.delete(`/accountability-partner/${partnerId}`);
@@ -152,7 +147,6 @@ export default function AccountabilityPartner() {
     }
   };
 
-  // Reset form to initial state
   const resetForm = () => {
     setFormData({
       name: "",
@@ -165,7 +159,6 @@ export default function AccountabilityPartner() {
 
   return (
     <div className="flex flex-col lg:flex-row h-full">
-      {/* Dialog to show information about Accountability Partner */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
@@ -199,7 +192,6 @@ export default function AccountabilityPartner() {
           </div>
         </DialogContent>
       </Dialog>
-      {/* Add Accountability Partner Form */}
       <Card className="bg-transparent border-none shadow-none flex-1 lg:flex-[2] h-full">
         <CardHeader>
           <CardTitle className="text-2xl">Add Accountability Partner</CardTitle>
@@ -306,13 +298,14 @@ export default function AccountabilityPartner() {
               <Button type="button" variant="outline" onClick={resetForm}>
                 Cancel
               </Button>
-              <Button type="submit">Add</Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Adding..." : "Add"}
+              </Button>
             </div>
           </form>
         </CardContent>
       </Card>
 
-      {/* List of Accountability Partners */}
       <Card className="rounded-none border-none shadow-none flex-1 h-full bg-accent mt-4 lg:mt-0">
         <CardHeader>
           <CardTitle className="text-2xl">My Accountability Partners</CardTitle>
