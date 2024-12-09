@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export default function OTPVerification() {
@@ -15,6 +17,7 @@ export default function OTPVerification() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState("email");
+  const [isSuccessDialogOpen, setIsSuccessDialogOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -85,7 +88,11 @@ export default function OTPVerification() {
       toast.success("Phone verified successfully");
       localStorage.removeItem("userEmail");
       localStorage.removeItem("userPhone");
-      router.push("/login");
+      setIsSuccessDialogOpen(true);
+      setTimeout(() => {
+        setIsSuccessDialogOpen(false);
+        router.push("/login");
+      }, 5000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -153,6 +160,14 @@ export default function OTPVerification() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
+        <DialogContent className="flex flex-col items-center">
+          <CheckCircle className="text-green-500 w-16 h-16 mb-4" />
+          <h2 className="text-2xl font-bold">Account Created Successfully!</h2>
+          <p className="text-gray-500 mt-2">Redirecting to login...</p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

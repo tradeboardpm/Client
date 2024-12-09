@@ -21,7 +21,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Info, SquarePen, Trash2, Plus } from "lucide-react";
+import { Info, SquarePen, Trash2, Plus, PlusCircle, Search } from "lucide-react";
 
 // const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -74,80 +74,88 @@ const EmptyState = ({
   };
 
   return (
-    <Card className="flex flex-col items-center justify-center p-4 ">
-      <div className="flex items-center w-full gap-2">
-        <h2 className="text-2xl font-semibold">Rules</h2>
-        <HoverCard>
-          <HoverCardTrigger>
-            <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
-          </HoverCardTrigger>
-          <HoverCardContent className="w-80">
-            <div className="flex flex-col gap-2">
-              <h4 className="font-semibold">Trading Rules</h4>
-              <p className="text-sm text-muted-foreground">
-                Define and track your trading rules to maintain better
-                discipline and consistency in your trading strategy. Check rules
-                you've followed for each trading session.
-              </p>
-            </div>
-          </HoverCardContent>
-        </HoverCard>
-      </div>
-      <img src="/images/no_rule.png" alt="No rules yet" className="mb-6 w-48" />
-      <h3 className="text-xl font-semibold mb-2">Get Started!</h3>
-      <p className="text-gray-500 mb-6">
-        Please click below to add your trading rules
-      </p>
+    <Card className="">
+      <CardHeader>
+        <div className="flex items-center w-full gap-2">
+          <h2 className="text-2xl font-semibold">Rules</h2>
+          <HoverCard>
+            <HoverCardTrigger>
+              <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+            </HoverCardTrigger>
+            <HoverCardContent className="w-80">
+              <div className="flex flex-col gap-2">
+                <h4 className="font-semibold">Trading Rules</h4>
+                <p className="text-sm text-muted-foreground">
+                  Define and track your trading rules to maintain better
+                  discipline and consistency in your trading strategy. Check
+                  rules you've followed for each trading session.
+                </p>
+              </div>
+            </HoverCardContent>
+          </HoverCard>
+        </div>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center justify-center">
+        <img
+          src="/images/no_rule.png"
+          alt="No rules yet"
+          className="mb-6 w-48"
+        />
+        <h3 className="text-xl font-semibold mb-2">Get Started!</h3>
+        <p className="text-gray-500 mb-6">
+          Please click below to add your trading rules
+        </p>
 
-      {/* Add Rule Dialog */}
-      <Dialog open={addRuleDialogOpen} onOpenChange={setAddRuleDialogOpen}>
-        <DialogTrigger asChild>
-          <Button
-            className="bg-primary hover:primary_gradient text-white mb-4"
-            onClick={() => setAddRuleDialogOpen(true)}
-          >
-            <Plus className="mr-2 h-4 w-4" /> Add Rules
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Rule</DialogTitle>
-            <DialogDescription>
-              Add a new trading rule. Maximum 150 characters.
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            value={newRuleDescription}
-            onChange={(e) => setNewRuleDescription(e.target.value)}
-            placeholder="Enter your rule"
-            maxLength={150}
-          />
-          <DialogFooter>
+        {/* Add Rule Dialog */}
+        <Dialog open={addRuleDialogOpen} onOpenChange={setAddRuleDialogOpen}>
+          <DialogTrigger asChild>
             <Button
-              variant="outline"
-              onClick={() => setAddRuleDialogOpen(false)}
+              className="bg-primary hover:primary_gradient text-white mb-4"
+              onClick={() => setAddRuleDialogOpen(true)}
             >
-              Cancel
+              <Plus className="mr-2 h-4 w-4" /> Add Rules
             </Button>
-            <Button
-              onClick={handleAddRule}
-              disabled={isAddRuleLoading || newRuleDescription.trim() === ""}
-            >
-              {isAddRuleLoading ? "Adding..." : "Add Rule"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Rule</DialogTitle>
+              <DialogDescription>
+                Add a new trading rule. Maximum 150 characters.
+              </DialogDescription>
+            </DialogHeader>
+            <Input
+              value={newRuleDescription}
+              onChange={(e) => setNewRuleDescription(e.target.value)}
+              placeholder="Enter your rule"
+              maxLength={150}
+            />
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setAddRuleDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleAddRule}
+                disabled={isAddRuleLoading || newRuleDescription.trim() === ""}
+              >
+                {isAddRuleLoading ? "Adding..." : "Add Rule"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
-      <div className="text-gray-400 mb-2">OR</div>
-      <Button
-        variant="outline"
-        className="text-primary hover:bg-primary/10"
-        onClick={handleLoadSampleRules}
-        disabled={isLoading}
-      >
-        {isLoading ? "Loading..." : "Load Standard Rules"}
-      </Button>
+        <div className="text-gray-400 mb-2">OR</div>
+        <Button
+          variant="outline"
+          className="text-primary hover:bg-primary/10"
+          onClick={handleLoadSampleRules}
+          disabled={isLoading}
+        >
+          {isLoading ? "Loading..." : "Load Standard Rules"}
+        </Button>
+      </CardContent>
     </Card>
   );
 };
@@ -401,33 +409,19 @@ export function RulesSection({ journal, setJournal, rules, onFollowRule }) {
             </HoverCard>
           </div>
           <div className="flex items-center gap-4">
-            <div className="relative w-36">
+            <div className="relative ml-8">
               <Input
                 placeholder="Search rules"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-8"
               />
-              <svg
-                className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500"
-                fill="none"
-                height="24"
-                stroke="currentColor"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-                width="24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.3-4.3" />
-              </svg>
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
             </div>
             <Dialog open={newRuleDialog} onOpenChange={setNewRuleDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-purple-600 px-1 w-fit text-white">
-                  <Plus className="mr-1 h-4 w-4" /> Add Rules
+                <Button className="bg-primary hover:bg-purple-600 px-2  w-fit text-white">
+                  <PlusCircle className="mr-1 h-4 w-4" /> Add Rules
                 </Button>
               </DialogTrigger>
               <DialogContent>
@@ -460,7 +454,7 @@ export function RulesSection({ journal, setJournal, rules, onFollowRule }) {
         </div>
       </CardHeader>
       <CardContent className="p-0 mt-3">
-        <div className="rounded-lg overflow-hidden">
+        <div className="rounded-lg overflow-hidden border">
           <div className="sticky top-0 z-10 grid grid-cols-[auto,1fr,auto] gap-4 p-2 px-4 bg-primary/25 border-b">
             <div className="flex items-center">
               <Checkbox
@@ -475,7 +469,7 @@ export function RulesSection({ journal, setJournal, rules, onFollowRule }) {
             <span className="font-medium">My Rules</span>
             <span className="font-medium text-right">Action</span>
           </div>
-          <div className="max-h-[400px] overflow-y-auto">
+          <div className="max-h-[50vh] min-h-96 overflow-y-auto">
             <div className="divide-y">
               {filteredRules.map((rule) => (
                 <div

@@ -59,7 +59,6 @@ export default function JournalTradePage() {
   const [rules, setRules] = useState(null);
   const [capital, setCapital] = useState(0);
   const [brokerage, setBrokerage] = useState(0);
-  // const [points, setPoints] = useState(0);
   const [tradesPerDay, setTradesPerDay] = useState(4);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
@@ -68,7 +67,6 @@ export default function JournalTradePage() {
   const [isSideSheetOpen, setIsSideSheetOpen] = useState(false);
 
   const { setPoints } = usePointsStore();
-
 
   const userName = Cookies.get("userName") || "Trader";
 
@@ -96,22 +94,22 @@ export default function JournalTradePage() {
     fetchWeeklyMetrics();
   }, [selectedDate]);
 
-const fetchCapital = async () => {
-  try {
-    const response = await api.get("/user/settings");
-    setCapital(response.data.capital);
+  const fetchCapital = async () => {
+    try {
+      const response = await api.get("/user/settings");
+      setCapital(response.data.capital);
 
-    // Store additional user settings
-    setBrokerage(response.data.brokerage);
-    setPoints(response.data.points);
-    setTradesPerDay(response.data.tradesPerDay);
+      // Store additional user settings
+      setBrokerage(response.data.brokerage);
+      setPoints(response.data.points);
+      setTradesPerDay(response.data.tradesPerDay);
 
-    // Sync points with Zustand store
-    usePointsStore.getState().setPoints(response.data.points);
-  } catch (error) {
-    console.error("Error fetching user settings:", error);
-  }
-};
+      // Sync points with Zustand store
+      usePointsStore.getState().setPoints(response.data.points);
+    } catch (error) {
+      console.error("Error fetching user settings:", error);
+    }
+  };
 
   const fetchWeeklyMetrics = async () => {
     try {
@@ -240,41 +238,35 @@ const fetchCapital = async () => {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6 items-start justify-evenly my-6 h-auto md:h-[65vh]">
+        <div className="grid md:grid-cols-2 gap-6 h-[calc(100vh-300px)] min-h-[500px]">
           {journal ? (
             <>
-              <div className="w-full md:w-1/2 lg:h-[65vh]">
-                <JournalSection selectedDate={selectedDate} />
-              </div>
-              <div className="w-full md:w-1/2 lg:h-[65vh]">
-                <RulesSection
-                  journal={journal}
-                  setJournal={setJournal}
-                  onUpdate={fetchCapital}
-                />
-              </div>
+              <JournalSection selectedDate={selectedDate} />
+              <RulesSection
+                journal={journal}
+                setJournal={setJournal}
+                onUpdate={fetchCapital}
+              />
             </>
           ) : (
             <>
-              <div className="w-full md:w-1/2 lg:h-[65vh]">
-                <JournalSection selectedDate={selectedDate} />
-              </div>
-              <div className="w-full md:w-1/2 lg:h-[65vh]">
-                <RulesSection
-                  rules={rules}
-                  onFollowRule={handleFollowRule}
-                  onUpdate={fetchCapital}
-                />
-              </div>
+              <JournalSection selectedDate={selectedDate} />
+              <RulesSection
+                rules={rules}
+                onFollowRule={handleFollowRule}
+                onUpdate={fetchCapital}
+              />
             </>
           )}
         </div>
 
-        <TradesSection
-          selectedDate={selectedDate}
-          onUpdate={fetchCapital}
-          brokerage={brokerage}
-        />
+        <div className="mt-12">
+          <TradesSection
+            selectedDate={selectedDate}
+            onUpdate={fetchCapital}
+            brokerage={brokerage}
+          />
+        </div>
       </main>
 
       {!isMobile && (

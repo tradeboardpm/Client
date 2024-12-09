@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import {
@@ -14,7 +14,6 @@ import {
 } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
 import {
   Select,
   SelectContent,
@@ -28,34 +27,71 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, ArrowUpRight, X } from "lucide-react";
+import { CalendarIcon, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import JournalCard from "@/components/cards/JournalCard";
+import * as SliderPrimitive from "@radix-ui/react-slider";
+import { Tooltip } from "@/components/ui/tooltip";
+import { Dialog, DialogHeader } from "@/components/ui/dialog";
+import { DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 
-const FilterPopover = ({ title, min, max, value, onChange }) => (
-  <Popover>
+const FilterPopover = ({
+  title,
+  min,
+  max,
+  value,
+  onChange,
+  open,
+  onOpenChange,
+}) => (
+  <Popover open={open} onOpenChange={onOpenChange}>
     <PopoverTrigger asChild>
       <Button variant="outline" className="w-[150px]">
         {title}
       </Button>
     </PopoverTrigger>
-    <PopoverContent
-      className="w-80"
-      onInteractOutside={(e) => e.preventDefault()}
-    >
+    <PopoverContent className="w-80">
       <div className="space-y-4">
         <h4 className="font-medium leading-none">{title}</h4>
         <div className="flex flex-col gap-4">
-          <Slider
-            min={min}
-            max={max}
-            step={1}
-            value={value}
-            onValueChange={onChange}
-          />
+          <div className="relative pt-6">
+            <SliderPrimitive.Root
+              min={min}
+              max={max}
+              step={1}
+              value={value}
+              onValueChange={onChange}
+              className="relative flex w-full touch-none select-none items-center"
+            >
+              <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
+                <SliderPrimitive.Range className="absolute h-full bg-primary" />
+              </SliderPrimitive.Track>
+              {value.map(
+                (val, index) =>
+                  val !== min &&
+                  val !== max && (
+                    <div
+                      key={index}
+                      className="absolute top-[-30px] transform -translate-x-1/2"
+                      style={{ left: `${((val - min) / (max - min)) * 100}%` }}
+                    >
+                      <div className="bg-background border border-primary rounded px-2 py-1 text-xs">
+                        {val}
+                      </div>
+                    </div>
+                  )
+              )}
+              {value.map((val, index) => (
+                <SliderPrimitive.Thumb
+                  key={index}
+                  className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                />
+              ))}
+            </SliderPrimitive.Root>
+          </div>
           <div className="flex justify-between">
-            <span>{value[0]}</span>
-            <span>{value[1]}</span>
+            <span>{min}</span>
+            <span>{max}</span>
           </div>
         </div>
       </div>
@@ -127,7 +163,6 @@ const RuleCard = ({ title, rules, className }) => (
   </Card>
 );
 
-
 export default function EnhancedMetricsDashboard() {
   const [period, setPeriod] = useState("thisWeek");
   const [metricsDateRange, setMetricsDateRange] = useState({
@@ -150,10 +185,25 @@ export default function EnhancedMetricsDashboard() {
   const [monthlyJournals, setMonthlyJournals] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [openPopover, setOpenPopover] = useState(null);
+  const popoverRef = useRef(null);
 
   useEffect(() => {
     fetchData();
   }, [period, metricsDateRange, journalsDateRange, filters]);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target)) {
+        setOpenPopover(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const fetchData = async () => {
     const token = Cookies.get("token");
@@ -171,8 +221,8 @@ export default function EnhancedMetricsDashboard() {
 
       switch (period) {
         case "thisWeek":
-          metricsFromDate = startOfWeek(new Date(), { weekStartsOn: 1 }); // Monday
-          metricsToDate = endOfWeek(new Date(), { weekStartsOn: 1 }); // Sunday
+          metricsFromDate = startOfWeek(new Date(), { weekStartsOn: 1 });
+          metricsToDate = endOfWeek(new Date(), { weekStartsOn: 1 });
           break;
         case "lastWeek":
           metricsFromDate = startOfWeek(subWeeks(new Date(), 1), {
@@ -230,7 +280,7 @@ export default function EnhancedMetricsDashboard() {
 
   return (
     <div className="container mx-auto flex flex-col p-6 gap-6">
-      <div className="bg-popover p-4 rounded-xl">
+      <div className="bg-card/75 shadow-md border border-border/50 p-4 rounded-xl">
         <div className="flex justify-between">
           <h1 className="text-2xl font-bold mb-4">Tradeboard Intelligence</h1>
 
@@ -300,8 +350,7 @@ export default function EnhancedMetricsDashboard() {
         )}
 
         {metrics && (
-          <div className="flex gap-6">
-            <div className="flex flex-col gap-6 flex-1">
+            <div className="grid grid-cols-2 gap-4">
               <StatCard
                 title="Profit Days"
                 stats={metrics.profit_days}
@@ -313,30 +362,27 @@ export default function EnhancedMetricsDashboard() {
                 stats={metrics.breakEven_days}
                 colorClass="text-blue-500"
               />
-            </div>
 
-            <div className="flex flex-col gap-6 flex-1 items-center justify-center">
-              <StatCard
-                title="Loss Days"
-                stats={metrics.loss_days}
-                colorClass="text-red-500"
+            <StatCard
+              title="Loss Days"
+              stats={metrics.loss_days}
+              colorClass="text-red-500"
+            />
+            <div className="grid md:grid-cols-2 gap-4">
+              <RuleCard
+                title="Top Followed Rules"
+                rules={metrics.topFollowedRules}
               />
-              <div className="grid md:grid-cols-2 gap-6">
-                <RuleCard
-                  title="Top Followed Rules"
-                  rules={metrics.topFollowedRules}
-                />
-                <RuleCard
-                  title="Top Unfollowed Rules"
-                  rules={metrics.topUnfollowedRules}
-                />
-              </div>
+              <RuleCard
+                title="Top Unfollowed Rules"
+                rules={metrics.topUnfollowedRules}
+              />
             </div>
           </div>
         )}
       </div>
 
-      <div className="bg-popover p-4 rounded-xl">
+      <div className="bg-card/75 shadow-md border border-border/50 p-4 rounded-xl min-h-[60vh]">
         {monthlyJournals && (
           <div className="mt-4">
             <div className="flex items-center justify-between mb-4">
@@ -348,23 +394,12 @@ export default function EnhancedMetricsDashboard() {
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-[280px] justify-start text-left font-normal",
+                        "font-normal",
                         !journalsDateRange.from && "text-muted-foreground"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {journalsDateRange.from ? (
-                        journalsDateRange.to ? (
-                          <>
-                            {format(journalsDateRange.from, "LLL dd, y")} -{" "}
-                            {format(journalsDateRange.to, "LLL dd, y")}
-                          </>
-                        ) : (
-                          format(journalsDateRange.from, "LLL dd, y")
-                        )
-                      ) : (
-                        <span>Pick a date range</span>
-                      )}
+                      date range
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
@@ -381,45 +416,59 @@ export default function EnhancedMetricsDashboard() {
                   </PopoverContent>
                 </Popover>
 
-                <FilterPopover
-                  title="Win Rate"
-                  min={0}
-                  max={100}
-                  value={[filters.minWinRate, filters.maxWinRate]}
-                  onChange={([min, max]) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      minWinRate: min,
-                      maxWinRate: max,
-                    }))
-                  }
-                />
-                <FilterPopover
-                  title="Trades"
-                  min={0}
-                  max={50}
-                  value={[filters.minTrades, filters.maxTrades]}
-                  onChange={([min, max]) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      minTrades: min,
-                      maxTrades: max,
-                    }))
-                  }
-                />
-                <FilterPopover
-                  title="Rules Followed"
-                  min={0}
-                  max={100}
-                  value={[filters.minRulesFollowed, filters.maxRulesFollowed]}
-                  onChange={([min, max]) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      minRulesFollowed: min,
-                      maxRulesFollowed: max,
-                    }))
-                  }
-                />
+                <div ref={popoverRef} className="flex gap-4">
+                  <FilterPopover
+                    title="Win Rate"
+                    min={0}
+                    max={100}
+                    value={[filters.minWinRate, filters.maxWinRate]}
+                    onChange={([min, max]) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        minWinRate: min,
+                        maxWinRate: max,
+                      }))
+                    }
+                    open={openPopover === "winRate"}
+                    onOpenChange={(open) =>
+                      setOpenPopover(open ? "winRate" : null)
+                    }
+                  />
+                  <FilterPopover
+                    title="Trades"
+                    min={0}
+                    max={50}
+                    value={[filters.minTrades, filters.maxTrades]}
+                    onChange={([min, max]) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        minTrades: min,
+                        maxTrades: max,
+                      }))
+                    }
+                    open={openPopover === "trades"}
+                    onOpenChange={(open) =>
+                      setOpenPopover(open ? "trades" : null)
+                    }
+                  />
+                  <FilterPopover
+                    title="Rules Followed"
+                    min={0}
+                    max={100}
+                    value={[filters.minRulesFollowed, filters.maxRulesFollowed]}
+                    onChange={([min, max]) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        minRulesFollowed: min,
+                        maxRulesFollowed: max,
+                      }))
+                    }
+                    open={openPopover === "rulesFollowed"}
+                    onOpenChange={(open) =>
+                      setOpenPopover(open ? "rulesFollowed" : null)
+                    }
+                  />
+                </div>
               </div>
             </div>
 

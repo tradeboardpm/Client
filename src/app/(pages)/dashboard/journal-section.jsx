@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { X, ImagePlus } from "lucide-react";
@@ -13,9 +13,9 @@ export function JournalSection({ selectedDate }) {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [localJournal, setLocalJournal] = useState({
-    note: "",
-    mistake: "",
-    lesson: "",
+    note: " ",
+    mistake: " ",
+    lesson: " ",
   });
   const [files, setFiles] = useState([]);
 
@@ -32,10 +32,13 @@ export function JournalSection({ selectedDate }) {
     try {
       const token = Cookies.get("token");
       const utcDate = getUTCDate(selectedDate);
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/journals`, {
-        params: { date: utcDate.toISOString() },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/journals`,
+        {
+          params: { date: utcDate.toISOString() },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setJournal(response.data);
     } catch (error) {
       console.error("Error fetching journal data:", error);
@@ -45,45 +48,54 @@ export function JournalSection({ selectedDate }) {
     }
   };
 
+  // Save journal function
+  const saveJournal = async (journalData) => {
+    if (!journalData) return;
+
+    setIsSaving(true);
+    try {
+      const token = Cookies.get("token");
+      const utcDate = getUTCDate(selectedDate);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/journals`,
+        {
+          ...journalData,
+          date: utcDate.toISOString(),
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setJournal(response.data);
+    } catch (error) {
+      console.error("Error saving journal:", error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Debounced save function
   const debouncedSaveJournal = useCallback(
-    debounce(async (journalData) => {
-      if (!journalData) return;
-
-      setIsSaving(true);
-      try {
-        const token = Cookies.get("token");
-        const utcDate = getUTCDate(selectedDate);
-        const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/journals`,
-          {
-            ...journalData,
-            date: utcDate.toISOString(),
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setJournal(response.data);
-      } catch (error) {
-        console.error("Error saving journal:", error);
-      } finally {
-        setIsSaving(false);
-      }
-    }, 500), // 500ms debounce time
+    debounce(saveJournal, 5000), // 5000ms (5 seconds) debounce time
     [selectedDate]
   );
 
   // Update journal entries
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    const updatedJournal = {
-      ...localJournal,
-      [name]: value,
-    };
+const handleChange = (e) => {
+  const { name, value } = e.target;
+  const updatedJournal = {
+    ...localJournal,
+    [name]: value || " ", // Use single space if value is empty or undefined
+  };
 
-    setLocalJournal(updatedJournal);
-    debouncedSaveJournal(updatedJournal);
+  setLocalJournal(updatedJournal);
+  debouncedSaveJournal(updatedJournal);
+};
+
+  // Handle blur event
+  const handleBlur = () => {
+    debouncedSaveJournal.cancel(); // Cancel any pending debounced saves
+    saveJournal(localJournal); // Immediately save on blur
   };
 
   // File upload handler
@@ -172,7 +184,7 @@ export function JournalSection({ selectedDate }) {
   }
 
   return (
-    <Card className="flex-1 w-full h-full">
+    <Card className="flex-1 w-full h-full flex justify-between flex-col pb-6">
       <CardHeader>
         <CardTitle className="flex text-xl items-center gap-2">
           Today's Journal
@@ -191,6 +203,7 @@ export function JournalSection({ selectedDate }) {
             placeholder="Type your notes here..."
             value={localJournal.note}
             onChange={handleChange}
+            onBlur={handleBlur}
             className="resize-none"
           />
         </div>
@@ -202,6 +215,7 @@ export function JournalSection({ selectedDate }) {
             placeholder="Type your mistakes here..."
             value={localJournal.mistake}
             onChange={handleChange}
+            onBlur={handleBlur}
             className="resize-none"
           />
         </div>
@@ -213,11 +227,13 @@ export function JournalSection({ selectedDate }) {
             placeholder="Type your lessons here..."
             value={localJournal.lesson}
             onChange={handleChange}
+            onBlur={handleBlur}
             className="resize-none"
           />
         </div>
-
-        <div className="flex justify-between">
+      </CardContent>
+      <CardFooter className="h-fit p-0 px-6 flex items-center justify-between ">
+       
           <div className="flex flex-wrap gap-2">
             {files.map((fileKey, index) => (
               <div
@@ -259,8 +275,8 @@ export function JournalSection({ selectedDate }) {
             <ImagePlus className="mr-2 h-4 w-4" />
             Attach
           </Button>
-        </div>
-      </CardContent>
+
+      </CardFooter>
     </Card>
   );
 }

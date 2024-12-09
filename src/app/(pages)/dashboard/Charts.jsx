@@ -40,10 +40,21 @@ const CustomLegend = ({ items }) => (
   </div>
 );
 
+const DefaultNoDataComponent = () => (
+  <div className="flex flex-col items-center justify-start p-8 text-center min-h-screen h-full">
+    <img src="/images/no_charts.svg" alt="No Data" className="mb-4 w-42 h-42" />
+    <h2 className="text-xl font-semibold mb-2">No Data</h2>
+    <p className="text-muted-foreground">
+      Please start journaling daily to see your performance here
+    </p>
+  </div>
+);
+
 export function WeeklyCharts({
   selectedDate = new Date(),
   tradesPerDay = 10,
   weeklyDataOverride = null,
+  noDataComponent: NoDataComponent = DefaultNoDataComponent,
 }) {
   const [weeklyData, setWeeklyData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,6 +124,33 @@ export function WeeklyCharts({
     fetchWeeklyData(selectedDate);
   }, [selectedDate]);
 
+  // Check if all daily data is zero
+  const hasNoData =
+    weeklyData &&
+    Object.values(weeklyData).every(
+      (dayData) =>
+        dayData.tradesTaken === 0 &&
+        dayData.rulesFollowed === 0 &&
+        dayData.rulesUnfollowed === 0 &&
+        dayData.totalProfitLoss === 0 &&
+        dayData.winTrades === 0 &&
+        dayData.lossTrades === 0
+    );
+
+  // Render loading or error state
+  if (isLoading) {
+    return <div>Loading weekly performance...</div>;
+  }
+
+  if (error) {
+    return <div>Error loading weekly data: {error}</div>;
+  }
+
+  // Render no data state
+  if (!weeklyData || hasNoData) {
+    return <NoDataComponent />;
+  }
+
   // Process data for charts
   const processedData = days.map((day, index) => {
     const date = weeklyData ? Object.keys(weeklyData)[index] : null;
@@ -127,19 +165,6 @@ export function WeeklyCharts({
       rulesBroken: dayData.rulesUnfollowed || 0,
     };
   });
-
-  // Render loading or error state
-  if (isLoading) {
-    return <div>Loading weekly performance...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading weekly data: {error}</div>;
-  }
-
-  if (!weeklyData) {
-    return <div>No weekly data available</div>;
-  }
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-4xl">

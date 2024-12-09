@@ -23,25 +23,18 @@ const JournalCard = ({
   const router = useRouter();
 
   const getProfitColor = () => {
-    if (profit > 100)
-      return "bg-green-500/50 border border-2 border-green-500 ";
-    if (profit >= -100 && profit <= 100)
-      return "bg-yellow-500/50  border border-2 border-yellow-500";
-    return "bg-red-500/50  border border-2 border-red-500";
+    if (profit > 100) return "bg-emerald-500/20 border border-2 border-emerald-500";
+    return "bg-rose-500/20 border border-2 border-rose-500";
   };
 
   const getProfitBorderColor = () => {
-    if (profit > 100) return "border-green-500/50  transition-all duration-300";
-    if (profit >= -100 && profit <= 100)
-      return " border-yellow-500/50 transition-all duration-300";
-    return "border-red-500/50 transition-all duration-300";
+    if (profit > 100) return "border-emerald-500/50 transition-all duration-300";
+    return "border-rose-500/50 transition-all duration-300";
   };
 
   const getArrowColor = () => {
-    if (profit > 100) return "text-green-500 group-hover:text-green-700";
-    if (profit >= -100 && profit <= 100)
-      return "text-yellow-500 group-hover:text-yellow-700";
-    return "text-red-500 group-hover:text-red-700";
+    if (profit > 100) return "text-emerald-700 group-hover:text-emerald-800";
+    return "text-rose-500 group-hover:text-rose-700";
   };
 
   // Format date to "Mon, 01 Dec"
@@ -75,7 +68,7 @@ const JournalCard = ({
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-2 pb-4">
+      <CardContent className="space-y-6 pb-4">
         <div>
           <span className="font-medium text-sm text-foreground/50">Note:</span>
           <p className="whitespace-nowrap overflow-hidden text-ellipsis">

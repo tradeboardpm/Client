@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Spinner } from "@/components/ui/spinner";
 import AnnouncementManager from "@/components/AnnouncementManager";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function MainLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -108,7 +109,10 @@ export default function MainLayout({ children }) {
         <Sidebar isOpen={sidebarOpen} />
         <div className="flex-1 overflow-auto">
           <Toaster />
+          <TooltipProvider>
+
           {children}
+          </TooltipProvider>
           <AlertDialog open={tokenExpired} onOpenChange={setTokenExpired}>
             <AlertDialogContent>
               <AlertDialogHeader>

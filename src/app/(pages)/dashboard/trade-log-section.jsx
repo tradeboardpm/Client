@@ -49,10 +49,10 @@ export function TradesSection({ selectedDate, brokerage }) {
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [newTrade, setNewTrade] = useState({
     instrumentName: "",
-    quantity: 0,
+    quantity: null,
     action: "buy",
-    buyingPrice: 0,
-    sellingPrice: 0,
+    buyingPrice: null,
+    sellingPrice: null,
     brokerage: brokerage,
     exchangeRate: 1,
     time: format(new Date(), "HH:mm"),
@@ -165,11 +165,11 @@ export function TradesSection({ selectedDate, brokerage }) {
   const resetNewTrade = () => {
     setNewTrade({
       instrumentName: "",
-      quantity: 0,
-      action: "buy",
-      buyingPrice: 0,
-      sellingPrice: 0,
-      brokerage: 0,
+      quantity: null,
+      action: null,
+      buyingPrice: null,
+      sellingPrice: null,
+      brokerage: brokerage,
       exchangeRate: 1,
       time: format(new Date(), "HH:mm"),
       equityType: "INTRADAY",
@@ -196,7 +196,7 @@ export function TradesSection({ selectedDate, brokerage }) {
           <Button onClick={() => setAddTradeOpen(true)} className="bg-primary">
             <Plus className="mr-2 h-4 w-4" /> Add Trade
           </Button>
-          
+
           <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
             <Import className="mr-2 h-4 w-4" /> Import Trade
           </Button>
@@ -380,125 +380,141 @@ export function TradesSection({ selectedDate, brokerage }) {
 
       {/* Add Trade Dialog */}
       <Dialog open={addTradeOpen} onOpenChange={setAddTradeOpen}>
-        <DialogContent className="">
+        <DialogContent className="md:max-w-[50vw]">
           <DialogHeader>
             <DialogTitle>Add New Trade</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="col-span-4">Instrument Name</Label>
-              <Input
-                className="col-span-4"
-                value={newTrade.instrumentName}
-                onChange={(e) =>
-                  setNewTrade({ ...newTrade, instrumentName: e.target.value })
-                }
-              />
+              <div className="col-span-2">
+                <Label>Instrument Name</Label>
+                <Input
+                  value={newTrade.instrumentName}
+                  onChange={(e) =>
+                    setNewTrade({ ...newTrade, instrumentName: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="col-span-2">
+                <Label>Quantity</Label>
+                <Input
+                  type="number"
+                  value={newTrade.quantity}
+                  onChange={(e) =>
+                    setNewTrade({
+                      ...newTrade,
+                      quantity: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="col-span-2">Quantity</Label>
-              <Label className="col-span-2">
-                {newTrade.action === "buy" ? "Buying" : "Selling"} Price
-              </Label>
-              <Input
-                type="number"
-                className="col-span-2"
-                value={newTrade.quantity}
-                onChange={(e) =>
-                  setNewTrade({ ...newTrade, quantity: Number(e.target.value) })
-                }
-              />
-              <Input
-                type="number"
-                className="col-span-2"
-                value={
-                  newTrade.action === "buy"
-                    ? newTrade.buyingPrice
-                    : newTrade.sellingPrice
-                }
-                onChange={(e) =>
-                  setNewTrade({
-                    ...newTrade,
-                    [newTrade.action === "buy"
-                      ? "buyingPrice"
-                      : "sellingPrice"]: Number(e.target.value),
-                  })
-                }
-              />
+              <div className="col-span-2">
+                <Label>Trade Type</Label>
+                <RadioGroup
+                  className=" flex space-x-4"
+                  value={newTrade.action}
+                  onValueChange={(value) =>
+                    setNewTrade({ ...newTrade, action: value })
+                  }
+                >
+                  <div className="flex items-center space-x-2 bg-card border border-border/25 shadow rounded-lg w-full p-2">
+                    <RadioGroupItem value="buy" id="buy" />
+                    <Label htmlFor="buy" className="w-full">Buy</Label>
+                  </div>
+                  <div className="flex items-center space-x-2 bg-card border border-border/25  shadow rounded-lg w-full p-2">
+                    <RadioGroupItem value="sell" id="sell" />
+                    <Label htmlFor="sell" className="w-full">Sell</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <div className="col-span-2">
+                <Label>
+                  {newTrade.action === "buy" ? "Buying" : "Selling"} Price
+                </Label>
+
+                <Input
+                  type="number"
+                  value={
+                    newTrade.action === "buy"
+                      ? newTrade.buyingPrice
+                      : newTrade.sellingPrice
+                  }
+                  onChange={(e) =>
+                    setNewTrade({
+                      ...newTrade,
+                      [newTrade.action === "buy"
+                        ? "buyingPrice"
+                        : "sellingPrice"]: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="col-span-2">Action</Label>
-              <RadioGroup
-                className="col-span-2 flex space-x-4"
-                value={newTrade.action}
-                onValueChange={(value) =>
-                  setNewTrade({ ...newTrade, action: value })
-                }
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="buy" id="buy" />
-                  <Label htmlFor="buy">Buy</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="sell" id="sell" />
-                  <Label htmlFor="sell">Sell</Label>
-                </div>
-              </RadioGroup>
+              <div className="col-span-2">
+                <Label>Equity Type</Label>
+
+                <Select
+                  value={newTrade.equityType}
+                  onValueChange={(value) =>
+                    setNewTrade({ ...newTrade, equityType: value })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="F&O-OPTIONS">Options</SelectItem>
+                    <SelectItem value="F&O-FUTURES">Futures</SelectItem>
+                    <SelectItem value="INTRADAY">Intraday</SelectItem>
+                    <SelectItem value="DELIVERY">Delivery</SelectItem>
+                    <SelectItem value="OTHERS">Others</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2">
+                <Label>Time</Label>
+                <Input
+                  type="time"
+                  value={newTrade.time}
+                  onChange={(e) =>
+                    setNewTrade({ ...newTrade, time: e.target.value })
+                  }
+                />
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="col-span-2">Equity Type</Label>
-              <Label className="col-span-2">Time</Label>
-              <Select
-                value={newTrade.equityType}
-                onValueChange={(value) =>
-                  setNewTrade({ ...newTrade, equityType: value })
-                }
-              >
-                <SelectTrigger className="col-span-2">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="F&O-OPTIONS">Options</SelectItem>
-                  <SelectItem value="F&O-FUTURES">Futures</SelectItem>
-                  <SelectItem value="INTRADAY">Intraday</SelectItem>
-                  <SelectItem value="DELIVERY">Delivery</SelectItem>
-                  <SelectItem value="OTHERS">Others</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input
-                type="time"
-                className="col-span-2"
-                value={newTrade.time}
-                onChange={(e) =>
-                  setNewTrade({ ...newTrade, time: e.target.value })
-                }
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="col-span-2">Exchange Charges (₹)</Label>
-              <Label className="col-span-2">Brokerage (₹)</Label>
-              <Input
-                type="number"
-                className="col-span-2"
-                value={newTrade.exchangeRate}
-                onChange={(e) =>
-                  setNewTrade({
-                    ...newTrade,
-                    exchangeRate: Number(e.target.value),
-                  })
-                }
-              />
-              <Input
-                type="number"
-                className="col-span-2"
-                value={newTrade.brokerage}
-                onChange={(e) =>
-                  setNewTrade({
-                    ...newTrade,
-                    brokerage: Number(e.target.value),
-                  })
-                }
-              />
+              <div className="col-span-2">
+                <Label>Exchange Charges (₹)</Label>
+
+                <Input
+                  type="number"
+                  value={newTrade.exchangeRate}
+                  onChange={(e) =>
+                    setNewTrade({
+                      ...newTrade,
+                      exchangeRate: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+
+              <div className="col-span-2">
+                <Label>Brokerage (₹)</Label>
+                <Input
+                  type="number"
+                  value={newTrade.brokerage}
+                  onChange={(e) =>
+                    setNewTrade({
+                      ...newTrade,
+                      brokerage: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
             </div>
             <div className="bg-secondary/50 p-4 rounded-lg">
               <div className="flex justify-between items-center">
