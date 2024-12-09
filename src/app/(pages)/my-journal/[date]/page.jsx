@@ -256,9 +256,15 @@ const JournalDetailsPage = () => {
                         <TableCell>{trade.equityType}</TableCell>
                         <TableCell>{trade.action}</TableCell>
                         <TableCell>{trade.quantity}</TableCell>
-                        <TableCell>₹{trade.buyingPrice.toFixed(2)}</TableCell>
-                        <TableCell>₹{trade.sellingPrice.toFixed(2)}</TableCell>
-                        <TableCell>₹{trade.brokerage.toFixed(2)}</TableCell>
+                        <TableCell>
+                          ₹{(trade.buyingPrice ?? 0).toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          ₹{(trade.sellingPrice ?? 0).toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          ₹{(trade.brokerage ?? 0).toFixed(2)}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -287,7 +293,7 @@ const JournalDetailsPage = () => {
                           : "text-red-900"
                       }`}
                     >
-                      ₹ {journalDetails.summary?.totalPnL.toFixed(2)}
+                      ₹ {(journalDetails.summary?.totalPnL ?? 0).toFixed(2)}
                     </div>
                   </div>
 
@@ -296,7 +302,7 @@ const JournalDetailsPage = () => {
                       Today's Charges:
                     </div>
                     <div className="text-lg font-bold text-primary">
-                      ₹ {journalDetails.summary?.totalCharges.toFixed(2)}
+                      ₹ {(journalDetails.summary?.totalCharges ?? 0).toFixed(2)}
                     </div>
                   </div>
 
@@ -323,7 +329,7 @@ const JournalDetailsPage = () => {
                           : "text-red-900"
                       }`}
                     >
-                      ₹ {journalDetails.summary?.netPnL.toFixed(2)}
+                      ₹ {(journalDetails.summary?.netPnL ?? 0).toFixed(2)}
                     </div>
                   </div>
                 </footer>
