@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 
 const images = [
-  "/images/Dashboard.png",
-  "/images/Dashboard.png",
-  "/images/Dashboard.png",
-  "/images/Dashboard.png",
+  "/images/Rectangle.png",
+  "/images/Rectangle.png",
+  "/images/Rectangle.png",
+  "/images/Rectangle.png",
 ];
 
 const captions = [
@@ -42,7 +42,7 @@ export default function ImageCarousel() {
   };
 
   return (
-    <div className="flex flex-col w-full h-full overflow-hidden pt-8 px-6">
+    <div className="flex flex-col w-full h-full overflow-hidden pt-8 px-12">
       <div className="flex w-full h-full overflow-x-hidden ">
         {images.map((src, index) => (
           <div
@@ -52,13 +52,13 @@ export default function ImageCarousel() {
               transform: `translateX(-${currentIndex * 100}%)`,
             }}
           >
-            <div className="relative w-full h-full rounded-lg overflow-hidden flex-1 ">
+            <div className="relative w-full h-full rounded-lg overflow-hidden flex-1  ">
               <Image
                 src={src}
                 alt={`Slide ${index + 1}`}
                 layout="fill"
-                objectFit="fill"
-                className="rounded-lg p-0"
+                objectFit="contain"
+                className="rounded-lg p-6"
               />
             </div>
           </div>
@@ -70,7 +70,7 @@ export default function ImageCarousel() {
           <button
             key={index}
             onClick={() => handleIndicatorClick(index)}
-            className={`h-1 w-20 transition-all rounded-full duration-300 ${
+            className={`h-2 w-28 transition-all rounded-full duration-300 ${
               currentIndex === index
                 ? "bg-white scale-110"
                 : "bg-gray-400 hover:bg-gray-300"

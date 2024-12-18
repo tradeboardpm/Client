@@ -12,6 +12,8 @@ import {
   subWeeks,
   subMonths,
 } from "date-fns";
+import Image from "next/image";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,15 +28,20 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, ArrowUpRight } from "lucide-react";
+import { CalendarIcon, ArrowUpRight, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import JournalCard from "@/components/cards/JournalCard";
 import * as SliderPrimitive from "@radix-ui/react-slider";
-import { Tooltip } from "@/components/ui/tooltip";
-import { Dialog, DialogHeader } from "@/components/ui/dialog";
-import { DialogContent, DialogTrigger } from "@radix-ui/react-dialog";
 
+// Reusable components (FilterPopover, StatCard, RuleCard remain the same as in the previous code)
 const FilterPopover = ({
   title,
   min,
@@ -46,8 +53,12 @@ const FilterPopover = ({
 }) => (
   <Popover open={open} onOpenChange={onOpenChange}>
     <PopoverTrigger asChild>
-      <Button variant="outline" className="w-[150px]">
+      <Button
+        variant="outline"
+        className="w-fit flex items-center gap-2 justify-between text-foreground h-8"
+      >
         {title}
+        <ChevronDown className="h-4 w-4 text-foreground/65" />
       </Button>
     </PopoverTrigger>
     <PopoverContent className="w-80">
@@ -81,7 +92,7 @@ const FilterPopover = ({
                     </div>
                   )
               )}
-              {value.map((val, index) => (
+              {value.map((_, index) => (
                 <SliderPrimitive.Thumb
                   key={index}
                   className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
@@ -106,62 +117,118 @@ const StatCard = ({ title, stats, colorClass }) => (
     </CardHeader>
     <CardContent>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">Rules Followed</p>
-          <p className={`text-xl font-bold ${colorClass}`}>
-            {stats.avgRulesFollowed.toFixed(2)}%
-          </p>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Words Journaled</p>
-          <p className={`text-xl font-bold ${colorClass}`}>
-            {stats.avgWordsJournaled.toFixed(0)}
-          </p>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Trades Taken</p>
-          <p className={`text-xl font-bold ${colorClass}`}>
-            {stats.avgTradesTaken.toFixed(2)}
-          </p>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Win Rate</p>
-          <p className={`text-xl font-bold ${colorClass}`}>
-            {stats.winRate.toFixed(2)}%
-          </p>
-        </div>
+        {[
+          {
+            label: "Rules Followed",
+            value: stats.avgRulesFollowed,
+            suffix: "%",
+          },
+          {
+            label: "Words Journaled",
+            value: stats.avgWordsJournaled,
+            suffix: "",
+          },
+          { label: "Trades Taken", value: stats.avgTradesTaken, suffix: "" },
+          { label: "Win Rate", value: stats.winRate, suffix: "%" },
+        ].map(({ label, value, suffix }) => (
+          <div key={label}>
+            <p className="text-sm text-muted-foreground">{label}</p>
+            <p className={`text-xl font-bold ${colorClass}`}>
+              {value.toFixed(label === "Words Journaled" ? 0 : 2)}
+              {suffix}
+            </p>
+          </div>
+        ))}
       </div>
     </CardContent>
   </Card>
 );
 
-const RuleCard = ({ title, rules, className }) => (
-  <Card
-    className={`${className} cursor-pointer h-full p-0 border border-foreground/15`}
-  >
-    <CardHeader className="p-2 px-3">
-      <div className="flex justify-between items-center">
-        <CardTitle>{title}</CardTitle>
-        <span className="flex items-center justify-center rounded-full border border-foreground/15 p-1">
-          <ArrowUpRight className="h-5 w-5" />
-        </span>
-      </div>
-    </CardHeader>
-    <CardContent>
-      <p className="text-sm text-muted-foreground">{rules[0]?.rule}</p>
-      <p className="mt-2">
-        <span
-          className={`text-2xl font-bold ${
-            rules[0]?.unfollowedCount ? "text-red-400" : "text-green-400"
-          }`}
-        >
-          {rules[0]?.unfollowedCount || rules[0]?.followedCount}
-        </span>{" "}
-        <span className="text-sm text-muted-foreground">times this period</span>
-      </p>
-    </CardContent>
-  </Card>
-);
+const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleCardClick = () => {
+    setIsDialogOpen(true);
+  };
+
+  return (
+    <>
+      <Card
+        className={`cursor-pointer rounded-2xl h-full p-0 border border-foreground/15 
+          hover:border-primary transition-colors duration-200 
+          ${isDialogOpen ? "border-primary shadow-2xl" : ""}`}
+        onClick={handleCardClick}
+      >
+        <CardHeader className="p-2 px-3">
+          <div className="flex justify-between items-center">
+            <CardTitle>{title}</CardTitle>
+            <span
+              className={`flex items-center justify-center rounded-full border border-foreground/15 p-1 
+                hover:bg-primary hover:text-background 
+                ${isDialogOpen ? "bg-primary text-background" : ""}`}
+            >
+              <ArrowUpRight className="h-3 w-3" />
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">{rules[0]?.rule}</p>
+          <p className="mt-2">
+            <span
+              className={`text-2xl font-bold ${
+                isTopFollowedRules
+                  ? "text-green-400"
+                  : rules[0]?.count
+                  ? "text-red-400"
+                  : "text-green-400"
+              }`}
+            >
+              {rules[0]?.count || 0}
+            </span>{" "}
+            <span className="text-xs text-foreground/35">
+              times this {period}
+            </span>
+          </p>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>List of {title}</DialogTitle>
+            <DialogDescription>
+              Detailed breakdown of rules for this category
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-2 py-4 overflow-auto h-[75vh]">
+            {rules.map((ruleItem, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-2 border rounded-lg hover:bg-secondary/30 transition-colors"
+              >
+                <div>
+                  <p className="font-medium text-sm">{ruleItem.rule}</p>
+                </div>
+                <div
+                  className={`font-bold w-36 text-right ${
+                    isTopFollowedRules
+                      ? "text-green-500"
+                      : ruleItem.count
+                      ? "text-red-500"
+                      : "text-green-500"
+                  }`}
+                >
+                  {ruleItem.count} times
+                </div>
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
 
 export default function EnhancedMetricsDashboard() {
   const [period, setPeriod] = useState("thisWeek");
@@ -188,26 +255,36 @@ export default function EnhancedMetricsDashboard() {
   const [openPopover, setOpenPopover] = useState(null);
   const popoverRef = useRef(null);
 
-  useEffect(() => {
-    fetchData();
-  }, [period, metricsDateRange, journalsDateRange, filters]);
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (popoverRef.current && !popoverRef.current.contains(event.target)) {
-        setOpenPopover(null);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+  // Compute date range based on selected period
+  const computeDateRange = () => {
+    const periodMap = {
+      thisWeek: () => ({
+        from: startOfWeek(new Date(), { weekStartsOn: 1 }),
+        to: endOfWeek(new Date(), { weekStartsOn: 1 }),
+      }),
+      lastWeek: () => ({
+        from: startOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 }),
+        to: endOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 }),
+      }),
+      thisMonth: () => ({
+        from: startOfMonth(new Date()),
+        to: endOfMonth(new Date()),
+      }),
+      lastMonth: () => ({
+        from: startOfMonth(subMonths(new Date(), 1)),
+        to: endOfMonth(subMonths(new Date(), 1)),
+      }),
+      customRange: () => ({
+        from: metricsDateRange.from || new Date(),
+        to: metricsDateRange.to || new Date(),
+      }),
     };
-  }, []);
+
+    return periodMap[period]();
+  };
 
   const fetchData = async () => {
     const token = Cookies.get("token");
-
     if (!token) {
       setError("No authentication token found");
       return;
@@ -217,40 +294,13 @@ export default function EnhancedMetricsDashboard() {
     setError(null);
 
     try {
-      let metricsFromDate, metricsToDate;
-
-      switch (period) {
-        case "thisWeek":
-          metricsFromDate = startOfWeek(new Date(), { weekStartsOn: 1 });
-          metricsToDate = endOfWeek(new Date(), { weekStartsOn: 1 });
-          break;
-        case "lastWeek":
-          metricsFromDate = startOfWeek(subWeeks(new Date(), 1), {
-            weekStartsOn: 1,
-          });
-          metricsToDate = endOfWeek(subWeeks(new Date(), 1), {
-            weekStartsOn: 1,
-          });
-          break;
-        case "thisMonth":
-          metricsFromDate = startOfMonth(new Date());
-          metricsToDate = endOfMonth(new Date());
-          break;
-        case "lastMonth":
-          metricsFromDate = startOfMonth(subMonths(new Date(), 1));
-          metricsToDate = endOfMonth(subMonths(new Date(), 1));
-          break;
-        case "customRange":
-          metricsFromDate = metricsDateRange.from || new Date();
-          metricsToDate = metricsDateRange.to || new Date();
-          break;
-      }
+      const { from: startDate, to: endDate } = computeDateRange();
 
       const [metricsResponse, journalsResponse] = await Promise.all([
         axios.get(`${process.env.NEXT_PUBLIC_API_URL}/metrics/date-range`, {
           params: {
-            startDate: metricsFromDate.toISOString(),
-            endDate: metricsToDate.toISOString(),
+            startDate: startDate.toISOString(),
+            endDate: endDate.toISOString(),
             ...filters,
           },
           headers: { Authorization: `Bearer ${token}` },
@@ -269,8 +319,16 @@ export default function EnhancedMetricsDashboard() {
         }),
       ]);
 
-      setMetrics(metricsResponse.data);
-      setMonthlyJournals(journalsResponse.data);
+      setMetrics(
+        Object.keys(metricsResponse.data).length === 0
+          ? null
+          : metricsResponse.data
+      );
+      setMonthlyJournals(
+        Object.keys(journalsResponse.data).length === 0
+          ? null
+          : journalsResponse.data
+      );
     } catch (err) {
       setError(err.response?.data?.error || "An error occurred");
     } finally {
@@ -278,224 +336,342 @@ export default function EnhancedMetricsDashboard() {
     }
   };
 
+  useEffect(() => {
+    fetchData();
+  }, [period, metricsDateRange, journalsDateRange, filters]);
+
+  // Close popover when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target)) {
+        setOpenPopover(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const renderDateRangeButton = (dateRange, placeholder) => {
+    // Check if the date range matches the default month range
+    const isDefaultRange =
+      dateRange.from &&
+      dateRange.to &&
+      format(dateRange.from, "LLL y") ===
+        format(startOfMonth(new Date()), "LLL y");
+
+    return (
+      <Button
+        variant="outline"
+        className={cn(
+          "w-fit  text-left font-normal h-8 flex items-center justify-between gap-2",
+          (!dateRange.from || isDefaultRange) && "text-foreground"
+        )}
+      >
+        {/* <CalendarIcon className="mr-2 h-4 w-4" /> */}
+        {dateRange.from && !isDefaultRange ? (
+          dateRange.to ? (
+            `${format(dateRange.from, "LLL dd, y")} - ${format(
+              dateRange.to,
+              "LLL dd, y"
+            )}`
+          ) : (
+            format(dateRange.from, "LLL dd, y")
+          )
+        ) : (
+          <span>{placeholder}</span>
+        )}
+
+        <ChevronDown className="h-4 w-4 text-foreground/65" />
+      </Button>
+    );
+  };
+
+  const clearAllFilters = () => {
+    // Reset filters to default values
+    setFilters({
+      minWinRate: 0,
+      maxWinRate: 100,
+      minTrades: 0,
+      maxTrades: 50,
+      minRulesFollowed: 0,
+      maxRulesFollowed: 100,
+    });
+
+    // Reset date ranges to default
+    setJournalsDateRange({
+      from: startOfMonth(new Date()),
+      to: endOfMonth(new Date()),
+    });
+
+    // Close any open popovers
+    setOpenPopover(null);
+  };
+
+  const hasActiveFilters = () => {
+    return (
+      filters.minWinRate !== 0 ||
+      filters.maxWinRate !== 100 ||
+      filters.minTrades !== 0 ||
+      filters.maxTrades !== 50 ||
+      filters.minRulesFollowed !== 0 ||
+      filters.maxRulesFollowed !== 100 ||
+      (journalsDateRange.from &&
+        format(journalsDateRange.from, "LLL y") !==
+          format(startOfMonth(new Date()), "LLL y"))
+    );
+  };
+
   return (
-    <div className="container mx-auto flex flex-col p-6 gap-6">
-      <div className="bg-card/75 shadow-md border border-border/50 p-4 rounded-xl">
-        <div className="flex justify-between">
-          <h1 className="text-2xl font-bold mb-4">Tradeboard Intelligence</h1>
+    <div className="bg-card">
+      <div className="flex flex-col p-6 gap-6 bg-background rounded-t-xl">
+        {/* Tradeboard Intelligence section (same as before) */}
+        <div className="bg-card/75 shadow-md border border-border/50 p-4 rounded-xl">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-xl font-bold">Tradeboard Intelligence</h1>
 
-          <div className="flex flex-wrap gap-4 mb-4">
-            <Select value={period} onValueChange={setPeriod}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select period" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="thisWeek">This Week</SelectItem>
-                <SelectItem value="lastWeek">Last Week</SelectItem>
-                <SelectItem value="thisMonth">This Month</SelectItem>
-                <SelectItem value="lastMonth">Last Month</SelectItem>
-                <SelectItem value="customRange">Custom Range</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-4">
+              <Select value={period} onValueChange={setPeriod}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[
+                    "thisWeek",
+                    "lastWeek",
+                    "thisMonth",
+                    "lastMonth",
+                    "customRange",
+                  ].map((periodOption) => (
+                    <SelectItem key={periodOption} value={periodOption}>
+                      {periodOption
+                        .replace(/([A-Z])/g, " $1")
+                        .replace(/^./, (str) => str.toUpperCase())}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-            {period === "customRange" && (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-[280px] justify-start text-left font-normal",
-                      !metricsDateRange.from && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {metricsDateRange.from ? (
-                      metricsDateRange.to ? (
-                        <>
-                          {format(metricsDateRange.from, "LLL dd, y")} -{" "}
-                          {format(metricsDateRange.to, "LLL dd, y")}
-                        </>
-                      ) : (
-                        format(metricsDateRange.from, "LLL dd, y")
-                      )
-                    ) : (
-                      <span>Pick a date range</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    initialFocus
-                    mode="range"
-                    defaultMonth={metricsDateRange.from}
-                    selected={metricsDateRange}
-                    onSelect={(range) => {
-                      setMetricsDateRange(range || { from: null, to: null });
-                    }}
-                    numberOfMonths={2}
-                  />
-                </PopoverContent>
-              </Popover>
-            )}
-          </div>
-        </div>
-
-        {error && (
-          <div
-            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-            role="alert"
-          >
-            {error}
-          </div>
-        )}
-
-        {metrics && (
-            <div className="grid grid-cols-2 gap-4">
-              <StatCard
-                title="Profit Days"
-                stats={metrics.profit_days}
-                colorClass="text-green-500"
-              />
-
-              <StatCard
-                title="Break Even Days"
-                stats={metrics.breakEven_days}
-                colorClass="text-blue-500"
-              />
-
-            <StatCard
-              title="Loss Days"
-              stats={metrics.loss_days}
-              colorClass="text-red-500"
-            />
-            <div className="grid md:grid-cols-2 gap-4">
-              <RuleCard
-                title="Top Followed Rules"
-                rules={metrics.topFollowedRules}
-              />
-              <RuleCard
-                title="Top Unfollowed Rules"
-                rules={metrics.topUnfollowedRules}
-              />
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-card/75 shadow-md border border-border/50 p-4 rounded-xl min-h-[60vh]">
-        {monthlyJournals && (
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Journal Analysis</h2>
-
-              <div className="flex flex-wrap gap-4 mb-4">
+              {period === "customRange" && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "font-normal",
-                        !journalsDateRange.from && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      date range
-                    </Button>
+                    {renderDateRangeButton(
+                      metricsDateRange,
+                      "Pick a date range"
+                    )}
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       initialFocus
                       mode="range"
-                      defaultMonth={journalsDateRange.from}
-                      selected={journalsDateRange}
-                      onSelect={(range) => {
-                        setJournalsDateRange(range || { from: null, to: null });
-                      }}
+                      defaultMonth={metricsDateRange.from}
+                      selected={metricsDateRange}
+                      onSelect={(range) =>
+                        setMetricsDateRange(range || { from: null, to: null })
+                      }
                       numberOfMonths={2}
                     />
                   </PopoverContent>
                 </Popover>
+              )}
+            </div>
+          </div>
 
-                <div ref={popoverRef} className="flex gap-4">
-                  <FilterPopover
-                    title="Win Rate"
-                    min={0}
-                    max={100}
-                    value={[filters.minWinRate, filters.maxWinRate]}
-                    onChange={([min, max]) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        minWinRate: min,
-                        maxWinRate: max,
-                      }))
-                    }
-                    open={openPopover === "winRate"}
-                    onOpenChange={(open) =>
-                      setOpenPopover(open ? "winRate" : null)
-                    }
-                  />
-                  <FilterPopover
-                    title="Trades"
-                    min={0}
-                    max={50}
-                    value={[filters.minTrades, filters.maxTrades]}
-                    onChange={([min, max]) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        minTrades: min,
-                        maxTrades: max,
-                      }))
-                    }
-                    open={openPopover === "trades"}
-                    onOpenChange={(open) =>
-                      setOpenPopover(open ? "trades" : null)
-                    }
-                  />
-                  <FilterPopover
-                    title="Rules Followed"
-                    min={0}
-                    max={100}
-                    value={[filters.minRulesFollowed, filters.maxRulesFollowed]}
-                    onChange={([min, max]) =>
-                      setFilters((prev) => ({
-                        ...prev,
-                        minRulesFollowed: min,
-                        maxRulesFollowed: max,
-                      }))
-                    }
-                    open={openPopover === "rulesFollowed"}
-                    onOpenChange={(open) =>
-                      setOpenPopover(open ? "rulesFollowed" : null)
-                    }
-                  />
-                </div>
+          {error && (
+            <div
+              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+              role="alert"
+            >
+              {error}
+            </div>
+          )}
+
+          {metrics ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[
+                {
+                  title: "Profit Days",
+                  key: "profit_days",
+                  color: "text-green-500",
+                },
+                { title: "Loss Days", key: "loss_days", color: "text-red-500" },
+                {
+                  title: "Break Even Days",
+                  key: "breakEven_days",
+                  color: "text-blue-500",
+                },
+              ].map(({ title, key, color }) => (
+                <StatCard
+                  key={key}
+                  title={title}
+                  stats={metrics[key]}
+                  colorClass={color}
+                />
+              ))}
+              <div className="grid md:grid-cols-2 gap-6">
+                <RuleCard
+                  title="Your Most Followed Rules"
+                  rules={metrics.topFollowedRules}
+                  isTopFollowedRules={true}
+                  period={period}
+                />
+                <RuleCard
+                  title="Your Most Broken Rules"
+                  rules={metrics.topUnfollowedRules}
+                  period={period}
+                />
               </div>
             </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8">
+              <Image
+                src="/images/no_box.png"
+                alt="No data"
+                width={200}
+                height={200}
+              />
+              <p className="mt-4 text-lg text-gray-500">
+                No data available for Tradeboard Intelligence
+              </p>
+            </div>
+          )}
+        </div>
 
-            {Object.keys(monthlyJournals).length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {Object.entries(monthlyJournals).map(([date, journal]) => (
-                  <JournalCard
-                    key={date}
-                    date={date}
-                    note={journal.note}
-                    mistake={journal.mistake}
-                    lesson={journal.lesson}
-                    rulesFollowedPercentage={journal.rulesFollowedPercentage}
-                    winRate={journal.winRate}
-                    profit={journal.profit}
-                    tradesTaken={journal.tradesTaken}
+        {/* Journal Analysis section with new filter clearing functionality */}
+        <div className="bg-card/75 shadow-md border border-border/50 p-4 rounded-xl min-h-[60vh]">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold">Journal Analysis</h2>
+
+            <div className="flex flex-wrap gap-4 items-center">
+              <p className="font-semibold">Filter By: </p>
+
+              <Popover>
+                <PopoverTrigger asChild>
+                  {renderDateRangeButton(journalsDateRange, "Date Range")}
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    initialFocus
+                    mode="range"
+                    defaultMonth={journalsDateRange.from}
+                    selected={journalsDateRange}
+                    onSelect={(range) =>
+                      setJournalsDateRange(range || { from: null, to: null })
+                    }
+                    numberOfMonths={2}
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <div ref={popoverRef} className="flex gap-4 items-center">
+                {[
+                  {
+                    title: "Win Rate",
+                    min: 0,
+                    max: 100,
+                    valueKey: ["minWinRate", "maxWinRate"],
+                  },
+                  {
+                    title: "Trades",
+                    min: 0,
+                    max: 50,
+                    valueKey: ["minTrades", "maxTrades"],
+                  },
+                  {
+                    title: "Rules Followed",
+                    min: 0,
+                    max: 100,
+                    valueKey: ["minRulesFollowed", "maxRulesFollowed"],
+                  },
+                ].map(({ title, min, max, valueKey }) => (
+                  <FilterPopover
+                    key={title}
+                    title={title}
+                    min={min}
+                    max={max}
+                    value={[filters[valueKey[0]], filters[valueKey[1]]]}
+                    onChange={([min, max]) =>
+                      setFilters((prev) => ({
+                        ...prev,
+                        [valueKey[0]]: min,
+                        [valueKey[1]]: max,
+                      }))
+                    }
+                    open={
+                      openPopover === title.replace(/\s/g, "").toLowerCase()
+                    }
+                    onOpenChange={(open) =>
+                      setOpenPopover(
+                        open ? title.replace(/\s/g, "").toLowerCase() : null
+                      )
+                    }
                   />
                 ))}
+
+                {/* New Clear Filters Button */}
+                {hasActiveFilters() && (
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={clearAllFilters}
+                    className="hover:bg-red-500/90"
+                    title="Clear all filters"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-            ) : (
-              <div className="text-center text-gray-500">
-                No journal entries for this period
-              </div>
-            )}
+            </div>
           </div>
-        )}
+          {monthlyJournals ? (
+            <div className="mt-4">
+              {Object.keys(monthlyJournals).length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {Object.entries(monthlyJournals).map(([date, journal]) => (
+                    <JournalCard
+                      key={date}
+                      date={date}
+                      note={journal.note}
+                      mistake={journal.mistake}
+                      lesson={journal.lesson}
+                      rulesFollowedPercentage={journal.rulesFollowedPercentage}
+                      winRate={journal.winRate}
+                      profit={journal.profit}
+                      tradesTaken={journal.tradesTaken}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center p-8">
+                  <Image
+                    src="/images/no_box.png"
+                    alt="No data"
+                    width={200}
+                    height={200}
+                  />
+                  <p className="mt-4 text-lg text-gray-500">
+                    No journal entries for this period
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center p-8">
+              <Image
+                src="/images/no_box.png"
+                alt="No data"
+                width={200}
+                height={200}
+              />
+              <p className="mt-4 text-lg text-gray-500">
+                No data available for Journal Analysis
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
+// export default EnhancedMetricsDashboard;

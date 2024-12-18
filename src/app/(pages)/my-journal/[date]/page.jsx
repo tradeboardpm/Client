@@ -23,12 +23,16 @@ import {
 } from "@/components/ui/table";
 import { WeeklyCharts } from "../../dashboard/Charts";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 const JournalDetailsPage = () => {
   const router = useRouter();
   const params = useParams();
   const [journalDetails, setJournalDetails] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  // const [currentDate, setCurrentDate] = useState(parseISO(params.date));
   const [currentDate, setCurrentDate] = useState(parseISO(params.date));
 
   useEffect(() => {
@@ -57,12 +61,12 @@ const JournalDetailsPage = () => {
     fetchJournalDetails();
   }, [currentDate, params.date]);
 
-  const changeDate = (days) => {
-    const newDate = addDays(currentDate, days);
-    const formattedDate = format(newDate, "yyyy-MM-dd");
-    router.push(`/my-journal/${formattedDate}`);
-    setCurrentDate(newDate);
-  };
+const changeDate = (days) => {
+  const newDate = addDays(currentDate, days);
+  const formattedDate = format(newDate, "yyyy-MM-dd");
+  router.push(`/my-journal/${formattedDate}`);
+  setCurrentDate(newDate);
+};
 
   const renderDateNavigation = () => (
     <nav aria-label="Journal Date Navigation">
@@ -122,227 +126,298 @@ const JournalDetailsPage = () => {
   const renderJournalDetails = () => {
     const journalData = journalDetails?.journalDetails || {};
     return (
-      <main className="grid grid-cols-[1fr_18rem]">
-        <section className="container p-6">
-          {renderDateNavigation()}
-          <div className="grid grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Journal</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <article>
-                  <h3 className="font-semibold mb-2">Notes</h3>
-                  <textarea
-                    readOnly
-                    className="w-full p-2 rounded-md resize-none bg-background border"
-                    value={journalData.note || "No notes"}
-                    rows={3}
-                  />
-                </article>
-                <article>
-                  <h3 className="font-semibold mb-2">Mistakes</h3>
-                  <textarea
-                    readOnly
-                    className="w-full p-2 rounded-md resize-none bg-background border"
-                    value={journalData.mistake || "No mistakes recorded"}
-                    rows={3}
-                  />
-                </article>
-                <article>
-                  <h3 className="font-semibold mb-2">Lessons</h3>
-                  <textarea
-                    readOnly
-                    className="w-full p-2 rounded-md resize-none bg-background border"
-                    value={journalData.lesson || "No lessons learned"}
-                    rows={3}
-                  />
-                </article>
-              </CardContent>
-              <CardFooter>
-                {journalData.attachedFiles?.length > 0 && (
-                  <div className="grid grid-cols-4 gap-2">
-                    {journalData.attachedFiles.map((file) => (
-                      <figure
-                        key={file}
-                        className="relative group rounded-lg overflow-hidden shadow border"
-                      >
-                        <img
-                          src={file}
-                          alt="Attached file"
-                          className="w-full h-20 object-cover"
+      <div className="bg-card">
+        <main className="grid grid-cols-[1fr_18rem]">
+          <section className=" p-6  bg-background rounded-t-xl">
+            {renderDateNavigation()}
+            <div className="grid grid-cols-2 gap-4">
+              <Card className="flex-1 w-full h-full flex justify-between flex-col pb-6">
+                <CardHeader>
+                  <CardTitle className="text-xl">Journal</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 h-full flex flex-col">
+                  <div className="space-y-2 flex flex-col flex-1">
+                    <label className="text-sm font-medium">Notes</label>
+                    <Textarea
+                      readOnly
+                      className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0"
+                      value={journalData.note || "No notes"}
+                    />
+                  </div>
+
+                  <div className="space-y-2 flex flex-col flex-1">
+                    <label className="text-sm font-medium">Mistakes</label>
+                    <Textarea
+                      readOnly
+                      className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0"
+                      value={journalData.mistake || "No mistakes recorded"}
+                    />
+                  </div>
+
+                  <div className="space-y-2 flex flex-col flex-1">
+                    <label className="text-sm font-medium">Lessons</label>
+                    <Textarea
+                      readOnly
+                      className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0"
+                      value={journalData.lesson || "No lessons learned"}
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="h-fit p-0 px-6">
+                  {journalData.attachedFiles?.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {journalData.attachedFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="relative group rounded-lg overflow-hidden w-20 h-9 shadow border"
+                        >
+                          <img
+                            src={file}
+                            alt={`Uploaded file ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardFooter>
+              </Card>
+
+              <Card className="w-full max-w-4xl h-full mx-auto p-4 flex-1">
+                <CardHeader className="p-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-xl">Rules</CardTitle>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0 mt-3">
+                  <div className="rounded-lg overflow-hidden border">
+                    <div className="sticky top-0 z-10 grid grid-cols-[auto,1fr,auto] gap-4 p-2 px-4 bg-primary/25 border-b">
+                      <div className="flex items-center">
+                        <Checkbox
+                          checked={false}
+                          // Add onCheckedChange handler for follow/unfollow all
                         />
-                      </figure>
-                    ))}
-                  </div>
-                )}
-              </CardFooter>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl">Rules</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[50px]">
-                        <Checkbox readOnly checked={false} />
-                      </TableHead>
-                      <TableHead>Rule Description</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {journalData.rulesFollowed?.map((rule) => (
-                      <TableRow key={rule.originalId}>
-                        <TableCell>
-                          <Checkbox checked={true} readOnly />
-                        </TableCell>
-                        <TableCell>{rule.description}</TableCell>
-                      </TableRow>
-                    ))}
-                    {journalData.rulesUnfollowed?.map((rule) => (
-                      <TableRow key={rule.originalId}>
-                        <TableCell>
-                          <Checkbox checked={false} readOnly />
-                        </TableCell>
-                        <TableCell>{rule.description}</TableCell>
-                      </TableRow>
-                    ))}
-                    {(!journalData.rulesFollowed ||
-                      journalData.rulesFollowed.length === 0) &&
-                      (!journalData.rulesUnfollowed ||
-                        journalData.rulesUnfollowed.length === 0) && (
-                        <TableRow>
-                          <TableCell
-                            colSpan={2}
-                            className="text-center text-muted-foreground"
+                      </div>
+                      <span className="font-medium">My Rules</span>
+                      {/* <span className="font-medium text-right">Action</span> */}
+                    </div>
+                    <div className="max-h-[50vh] min-h-96 overflow-y-auto">
+                      <div className="divide-y">
+                        {journalData.rules?.map((rule) => (
+                          <div
+                            key={rule._id}
+                            className="grid grid-cols-[auto,1fr,auto] gap-4 px-4 py-2 items-center hover:bg-secondary/50"
                           >
+                            <div>
+                              <Checkbox
+                                checked={rule.isFollowed}
+                                // Add onCheckedChange handler
+                              />
+                            </div>
+                            <span className="text-gray-700">
+                              {rule.description}
+                            </span>
+                            {/* <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-gray-500 hover:text-gray-700"
+                              // Add onClick for edit
+                            >
+                              <SquarePen className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-gray-500 hover:text-gray-700"
+                              // Add onClick for delete
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div> */}
+                          </div>
+                        ))}
+
+                        {(!journalData.rules ||
+                          journalData.rules.length === 0) && (
+                          <div className="text-center text-muted-foreground p-4">
                             No rules tracked
-                          </TableCell>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {journalData.trades?.length > 0 && (
+              <Card className="mt-4 ">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                  <div className="space-y-1 text-xl">
+                    <CardTitle>Trades</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-lg overflow-hidden border">
+                    <Table className="rounded-b-lg overflow-hidden bg-background">
+                      <TableHeader className="bg-primary/25">
+                        <TableRow className="border-none">
+                          <TableHead className="text-nowrap">Time</TableHead>
+                          <TableHead className="text-nowrap">
+                            Instrument
+                          </TableHead>
+                          <TableHead className="text-nowrap">Type</TableHead>
+                          <TableHead className="text-nowrap">Action</TableHead>
+                          <TableHead className="text-nowrap">
+                            Quantity
+                          </TableHead>
+                          <TableHead className="text-nowrap">
+                            Buying Price
+                          </TableHead>
+                          <TableHead className="text-nowrap">
+                            Selling Price
+                          </TableHead>
+                          <TableHead className="text-nowrap">
+                            Brokerage
+                          </TableHead>
                         </TableRow>
-                      )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
-
-          {journalData.trades?.length > 0 && (
-            <Card className="mt-4">
-              <CardHeader>
-                <CardTitle className="text-xl">Trades</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Time</TableHead>
-                      <TableHead>Instrument</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Quantity</TableHead>
-                      <TableHead>Buying Price</TableHead>
-                      <TableHead>Selling Price</TableHead>
-                      <TableHead>Brokerage</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {journalData.trades.map((trade) => (
-                      <TableRow key={trade._id}>
-                        <TableCell>{trade.time}</TableCell>
-                        <TableCell>{trade.instrumentName}</TableCell>
-                        <TableCell>{trade.equityType}</TableCell>
-                        <TableCell>{trade.action}</TableCell>
-                        <TableCell>{trade.quantity}</TableCell>
-                        <TableCell>
-                          ₹{(trade.buyingPrice ?? 0).toFixed(2)}
-                        </TableCell>
-                        <TableCell>
-                          ₹{(trade.sellingPrice ?? 0).toFixed(2)}
-                        </TableCell>
-                        <TableCell>
-                          ₹{(trade.brokerage ?? 0).toFixed(2)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <footer className="grid grid-cols-3 gap-4 mt-6">
-                  <div
-                    className={`rounded-lg p-2 flex items-center gap-2 ${
-                      journalDetails.summary?.totalPnL >= 0
-                        ? "bg-green-600/20"
-                        : "bg-red-600/20"
-                    }`}
-                  >
+                      </TableHeader>
+                      <TableBody>
+                        {journalData.trades.map((trade) => (
+                          <TableRow key={trade._id}>
+                            <TableCell className="text-nowrap">
+                              {trade.time}
+                            </TableCell>
+                            <TableCell
+                              className={cn(
+                                !trade.buyingPrice || !trade.sellingPrice
+                                  ? "text-foreground font-semibold"
+                                  : trade.buyingPrice < trade.sellingPrice
+                                  ? "text-green-500 font-semibold"
+                                  : "text-red-500 font-semibold"
+                              )}
+                            >
+                              {trade.instrumentName}
+                            </TableCell>
+                            <TableCell className="text-nowrap">
+                              {trade.equityType}
+                            </TableCell>
+                            <TableCell className="text-nowrap">
+                              {trade.action}
+                            </TableCell>
+                            <TableCell className="text-nowrap">
+                              {trade.quantity}
+                            </TableCell>
+                            <TableCell className="text-nowrap">
+                              {trade.buyingPrice
+                                ? `₹${trade.buyingPrice.toFixed(2)}`
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="text-nowrap">
+                              {trade.sellingPrice
+                                ? `₹${trade.sellingPrice.toFixed(2)}`
+                                : "-"}
+                            </TableCell>
+                            <TableCell className="text-nowrap">
+                              {trade.brokerage
+                                ? `₹${trade.brokerage.toFixed(2)}`
+                                : "-"}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div className="flex gap-6 items-center justify-between mt-6">
                     <div
-                      className={`text-sm font-medium ${
+                      className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
                         journalDetails.summary?.totalPnL >= 0
-                          ? "text-green-800"
-                          : "text-red-800"
+                          ? "bg-green-600/20"
+                          : "bg-red-600/20"
                       }`}
                     >
-                      Today's Profit:
+                      <div
+                        className={`text-sm font-medium ${
+                          journalDetails.summary?.totalPnL >= 0
+                            ? "text-green-800"
+                            : "text-red-800"
+                        }`}
+                      >
+                        Today's Profit:
+                      </div>
+                      <div
+                        className={`text-lg font-bold ${
+                          journalDetails.summary?.totalPnL >= 0
+                            ? "text-green-900"
+                            : "text-red-900"
+                        }`}
+                      >
+                        ₹ {(journalDetails.summary?.totalPnL ?? 0).toFixed(2)}
+                      </div>
                     </div>
-                    <div
-                      className={`text-lg font-bold ${
-                        journalDetails.summary?.totalPnL >= 0
-                          ? "text-green-900"
-                          : "text-red-900"
-                      }`}
-                    >
-                      ₹ {(journalDetails.summary?.totalPnL ?? 0).toFixed(2)}
-                    </div>
-                  </div>
 
-                  <div className="rounded-lg bg-primary/20 flex items-center gap-2 p-2">
-                    <div className="text-sm font-medium text-primary">
-                      Today's Charges:
+                    <div className="rounded-lg bg-primary/20 flex items-center gap-2 p-2 w-fit">
+                      <div className="text-sm font-medium text-primary">
+                        Today's Charges:
+                      </div>
+                      <div className="text-lg font-bold text-primary">
+                        ₹{" "}
+                        {(journalDetails.summary?.totalCharges ?? 0).toFixed(2)}
+                      </div>
                     </div>
-                    <div className="text-lg font-bold text-primary">
-                      ₹ {(journalDetails.summary?.totalCharges ?? 0).toFixed(2)}
-                    </div>
-                  </div>
 
-                  <div
-                    className={`rounded-lg p-2 flex items-center gap-2 ${
-                      journalDetails.summary?.netPnL >= 0
-                        ? "bg-green-600/20"
-                        : "bg-red-600/20"
-                    }`}
-                  >
                     <div
-                      className={`text-sm font-medium ${
+                      className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
                         journalDetails.summary?.netPnL >= 0
-                          ? "text-green-800"
-                          : "text-red-800"
+                          ? "bg-green-600/20"
+                          : "bg-red-600/20"
                       }`}
                     >
-                      Net Realised P&L:
-                    </div>
-                    <div
-                      className={`text-lg font-bold ${
-                        journalDetails.summary?.netPnL >= 0
-                          ? "text-green-900"
-                          : "text-red-900"
-                      }`}
-                    >
-                      ₹ {(journalDetails.summary?.netPnL ?? 0).toFixed(2)}
+                      <div
+                        className={`text-sm font-medium ${
+                          journalDetails.summary?.netPnL >= 0
+                            ? "text-green-800"
+                            : "text-red-800"
+                        }`}
+                      >
+                        Net Realised P&L:
+                      </div>
+                      <div
+                        className={`text-lg font-bold ${
+                          journalDetails.summary?.netPnL >= 0
+                            ? "text-green-900"
+                            : "text-red-900"
+                        }`}
+                      >
+                        ₹ {(journalDetails.summary?.netPnL ?? 0).toFixed(2)}
+                      </div>
                     </div>
                   </div>
-                </footer>
-              </CardContent>
-            </Card>
-          )}
-        </section>
+                </CardContent>
+              </Card>
+            )}
+          </section>
 
-        <aside className="bg-card/75 p-4">
-          <h2 className="text-xl font-bold mb-2">Performance</h2>
-          <WeeklyCharts selectedDate={format(currentDate, "yyyy-MM-dd")} />
-        </aside>
-      </main>
+          <aside className="bg-card p-4">
+            <h2 className="text-xl font-bold mb-2">Performance</h2>
+            {/* <WeeklyCharts selectedDate={format(currentDate, "yyyy-MM-dd")} /> */}
+            {/* <WeeklyCharts selectedDate={format(currentDate, "yyyy-MM-dd")} /> */}
+            <WeeklyCharts
+              selectedDate={format(currentDate, "yyyy-MM-dd")}
+              // Optional: Add a console.log to verify the date
+              onMount={() => {
+                console.log(
+                  "Current Date Passed to WeeklyCharts:",
+                  format(currentDate, "yyyy-MM-dd")
+                );
+              }}
+            />
+          </aside>
+        </main>
+      </div>
     );
   };
 

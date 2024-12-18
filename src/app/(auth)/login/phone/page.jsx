@@ -70,8 +70,8 @@ export default function LoginPage() {
       </Button>
       <div className="space-y-2 text-start">
         <h1 className="text-3xl font-bold">Log in with Mobile Number</h1>
-        <p className="text-muted-foreground text-sm">
-          Please enter your registered mobile no.
+        <p className="text-muted-foreground/65 text-sm">
+          Please enter your registered mobile number
         </p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -109,7 +109,7 @@ export default function LoginPage() {
           className="w-full text-background"
           disabled={isLoading}
         >
-          {isLoading ? "Sending OTP..." : "Log in"}
+          {isLoading ? "Sending OTP..." : "Send OTP"}
         </Button>
       </form>
       <p className="text-center text-sm text-muted-foreground">

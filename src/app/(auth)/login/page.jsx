@@ -79,10 +79,10 @@ export default function LoginOptionsPage() {
 
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
-      <div className="w-full max-w-lg p-8 space-y-8">
-        <div className="space-y-2 text-center">
+      <div className="w-fit max-w-lg  space-y-8">
+        <div className="space-y-2 text-start">
           <h1 className="text-3xl font-bold">Log in to your account</h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground/65 text-sm ">
             Please select any one of them
           </p>
         </div>
@@ -96,7 +96,7 @@ export default function LoginOptionsPage() {
 
           <Button
             variant="secondary"
-            className="w-full justify-center border border-primary/15 bg-accent/25 shadow"
+            className="w-full justify-center border border-primary/15 bg-accent/25 shadow font-semibold text-xs"
             onClick={() => router.push("/login/email")}
             disabled={isLoading}
           >
@@ -106,7 +106,7 @@ export default function LoginOptionsPage() {
 
           <Button
             variant="secondary"
-            className="w-full justify-center border border-primary/15 bg-accent/25 shadow"
+            className="w-full justify-center border border-primary/15 bg-accent/25 shadow font-semibold text-xs"
             onClick={() => router.push("/login/phone")}
             disabled={isLoading}
           >

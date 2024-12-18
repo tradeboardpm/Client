@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { Eye, EyeOff } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -25,6 +23,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, Monitor, MonitorX } from "lucide-react";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -53,6 +58,14 @@ export default function AccountPage() {
     brokerage: 0,
     tradesPerDay: 0,
   });
+
+  const [isGoogleUser, setIsGoogleUser] = useState(false);
+  const [createPasswordOpen, setCreatePasswordOpen] = useState(false);
+  const [addPhoneOpen, setAddPhoneOpen] = useState(false);
+  const [verifyPhoneOpen, setVerifyPhoneOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [otp, setOtp] = useState("");
 
   // Axios instance with interceptor for bearer token
   const api = axios.create({
@@ -86,6 +99,7 @@ export default function AccountPage() {
       const response = await api.get("/user/profile");
       setUser(response.data);
       setPersonalForm(response.data);
+      setIsGoogleUser(!!response.data.googleId);
     } catch (error) {
       toast({
         title: "Error",
@@ -153,272 +167,532 @@ export default function AccountPage() {
     }
   };
 
-  const handleLogout = () => {
-    Cookies.remove("token");
-    router.push("/login");
+  const handleCreatePassword = async () => {
+    try {
+      await api.post("/user/create-password", { password: newPassword });
+      setCreatePasswordOpen(false);
+      toast({
+        title: "Success",
+        description: "Password created successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create password",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddPhone = async () => {
+    try {
+      await api.post("/user/add-phone", { phone: phoneNumber });
+      setAddPhoneOpen(false);
+      setVerifyPhoneOpen(true);
+      toast({
+        title: "Success",
+        description: "OTP sent to your phone number",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add phone number",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleVerifyPhone = async () => {
+    try {
+      await api.post("/user/verify-phone", { otp });
+      setVerifyPhoneOpen(false);
+      fetchUserData(); // Refresh user data
+      toast({
+        title: "Success",
+        description: "Phone number verified successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify phone number",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+      Cookies.remove("token");
+      Cookies.remove("expiry");
+      Cookies.remove("userName");
+      Cookies.remove("userEmail");
+      Cookies.remove("userId");
+      router.push("/login");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Logout failed",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLogoutAll = async () => {
+    try {
+      await api.post("/auth/logout-all");
+      Cookies.remove("token");
+      Cookies.remove("expiry");
+      Cookies.remove("userName");
+      Cookies.remove("userEmail");
+      Cookies.remove("userId");
+      router.push("/login");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Logout from all devices failed",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">My Account</h1>
-        <Button variant="outline" onClick={handleLogout}>
-          Logout
-        </Button>
+    <div className="bg-card">
+      <div className="p-6 bg-background rounded-t-xl">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">My Account</h1>
+          <div className="flex items-center space-x-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="flex items-center gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer hover:bg-secondary"
+                >
+                  <Monitor className="mr-2 h-4 w-4" />
+                  Logout from this device
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleLogoutAll}
+                  className="cursor-pointer hover:bg-secondary"
+                >
+                  <MonitorX className="mr-2 h-4 w-4" />
+                  Logout from all devices
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Personal Details Section */}
+        <Card className="mb-6">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Personal Details</CardTitle>
+              <CardDescription>
+                Manage your personal information
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setPersonalDetailsOpen(true)}
+            >
+              Edit
+            </Button>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label>Name</Label>
+                <Input value={user?.name} readOnly />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input value={user?.email} readOnly />
+              </div>
+              {user?.phone && (
+                <div>
+                  <Label>Phone number</Label>
+                  <Input value={user?.phone} readOnly />
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Google User Specific Sections */}
+        {isGoogleUser && !user?.hasPassword && (
+          <Card className="mb-6">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Create Password</CardTitle>
+                <CardDescription>
+                  Set a password for your Google account
+                </CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setCreatePasswordOpen(true)}
+              >
+                Create Password
+              </Button>
+            </CardHeader>
+          </Card>
+        )}
+
+        {!user?.phone && (
+          <Card className="mb-6">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Add Phone Number</CardTitle>
+                <CardDescription>
+                  Add and verify your phone number
+                </CardDescription>
+              </div>
+              <Button variant="outline" onClick={() => setAddPhoneOpen(true)}>
+                Add Phone
+              </Button>
+            </CardHeader>
+          </Card>
+        )}
+
+        {/* Password Section */}
+        {user?.hasPassword && (
+          <Card className="mb-6">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Password</CardTitle>
+                <CardDescription>Manage your password</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setPasswordDialogOpen(true)}
+              >
+                Change Password
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <div className="relative">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  value="********"
+                  readOnly
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Dashboard Settings Section */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Dashboard Settings</CardTitle>
+              <CardDescription>Manage your trading preferences</CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setSettingsDialogOpen(true)}
+            >
+              Edit
+            </Button>
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label>Capital</Label>
+                <Input value={settings?.capital} readOnly />
+              </div>
+              <div>
+                <Label>Brokerage</Label>
+                <Input value={settings?.brokerage} readOnly />
+              </div>
+              <div>
+                <Label>Trades Per Day</Label>
+                <Input value={settings?.tradesPerDay} readOnly />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Personal Details Dialog */}
+        <Dialog
+          open={personalDetailsOpen}
+          onOpenChange={setPersonalDetailsOpen}
+        >
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Personal Details</DialogTitle>
+              <DialogDescription>
+                Update your personal information
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  value={personalForm.name}
+                  onChange={(e) =>
+                    setPersonalForm({ ...personalForm, name: e.target.value })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={personalForm.email}
+                  onChange={(e) =>
+                    setPersonalForm({ ...personalForm, email: e.target.value })
+                  }
+                />
+              </div>
+              {user?.phone && (
+                <div>
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    value={personalForm.phone}
+                    onChange={(e) =>
+                      setPersonalForm({
+                        ...personalForm,
+                        phone: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setPersonalDetailsOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handlePersonalDetailsSubmit}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Password Dialog */}
+        <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Change Password</DialogTitle>
+              <DialogDescription>
+                Enter your current and new password
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div>
+                <Label htmlFor="currentPassword">Current Password</Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) =>
+                    setPasswordForm({
+                      ...passwordForm,
+                      currentPassword: e.target.value,
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) =>
+                    setPasswordForm({
+                      ...passwordForm,
+                      newPassword: e.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setPasswordDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handlePasswordSubmit}>Change Password</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Settings Dialog */}
+        <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Dashboard Settings</DialogTitle>
+              <DialogDescription>
+                Update your trading preferences
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div>
+                <Label htmlFor="capital">Capital</Label>
+                <Input
+                  id="capital"
+                  type="number"
+                  value={settingsForm.capital}
+                  onChange={(e) =>
+                    setSettingsForm({
+                      ...settingsForm,
+                      capital: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="brokerage">Brokerage</Label>
+                <Input
+                  id="brokerage"
+                  type="number"
+                  value={settingsForm.brokerage}
+                  onChange={(e) =>
+                    setSettingsForm({
+                      ...settingsForm,
+                      brokerage: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+              <div>
+                <Label htmlFor="tradesPerDay">Trades Per Day</Label>
+                <Input
+                  id="tradesPerDay"
+                  type="number"
+                  value={settingsForm.tradesPerDay}
+                  onChange={(e) =>
+                    setSettingsForm({
+                      ...settingsForm,
+                      tradesPerDay: Number(e.target.value),
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setSettingsDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSettingsSubmit}>Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Password Dialog */}
+        <Dialog open={createPasswordOpen} onOpenChange={setCreatePasswordOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Password</DialogTitle>
+              <DialogDescription>
+                Set a password for your Google-linked account
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div>
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setCreatePasswordOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleCreatePassword}>Create Password</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Phone Dialog */}
+        <Dialog open={addPhoneOpen} onOpenChange={setAddPhoneOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Phone Number</DialogTitle>
+              <DialogDescription>
+                Enter your phone number to receive an OTP
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div>
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setAddPhoneOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAddPhone}>Send OTP</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Verify Phone Dialog */}
+        <Dialog open={verifyPhoneOpen} onOpenChange={setVerifyPhoneOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Verify Phone Number</DialogTitle>
+              <DialogDescription>
+                Enter the OTP sent to your phone
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div>
+                <Label htmlFor="otp">OTP</Label>
+                <Input
+                  id="otp"
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setVerifyPhoneOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleVerifyPhone}>Verify OTP</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
-
-      {/* Personal Details Section */}
-      <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Personal Details</CardTitle>
-            <CardDescription>Manage your personal information</CardDescription>
-          </div>
-          <Button
-            variant="outline"
-            onClick={() => setPersonalDetailsOpen(true)}
-          >
-            Edit
-          </Button>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label>Name</Label>
-              <Input value={user?.name} readOnly />
-            </div>
-            <div>
-              <Label>Email</Label>
-              <Input value={user?.email} readOnly />
-            </div>
-            <div>
-              <Label>Phone number</Label>
-              <Input value={user?.phone} readOnly />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Password Section */}
-      <Card className="mb-6">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Password</CardTitle>
-            <CardDescription>Manage your password</CardDescription>
-          </div>
-          <Button variant="outline" onClick={() => setPasswordDialogOpen(true)}>
-            Change Password
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="relative">
-            <Input
-              type={showPassword ? "text" : "password"}
-              value="********"
-              readOnly
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Dashboard Settings Section */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Dashboard Settings</CardTitle>
-            <CardDescription>Manage your trading preferences</CardDescription>
-          </div>
-          <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
-            Edit
-          </Button>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label>Capital</Label>
-              <Input value={settings?.capital} readOnly />
-            </div>
-            <div>
-              <Label>Brokerage</Label>
-              <Input value={settings?.brokerage} readOnly />
-            </div>
-            <div>
-              <Label>Trades Per Day</Label>
-              <Input value={settings?.tradesPerDay} readOnly />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Personal Details Dialog */}
-      <Dialog open={personalDetailsOpen} onOpenChange={setPersonalDetailsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Personal Details</DialogTitle>
-            <DialogDescription>
-              Update your personal information
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={personalForm.name}
-                onChange={(e) =>
-                  setPersonalForm({ ...personalForm, name: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={personalForm.email}
-                onChange={(e) =>
-                  setPersonalForm({ ...personalForm, email: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={personalForm.phone}
-                onChange={(e) =>
-                  setPersonalForm({ ...personalForm, phone: e.target.value })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setPersonalDetailsOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handlePersonalDetailsSubmit}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Password Dialog */}
-      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Change Password</DialogTitle>
-            <DialogDescription>
-              Enter your current and new password
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div>
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={passwordForm.currentPassword}
-                onChange={(e) =>
-                  setPasswordForm({
-                    ...passwordForm,
-                    currentPassword: e.target.value,
-                  })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={passwordForm.newPassword}
-                onChange={(e) =>
-                  setPasswordForm({
-                    ...passwordForm,
-                    newPassword: e.target.value,
-                  })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setPasswordDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handlePasswordSubmit}>Change Password</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Settings Dialog */}
-      <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Dashboard Settings</DialogTitle>
-            <DialogDescription>
-              Update your trading preferences
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div>
-              <Label htmlFor="capital">Capital</Label>
-              <Input
-                id="capital"
-                type="number"
-                value={settingsForm.capital}
-                onChange={(e) =>
-                  setSettingsForm({
-                    ...settingsForm,
-                    capital: Number(e.target.value),
-                  })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="brokerage">Brokerage</Label>
-              <Input
-                id="brokerage"
-                type="number"
-                value={settingsForm.brokerage}
-                onChange={(e) =>
-                  setSettingsForm({
-                    ...settingsForm,
-                    brokerage: Number(e.target.value),
-                  })
-                }
-              />
-            </div>
-            <div>
-              <Label htmlFor="tradesPerDay">Trades Per Day</Label>
-              <Input
-                id="tradesPerDay"
-                type="number"
-                value={settingsForm.tradesPerDay}
-                onChange={(e) =>
-                  setSettingsForm({
-                    ...settingsForm,
-                    tradesPerDay: Number(e.target.value),
-                  })
-                }
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setSettingsDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSettingsSubmit}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

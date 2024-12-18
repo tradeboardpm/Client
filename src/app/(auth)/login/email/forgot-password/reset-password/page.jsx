@@ -86,6 +86,7 @@ function SetNewPasswordContent() {
 
   return (
     <div className="w-full max-w-lg p-8 space-y-8">
+      <p>{resetToken}</p>
       <Button
         variant="outline"
         className="mb-8 rounded-full size-10 p-0 absolute left-10 lg:left-32 top-20"

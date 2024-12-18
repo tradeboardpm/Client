@@ -28,23 +28,26 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Plus, Import, Search, SquarePen, Trash2 } from "lucide-react";
+import { Plus, Import, Search, SquarePen, Trash2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { ImportTradeDialog } from "./import-trade";
+import { calculateExchangeCharges } from "@/utils/calculateExchangeCharges";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 
 export function TradesSection({ selectedDate, brokerage }) {
   const [trades, setTrades] = useState([]);
   const [tradeSummary, setTradeSummary] = useState({
     totalPnL: 0,
     totalCharges: 0,
-    netPnL: 0,
+    totalNetPnL: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [addTradeOpen, setAddTradeOpen] = useState(false);
-  const [editTradeOpen, setEditTradeOpen] = useState(false);
+  const [editOpenTradeOpen, setEditOpenTradeOpen] = useState(false);
+  const [editCompleteTradeOpen, setEditCompleteTradeOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [newTrade, setNewTrade] = useState({
@@ -54,17 +57,43 @@ export function TradesSection({ selectedDate, brokerage }) {
     buyingPrice: null,
     sellingPrice: null,
     brokerage: brokerage,
-    exchangeRate: 1,
+    exchangeRate: 0,
     time: format(new Date(), "HH:mm"),
     equityType: "INTRADAY",
   });
 
-   const [tradesData, setTradesData] = useState([]);
-   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchTradesData();
   }, [selectedDate]);
+
+  useEffect(() => {
+    if (
+      newTrade.quantity &&
+      newTrade.action &&
+      newTrade.equityType &&
+      (newTrade.buyingPrice || newTrade.sellingPrice)
+    ) {
+      const price =
+        newTrade.action === "buy"
+          ? newTrade.buyingPrice
+          : newTrade.sellingPrice;
+      const exchangeCharges = calculateExchangeCharges(
+        newTrade.equityType,
+        newTrade.action,
+        price,
+        newTrade.quantity
+      );
+      setNewTrade((prev) => ({ ...prev, exchangeRate: exchangeCharges }));
+    }
+  }, [
+    newTrade.buyingPrice,
+    newTrade.sellingPrice,
+    newTrade.quantity,
+    newTrade.action,
+    newTrade.equityType,
+  ]);
 
   const getUTCDate = (date) => {
     return new Date(
@@ -85,7 +114,6 @@ export function TradesSection({ selectedDate, brokerage }) {
         }
       );
 
-      // Update trades and summary based on new response structure
       setTrades(response.data.trades);
       setTradeSummary(response.data.summary);
     } catch (error) {
@@ -105,6 +133,7 @@ export function TradesSection({ selectedDate, brokerage }) {
         `${process.env.NEXT_PUBLIC_API_URL}/trades`,
         {
           ...newTrade,
+          instrumentName: newTrade.instrumentName.toUpperCase(),
           date: utcDate.toISOString(),
         },
         {
@@ -121,22 +150,49 @@ export function TradesSection({ selectedDate, brokerage }) {
     }
   };
 
-  const handleTradeEdit = async () => {
+  const handleOpenTradeEdit = async () => {
     setIsLoading(true);
     try {
       const token = Cookies.get("token");
       await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/trades/${selectedTrade._id}`,
-        selectedTrade,
+        `${process.env.NEXT_PUBLIC_API_URL}/trades/open/${selectedTrade._id}`,
+        {
+          ...selectedTrade,
+          instrumentName: selectedTrade.instrumentName.toUpperCase(), // Capitalize before sending
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
       fetchTradesData();
-      setEditTradeOpen(false);
+      setEditOpenTradeOpen(false);
       setSelectedTrade(null);
     } catch (error) {
-      console.error("Error editing trade:", error);
+      console.error("Error editing open trade:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCompleteTradeEdit = async () => {
+    setIsLoading(true);
+    try {
+      const token = Cookies.get("token");
+      await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_URL}/trades/complete/${selectedTrade._id}`,
+        {
+          ...selectedTrade,
+          instrumentName: selectedTrade.instrumentName.toUpperCase(), // Capitalize before sending
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      fetchTradesData();
+      setEditCompleteTradeOpen(false);
+      setSelectedTrade(null);
+    } catch (error) {
+      console.error("Error editing complete trade:", error);
     } finally {
       setIsLoading(false);
     }
@@ -166,11 +222,11 @@ export function TradesSection({ selectedDate, brokerage }) {
     setNewTrade({
       instrumentName: "",
       quantity: null,
-      action: null,
+      action: "buy",
       buyingPrice: null,
       sellingPrice: null,
       brokerage: brokerage,
-      exchangeRate: 1,
+      exchangeRate: 0,
       time: format(new Date(), "HH:mm"),
       equityType: "INTRADAY",
     });
@@ -183,28 +239,27 @@ export function TradesSection({ selectedDate, brokerage }) {
   const calculateTotalOrder = (trade) => {
     const price =
       trade.action === "buy" ? trade.buyingPrice : trade.sellingPrice;
-    return trade.quantity * price * trade.exchangeRate;
+    return trade.quantity * price + trade.exchangeRate + (trade.brokerage || 0);
   };
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <div className="space-y-1">
+        <div className="space-y-1 text-xl">
           <CardTitle>Trade Log</CardTitle>
         </div>
         <div className="flex items-center space-x-2">
           <Button onClick={() => setAddTradeOpen(true)} className="bg-primary">
             <Plus className="mr-2 h-4 w-4" /> Add Trade
           </Button>
-
           <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
             <Import className="mr-2 h-4 w-4" /> Import Trade
           </Button>
-          {/* ... other elements */}
           <ImportTradeDialog
             open={importDialogOpen}
             onOpenChange={setImportDialogOpen}
             onImportComplete={fetchTradesData}
+            defaultBrokerage={brokerage}
           />
         </div>
       </CardHeader>
@@ -227,78 +282,102 @@ export function TradesSection({ selectedDate, brokerage }) {
             </div>
 
             <div className="rounded-lg overflow-hidden">
-              <Table className="rounded-b-lg overflow-hidden bg-background">
-                <TableHeader className="bg-primary/25 border">
-                  <TableRow className="border-none">
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Instrument</TableHead>
-                    <TableHead>Equity Type</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Buying Price</TableHead>
-                    <TableHead>Selling Price</TableHead>
-                    <TableHead>Exchange charges</TableHead>
-                    <TableHead>Brokerage</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="border">
-                  {filteredTrades.map((trade) => (
-                    <TableRow key={trade._id}>
-                      <TableCell>
-                        {format(new Date(trade.date), "dd-MM-yyyy")}
-                      </TableCell>
-                      <TableCell>{trade.time}</TableCell>
-                      <TableCell
-                        className={cn(
-                          trade.buyingPrice < trade.sellingPrice
-                            ? "text-green-500"
-                            : "text-red-500"
-                        )}
-                      >
-                        {trade.instrumentName}
-                      </TableCell>
-                      <TableCell>{trade.equityType}</TableCell>
-                      <TableCell>{trade.action}</TableCell>
-                      <TableCell>{trade.quantity}</TableCell>
-                      <TableCell>₹ {trade.buyingPrice}</TableCell>
-                      <TableCell>₹ {trade.sellingPrice}</TableCell>
-                      <TableCell>{trade.exchangeRate}</TableCell>
-                      <TableCell>₹ {trade.brokerage}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedTrade(trade);
-                              setEditTradeOpen(true);
-                            }}
-                          >
-                            <SquarePen className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedTrade(trade);
-                              setDeleteDialogOpen(true);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="rounded-lg overflow-hidden border">
+                <Table className="rounded-b-lg overflow-hidden bg-background">
+                  <TableHeader className="bg-primary/25">
+                    <TableRow className="border-none">
+                      <TableHead className="text-nowrap">Date</TableHead>
+                      <TableHead className="text-nowrap">Time</TableHead>
+                      <TableHead className="text-nowrap">Instrument</TableHead>
+                      <TableHead className="text-nowrap">Equity Type</TableHead>
+                      <TableHead className="text-nowrap">Quantity</TableHead>
+                      <TableHead className="text-nowrap">
+                        Buying Price
+                      </TableHead>
+                      <TableHead className="text-nowrap">
+                        Selling Price
+                      </TableHead>
+                      <TableHead className="text-nowrap">
+                        Exchange charges
+                      </TableHead>
+                      <TableHead className="text-nowrap">Brokerage</TableHead>
+                      <TableHead className="text-nowrap">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTrades.map((trade) => (
+                      <TableRow key={trade._id}>
+                        <TableCell className="text-nowrap">
+                          {format(new Date(trade.date), "dd-MM-yyyy")}
+                        </TableCell>
+                        <TableCell className="text-nowrap">
+                          {trade.time}
+                        </TableCell>
+                        <TableCell
+                          className={cn(
+                            !trade.buyingPrice || !trade.sellingPrice
+                              ? "text-foreground font-semibold"
+                              : trade.buyingPrice < trade.sellingPrice
+                              ? "text-green-500 font-semibold"
+                              : "text-red-500 font-semibold"
+                          )}
+                        >
+                          {trade.instrumentName}
+                        </TableCell>
+                        <TableCell className="text-nowrap">
+                          {trade.equityType}
+                        </TableCell>
+                        <TableCell className="text-nowrap">
+                          {trade.quantity}
+                        </TableCell>
+                        <TableCell className="text-nowrap">
+                          {trade.buyingPrice ? `₹ ${trade.buyingPrice}` : "-"}
+                        </TableCell>
+                        <TableCell className="text-nowrap">
+                          {trade.sellingPrice ? `₹ ${trade.sellingPrice}` : "-"}
+                        </TableCell>
+                        <TableCell className="text-nowrap">
+                          ₹ {trade.exchangeRate.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-nowrap">
+                          ₹ {trade.brokerage}
+                        </TableCell>
+                        <TableCell className="text-nowrap">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedTrade(trade);
+                                trade.isOpen
+                                  ? setEditOpenTradeOpen(true)
+                                  : setEditCompleteTradeOpen(true);
+                              }}
+                            >
+                              <SquarePen className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedTrade(trade);
+                                setDeleteDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
 
               {trades.length > 0 && (
-                <div className="grid grid-cols-3 gap-4 mt-6">
+                <div className="flex gap-6 items-center justify-between mt-6">
                   <div
-                    className={`rounded-lg p-2 flex items-center gap-2 ${
+                    className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
                       tradeSummary.totalPnL >= 0
                         ? "bg-green-600/20"
                         : "bg-red-600/20"
@@ -324,9 +403,24 @@ export function TradesSection({ selectedDate, brokerage }) {
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-primary/20 flex items-center gap-2 p-2">
+                  <div className="rounded-lg bg-primary/20 flex items-center gap-2 p-2 w-fit">
                     <div className="text-sm font-medium text-primary">
-                      Today's Charges:
+                      <span className="flex gap-1 items-center">
+                        Today's Charges
+                        <HoverCard>
+                          <HoverCardTrigger>
+                            <Info className="h-4 w-4 text-primary cursor-pointer" />
+                          </HoverCardTrigger>
+                          <HoverCardContent className="w-80">
+                            <div className="flex flex-col gap-2">
+                              <p className="text-sm text-muted-foreground">
+                                Today's Charges = Exchange charges + Brokerage
+                              </p>
+                            </div>
+                          </HoverCardContent>
+                        </HoverCard>
+                        :
+                      </span>
                     </div>
                     <div className="text-lg font-bold text-primary">
                       ₹ {tradeSummary.totalCharges.toFixed(2)}
@@ -334,15 +428,15 @@ export function TradesSection({ selectedDate, brokerage }) {
                   </div>
 
                   <div
-                    className={`rounded-lg p-2 flex items-center gap-2 ${
-                      tradeSummary.netPnL >= 0
+                    className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
+                      tradeSummary.totalNetPnL >= 0
                         ? "bg-green-600/20"
                         : "bg-red-600/20"
                     }`}
                   >
                     <div
                       className={`text-sm font-medium ${
-                        tradeSummary.netPnL >= 0
+                        tradeSummary.totalNetPnL >= 0
                           ? "text-green-800"
                           : "text-red-800"
                       }`}
@@ -351,12 +445,12 @@ export function TradesSection({ selectedDate, brokerage }) {
                     </div>
                     <div
                       className={`text-lg font-bold ${
-                        tradeSummary.netPnL >= 0
+                        tradeSummary.totalNetPnL >= 0
                           ? "text-green-900"
                           : "text-red-900"
                       }`}
                     >
-                      ₹ {tradeSummary.netPnL.toFixed(2)}
+                      ₹ {tradeSummary.totalNetPnL?.toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -366,7 +460,7 @@ export function TradesSection({ selectedDate, brokerage }) {
         ) : (
           <div className="flex flex-col items-center justify-center py-12">
             <img
-              src="/images/no_trade.png"
+              src="/images/no_trade.svg"
               alt="No trades"
               className="w-64 h-64 mb-6"
             />
@@ -381,8 +475,8 @@ export function TradesSection({ selectedDate, brokerage }) {
       {/* Add Trade Dialog */}
       <Dialog open={addTradeOpen} onOpenChange={setAddTradeOpen}>
         <DialogContent className="md:max-w-[50vw]">
-          <DialogHeader>
-            <DialogTitle>Add New Trade</DialogTitle>
+          <DialogHeader className="border-b pb-4">
+            <DialogTitle>Add Trade</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
@@ -391,7 +485,10 @@ export function TradesSection({ selectedDate, brokerage }) {
                 <Input
                   value={newTrade.instrumentName}
                   onChange={(e) =>
-                    setNewTrade({ ...newTrade, instrumentName: e.target.value })
+                    setNewTrade({
+                      ...newTrade,
+                      instrumentName: e.target.value.toUpperCase(),
+                    })
                   }
                 />
               </div>
@@ -414,19 +511,33 @@ export function TradesSection({ selectedDate, brokerage }) {
               <div className="col-span-2">
                 <Label>Trade Type</Label>
                 <RadioGroup
-                  className=" flex space-x-4"
+                  className="flex space-x-4"
                   value={newTrade.action}
                   onValueChange={(value) =>
                     setNewTrade({ ...newTrade, action: value })
                   }
                 >
-                  <div className="flex items-center space-x-2 bg-card border border-border/25 shadow rounded-lg w-full p-2">
+                  <div
+                    className={cn(
+                      "flex items-center space-x-2 border border-border/25 shadow rounded-lg w-36 p-2",
+                      newTrade.action === "buy" ? "bg-[#A073F01A]" : "bg-card"
+                    )}
+                  >
                     <RadioGroupItem value="buy" id="buy" />
-                    <Label htmlFor="buy" className="w-full">Buy</Label>
+                    <Label htmlFor="buy" className="w-full">
+                      Buy
+                    </Label>
                   </div>
-                  <div className="flex items-center space-x-2 bg-card border border-border/25  shadow rounded-lg w-full p-2">
+                  <div
+                    className={cn(
+                      "flex items-center space-x-2 border border-border/25 shadow rounded-lg w-36 p-2",
+                      newTrade.action === "sell" ? "bg-[#A073F01A]" : "bg-card"
+                    )}
+                  >
                     <RadioGroupItem value="sell" id="sell" />
-                    <Label htmlFor="sell" className="w-full">Sell</Label>
+                    <Label htmlFor="sell" className="w-full">
+                      Sell
+                    </Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -434,7 +545,6 @@ export function TradesSection({ selectedDate, brokerage }) {
                 <Label>
                   {newTrade.action === "buy" ? "Buying" : "Selling"} Price
                 </Label>
-
                 <Input
                   type="number"
                   value={
@@ -442,21 +552,21 @@ export function TradesSection({ selectedDate, brokerage }) {
                       ? newTrade.buyingPrice
                       : newTrade.sellingPrice
                   }
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const price = Number(e.target.value);
                     setNewTrade({
                       ...newTrade,
                       [newTrade.action === "buy"
                         ? "buyingPrice"
-                        : "sellingPrice"]: Number(e.target.value),
-                    })
-                  }
+                        : "sellingPrice"]: price,
+                    });
+                  }}
                 />
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <div className="col-span-2">
                 <Label>Equity Type</Label>
-
                 <Select
                   value={newTrade.equityType}
                   onValueChange={(value) =>
@@ -467,11 +577,11 @@ export function TradesSection({ selectedDate, brokerage }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="F&O-OPTIONS">Options</SelectItem>
-                    <SelectItem value="F&O-FUTURES">Futures</SelectItem>
-                    <SelectItem value="INTRADAY">Intraday</SelectItem>
-                    <SelectItem value="DELIVERY">Delivery</SelectItem>
-                    <SelectItem value="OTHERS">Others</SelectItem>
+                    <SelectItem value="F&O-OPTIONS">F&O-OPTIONS</SelectItem>
+                    <SelectItem value="F&O-FUTURES">F&O-FUTURES</SelectItem>
+                    <SelectItem value="INTRADAY">INTRADAY</SelectItem>
+                    <SelectItem value="DELIVERY">DELIVERY</SelectItem>
+                    <SelectItem value="OTHERS">OTHERS</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -489,19 +599,8 @@ export function TradesSection({ selectedDate, brokerage }) {
             <div className="grid grid-cols-4 items-center gap-4">
               <div className="col-span-2">
                 <Label>Exchange Charges (₹)</Label>
-
-                <Input
-                  type="number"
-                  value={newTrade.exchangeRate}
-                  onChange={(e) =>
-                    setNewTrade({
-                      ...newTrade,
-                      exchangeRate: Number(e.target.value),
-                    })
-                  }
-                />
+                <Input type="number" value={newTrade.exchangeRate} readOnly />
               </div>
-
               <div className="col-span-2">
                 <Label>Brokerage (₹)</Label>
                 <Input
@@ -536,134 +635,160 @@ export function TradesSection({ selectedDate, brokerage }) {
         </DialogContent>
       </Dialog>
 
-      {/* Edit Trade Dialog */}
-      <Dialog open={editTradeOpen} onOpenChange={setEditTradeOpen}>
-        <DialogContent className="">
-          <DialogHeader>
-            <DialogTitle>Edit Trade</DialogTitle>
+      {/* Edit Open Trade Dialog */}
+      <Dialog open={editOpenTradeOpen} onOpenChange={setEditOpenTradeOpen}>
+        <DialogContent className="md:max-w-[50vw]">
+          <DialogHeader className="border-b pb-4">
+            <DialogTitle>Edit Open Trade</DialogTitle>
           </DialogHeader>
           {selectedTrade && (
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="col-span-4">Instrument Name</Label>
-                <Input
-                  className="col-span-4"
-                  value={selectedTrade.instrumentName}
-                  onChange={(e) =>
-                    setSelectedTrade({
-                      ...selectedTrade,
-                      instrumentName: e.target.value,
-                    })
-                  }
-                />
+                <div className="col-span-2">
+                  <Label>Instrument Name</Label>
+                  <Input
+                    value={selectedTrade.instrumentName}
+                    onChange={(e) =>
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        instrumentName: e.target.value.toUpperCase(),
+                      })
+                    }
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Quantity</Label>
+                  <Input
+                    type="number"
+                    value={selectedTrade.quantity}
+                    onChange={(e) =>
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        quantity: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="col-span-2">Quantity</Label>
-                <Label className="col-span-2">
-                  {selectedTrade.action === "buy" ? "Buying" : "Selling"} Price
-                </Label>
-                <Input
-                  type="number"
-                  className="col-span-2"
-                  value={selectedTrade.quantity}
-                  onChange={(e) =>
-                    setSelectedTrade({
-                      ...selectedTrade,
-                      quantity: Number(e.target.value),
-                    })
-                  }
-                />
-                <Input
-                  type="number"
-                  className="col-span-2"
-                  value={
-                    selectedTrade.action === "buy"
-                      ? selectedTrade.buyingPrice
-                      : selectedTrade.sellingPrice
-                  }
-                  onChange={(e) =>
-                    setSelectedTrade({
-                      ...selectedTrade,
-                      [selectedTrade.action === "buy"
-                        ? "buyingPrice"
-                        : "sellingPrice"]: Number(e.target.value),
-                    })
-                  }
-                />
+                <div className="col-span-2">
+                  <Label>Trade Type</Label>
+                  <RadioGroup
+                    className="flex space-x-4"
+                    value={selectedTrade.action}
+                    onValueChange={(value) =>
+                      setSelectedTrade({ ...selectedTrade, action: value })
+                    }
+                  >
+                    <div
+                      className={cn(
+                        "flex items-center space-x-2 border border-border/25 shadow rounded-lg w-36 p-2",
+                        selectedTrade.action === "buy"
+                          ? "bg-[#A073F01A]"
+                          : "bg-card"
+                      )}
+                    >
+                      <RadioGroupItem value="buy" id="edit-open-buy" />
+                      <Label htmlFor="edit-open-buy" className="w-full">
+                        Buy
+                      </Label>
+                    </div>
+                    <div
+                      className={cn(
+                        "flex items-center space-x-2 border border-border/25 shadow rounded-lg w-36 p-2",
+                        selectedTrade.action === "sell"
+                          ? "bg-[#A073F01A]"
+                          : "bg-card"
+                      )}
+                    >
+                      <RadioGroupItem value="sell" id="edit-open-sell" />
+                      <Label htmlFor="edit-open-sell" className="w-full">
+                        Sell
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="col-span-2">
+                  <Label>
+                    {selectedTrade.action === "buy" ? "Buying" : "Selling"}{" "}
+                    Price
+                  </Label>
+                  <Input
+                    type="number"
+                    value={
+                      selectedTrade.action === "buy"
+                        ? selectedTrade.buyingPrice
+                        : selectedTrade.sellingPrice
+                    }
+                    onChange={(e) => {
+                      const price = Number(e.target.value);
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        [selectedTrade.action === "buy"
+                          ? "buyingPrice"
+                          : "sellingPrice"]: price,
+                      });
+                    }}
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="col-span-2">Action</Label>
-                <RadioGroup
-                  className="col-span-2 flex space-x-4"
-                  value={selectedTrade.action}
-                  onValueChange={(value) =>
-                    setSelectedTrade({ ...selectedTrade, action: value })
-                  }
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="buy" id="edit-buy" />
-                    <Label htmlFor="edit-buy">Buy</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sell" id="edit-sell" />
-                    <Label htmlFor="edit-sell">Sell</Label>
-                  </div>
-                </RadioGroup>
+                <div className="col-span-2">
+                  <Label>Equity Type</Label>
+                  <Select
+                    value={selectedTrade.equityType}
+                    onValueChange={(value) =>
+                      setSelectedTrade({ ...selectedTrade, equityType: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="F&O-OPTIONS">F&O-OPTIONS</SelectItem>
+                      <SelectItem value="F&O-FUTURES">F&O-FUTURES</SelectItem>
+                      <SelectItem value="INTRADAY">INTRADAY</SelectItem>
+                      <SelectItem value="DELIVERY">DELIVERY</SelectItem>
+                      <SelectItem value="OTHERS">OTHERS</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2">
+                  <Label>Time</Label>
+                  <Input
+                    type="time"
+                    value={selectedTrade.time}
+                    onChange={(e) =>
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        time: e.target.value,
+                      })
+                    }
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="col-span-2">Equity Type</Label>
-                <Label className="col-span-2">Time</Label>
-                <Select
-                  value={selectedTrade.equityType}
-                  onValueChange={(value) =>
-                    setSelectedTrade({ ...selectedTrade, equityType: value })
-                  }
-                >
-                  <SelectTrigger className="col-span-2">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="F&O-OPTIONS">Options</SelectItem>
-                    <SelectItem value="F&O-FUTURES">Futures</SelectItem>
-                    <SelectItem value="INTRADAY">Intraday</SelectItem>
-                    <SelectItem value="DELIVERY">Delivery</SelectItem>
-                    <SelectItem value="OTHERS">Others</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="time"
-                  className="col-span-2"
-                  value={selectedTrade.time}
-                  onChange={(e) =>
-                    setSelectedTrade({ ...selectedTrade, time: e.target.value })
-                  }
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="col-span-2">Exchange Charges (₹)</Label>
-                <Label className="col-span-2">Brokerage (₹)</Label>
-                <Input
-                  type="number"
-                  className="col-span-2"
-                  value={selectedTrade.exchangeRate}
-                  onChange={(e) =>
-                    setSelectedTrade({
-                      ...selectedTrade,
-                      exchangeRate: Number(e.target.value),
-                    })
-                  }
-                />
-                <Input
-                  type="number"
-                  className="col-span-2"
-                  value={selectedTrade.brokerage}
-                  onChange={(e) =>
-                    setSelectedTrade({
-                      ...selectedTrade,
-                      brokerage: Number(e.target.value),
-                    })
-                  }
-                />
+                <div className="col-span-2">
+                  <Label>Exchange Charges (₹)</Label>
+                  <Input
+                    type="number"
+                    value={selectedTrade.exchangeRate}
+                    readOnly
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Brokerage (₹)</Label>
+                  <Input
+                    type="number"
+                    value={selectedTrade.brokerage}
+                    onChange={(e) =>
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        brokerage: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
               </div>
               <div className="bg-secondary/50 p-4 rounded-lg">
                 <div className="flex justify-between items-center">
@@ -676,10 +801,161 @@ export function TradesSection({ selectedDate, brokerage }) {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditTradeOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setEditOpenTradeOpen(false)}
+            >
               Cancel
             </Button>
-            <Button onClick={handleTradeEdit} className="bg-primary">
+            <Button onClick={handleOpenTradeEdit} className="bg-primary">
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Complete Trade Dialog */}
+      <Dialog
+        open={editCompleteTradeOpen}
+        onOpenChange={setEditCompleteTradeOpen}
+      >
+        <DialogContent className="md:max-w-[50vw]">
+          <DialogHeader className="border-b pb-4">
+            <DialogTitle>Edit Complete Trade</DialogTitle>
+          </DialogHeader>
+          {selectedTrade && (
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="col-span-2">
+                  <Label>Instrument Name</Label>
+                  <Input
+                    value={selectedTrade.instrumentName}
+                    onChange={(e) =>
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        instrumentName: e.target.value.toUpperCase(),
+                      })
+                    }
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Quantity</Label>
+                  <Input
+                    type="number"
+                    value={selectedTrade.quantity}
+                    onChange={(e) =>
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        quantity: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="col-span-2">
+                  <Label>Buying Price</Label>
+                  <Input
+                    type="number"
+                    value={selectedTrade.buyingPrice}
+                    onChange={(e) =>
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        buyingPrice: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Selling Price</Label>
+                  <Input
+                    type="number"
+                    value={selectedTrade.sellingPrice}
+                    onChange={(e) =>
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        sellingPrice: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="col-span-2">
+                  <Label>Equity Type</Label>
+                  <Select
+                    value={selectedTrade.equityType}
+                    onValueChange={(value) =>
+                      setSelectedTrade({ ...selectedTrade, equityType: value })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="F&O-OPTIONS">F&O-OPTIONS</SelectItem>
+                      <SelectItem value="F&O-FUTURES">F&O-FUTURES</SelectItem>
+                      <SelectItem value="INTRADAY">INTRADAY</SelectItem>
+                      <SelectItem value="DELIVERY">DELIVERY</SelectItem>
+                      <SelectItem value="OTHERS">OTHERS</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2">
+                  <Label>Time</Label>
+                  <Input
+                    type="time"
+                    value={selectedTrade.time}
+                    onChange={(e) =>
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        time: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <div className="col-span-2">
+                  <Label>Exchange Charges (₹)</Label>
+                  <Input
+                    type="number"
+                    value={selectedTrade.exchangeRate}
+                    readOnly
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Brokerage (₹)</Label>
+                  <Input
+                    type="number"
+                    value={selectedTrade.brokerage}
+                    onChange={(e) =>
+                      setSelectedTrade({
+                        ...selectedTrade,
+                        brokerage: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="bg-secondary/50 p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Total Order Amount:</span>
+                  <span className="text-lg font-bold">
+                    ₹ {calculateTotalOrder(selectedTrade)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setEditCompleteTradeOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCompleteTradeEdit} className="bg-primary">
               Save Changes
             </Button>
           </DialogFooter>

@@ -158,195 +158,208 @@ export default function AccountabilityPartner() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-full">
-      <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Accountability Partner</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p>
-              An Accountability Partner is someone who supports another person
-              to keep a commitment or maintain progress on a desired goal. They
-              will often be a trusted acquaintance who will regularly ask an
-              individual about their progress.
-            </p>
-            <p>
-              Add details of such a person and we will share your progress with
-              them. You can also choose what details the accountability partner
-              can view.
-            </p>
-            <p className="text-sm text-gray-500">
-              Accountability Partners cannot make any changes to your data or
-              your account.
-            </p>
-            <div className="w-full flex justify-end items-end">
-              <Button
-                variant="outline"
-                className="text-primary"
-                onClick={() => setShowDialog(false)}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-      <Card className="bg-transparent border-none shadow-none flex-1 lg:flex-[2] h-full">
-        <CardHeader>
-          <CardTitle className="text-2xl">Add Accountability Partner</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="name">Full name*</Label>
-                <Input
-                  id="name"
-                  placeholder="Accountability Partner's full name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div className="flex-1">
-                <Label htmlFor="email">Email ID*</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Accountability Partner's Email ID"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-            </div>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <Label htmlFor="relation">Relation</Label>
-                <Select
-                  value={formData.relation}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, relation: value })
-                  }
-                >
-                  <SelectTrigger id="relation">
-                    <SelectValue placeholder="Select" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mentor">Mentor</SelectItem>
-                    <SelectItem value="family">Family Member</SelectItem>
-                    <SelectItem value="friend">Friend</SelectItem>
-                    <SelectItem value="colleague">Colleague</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex-1">
-                <Label htmlFor="details" className="-mb-4">
-                  Select details you want to share*
-                </Label>
-                <MultiSelector
-                  values={selectedDetails}
-                  onValuesChange={setSelectedDetails}
-                  className="w-full -mt-2 h-fit"
-                >
-                  <MultiSelectorTrigger className="w-full rounded bg-card border border-input/25 shadow-sm p-2">
-                    <MultiSelectorInput
-                      placeholder="Select details..."
-                      className="bg-card text-sm"
-                    />
-                  </MultiSelectorTrigger>
-                  <MultiSelectorContent>
-                    <MultiSelectorList>
-                      {detailOptions.map((option) => (
-                        <MultiSelectorItem
-                          key={option.value}
-                          value={option.value}
-                        >
-                          {option.label}
-                        </MultiSelectorItem>
-                      ))}
-                    </MultiSelectorList>
-                  </MultiSelectorContent>
-                </MultiSelector>
-              </div>
-            </div>
-            <div>
-              <Label>Share my progress*</Label>
-              <RadioGroup
-                value={formData.shareFrequency}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, shareFrequency: value })
-                }
-                className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="weekly" id="weekly" />
-                  <Label htmlFor="weekly">Weekly</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="monthly" id="monthly" />
-                  <Label htmlFor="monthly">Monthly</Label>
-                </div>
-              </RadioGroup>
-            </div>
-            <div className="text-sm text-gray-500">
-              Your accountability partner will receive progress analysis
-              starting from today.
-            </div>
-            <div className="flex justify-end space-x-2">
-              <Button type="button" variant="outline" onClick={resetForm}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Adding..." : "Add"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card className="rounded-none border-none shadow-none flex-1 h-full bg-accent mt-4 lg:mt-0">
-        <CardHeader>
-          <CardTitle className="text-2xl">My Accountability Partners</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {partners.length > 0 ? (
+    <div className="bg-card h-full">
+      <div className="flex flex-col lg:flex-row h-full bg-background rounded-t-xl">
+        <Dialog open={showDialog} onOpenChange={setShowDialog}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Accountability Partner</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4">
-              {partners.map((partner) => (
-                <Card key={partner._id}>
-                  <CardContent className="flex justify-between items-center p-4">
-                    <div>
-                      <h3 className="font-semibold">{partner.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        Last updated:{" "}
-                        {new Date(partner.updatedAt).toLocaleString()}
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemovePartner(partner._id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <Package className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-semibold text-gray-900">
-                No Accountability Partners
-              </h3>
-              <p className="mt-1 text-sm text-gray-500">
-                Please add your first Accountability Partner
+              <p>
+                An Accountability Partner is someone who supports another person
+                to keep a commitment or maintain progress on a desired goal.
+                They will often be a trusted acquaintance who will regularly ask
+                an individual about their progress.
               </p>
+              <p>
+                Add details of such a person and we will share your progress
+                with them. You can also choose what details the accountability
+                partner can view.
+              </p>
+              <p className="text-sm text-gray-500">
+                Accountability Partners cannot make any changes to your data or
+                your account.
+              </p>
+              <div className="w-full flex justify-end items-end">
+                <Button
+                  variant="outline"
+                  className="text-primary"
+                  onClick={() => setShowDialog(false)}
+                >
+                  Close
+                </Button>
+              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </DialogContent>
+        </Dialog>
+        <Card className="bg-transparent border-none shadow-none flex-1 lg:flex-[2] h-full">
+          <CardHeader>
+            <CardTitle className="text-2xl">
+              Add Accountability Partner
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="name">Full name*</Label>
+                  <Input
+                    id="name"
+                    placeholder="Accountability Partner's full name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label htmlFor="email">Email ID*</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Accountability Partner's Email ID"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <Label htmlFor="relation">Relation</Label>
+                  <Select
+                    value={formData.relation}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, relation: value })
+                    }
+                  >
+                    <SelectTrigger id="relation">
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mentor">Mentor</SelectItem>
+                      <SelectItem value="family">Family Member</SelectItem>
+                      <SelectItem value="friend">Friend</SelectItem>
+                      <SelectItem value="colleague">Colleague</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex-1">
+                  <Label htmlFor="details" className="-mb-4">
+                    Select details you want to share*
+                  </Label>
+                  <MultiSelector
+                    values={selectedDetails}
+                    onValuesChange={setSelectedDetails}
+                    className="w-full -mt-2 h-fit"
+                  >
+                    <MultiSelectorTrigger className="w-full rounded bg-card border border-input/25 shadow-sm p-2">
+                      <MultiSelectorInput
+                        placeholder="Select details..."
+                        className="bg-card text-sm"
+                      />
+                    </MultiSelectorTrigger>
+                    <MultiSelectorContent>
+                      <MultiSelectorList>
+                        {detailOptions.map((option) => (
+                          <MultiSelectorItem
+                            key={option.value}
+                            value={option.value}
+                          >
+                            {option.label}
+                          </MultiSelectorItem>
+                        ))}
+                      </MultiSelectorList>
+                    </MultiSelectorContent>
+                  </MultiSelector>
+                </div>
+              </div>
+              <div>
+                <Label>Share my progress*</Label>
+                <RadioGroup
+                  value={formData.shareFrequency}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, shareFrequency: value })
+                  }
+                  className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="weekly" id="weekly" />
+                    <Label htmlFor="weekly">Weekly</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="monthly" id="monthly" />
+                    <Label htmlFor="monthly">Monthly</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <div className="text-sm text-gray-500">
+                Your accountability partner will receive progress analysis
+                starting from today.
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button type="button" variant="outline" onClick={resetForm}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? "Adding..." : "Add"}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-none border-none shadow-none flex-1 h-full bg-[#F3EFFA] dark:bg-[#2a292b] mt-4 lg:mt-0">
+          <CardHeader>
+            <CardTitle className="text-2xl">
+              My Accountability Partners
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="h-full">
+            {partners.length > 0 ? (
+              <div className="space-y-4">
+                {partners.map((partner) => (
+                  <Card key={partner._id}>
+                    <CardContent className="flex justify-between items-center p-4">
+                      <div>
+                        <h3 className="font-semibold">{partner.name}</h3>
+                        <p className="text-sm text-gray-500">
+                          Last updated:{" "}
+                          {new Date(partner.updatedAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemovePartner(partner._id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center  flex flex-col items-center justify-center ">
+                  {/* <Package className="mx-auto h-12 w-12 text-gray-400" /> */}
+                  <img
+                    src="/images/no_box.png"
+                    alt="no data"
+                    className="size-36"
+                  />
+                  <h3 className="mt-2 text-lg font-semibold text-gray-900">
+                    No Data
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Please add your first Accountability Partner
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

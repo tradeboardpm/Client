@@ -23,12 +23,12 @@ const GoogleLoginButton = ({
     <div className={`relative w-full ${className}`}>
       <Button
         variant="ghost"
-        className="w-full justify-center border border-primary/15 bg-accent/25 shadow"
+        className="w-full justify-center border border-primary/15 bg-accent/25 shadow font-semibold text-xs"
         onClick={handleClick}
         disabled={disabled}
       >
         <img src="/images/google.svg" alt="google img" className="h-5 mr-2" />
-        
+
         {text}
       </Button>
 

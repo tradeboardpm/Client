@@ -25,7 +25,6 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
 
   const today = new Date();
 
-
   const modifiers = {
     future: (date) => isFuture(date),
     today: (date) => isToday(date),
@@ -58,9 +57,30 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
   const modifiersStyles = {
     future: { opacity: 0.5, pointerEvents: "none" },
     today: { border: "2px solid purple" },
-    profit: { backgroundColor: "rgba(34, 197, 94, 0.5)" },
-    loss: { backgroundColor: "rgba(239, 68, 68, 0.5)" },
-    breakeven: { backgroundColor: "rgba(234, 179, 8, 0.5)" },
+    profit: {
+      backgroundColor: "#C0F9E5",
+      color: "#0ED991",
+      dark: {
+        backgroundColor: "rgba(192, 249, 229, 0.2)",
+        color: "#0ED991",
+      },
+    },
+    loss: {
+      backgroundColor: "#FFD3D8",
+      color: "#FF8190",
+      dark: {
+        backgroundColor: "rgba(255, 211, 216, 0.2)",
+        color: "#FF8190",
+      },
+    },
+    breakeven: {
+      backgroundColor: "#FFF8B8",
+      color: "#FAC300",
+      dark: {
+        backgroundColor: "rgba(255, 248, 184, 0.2)",
+        color: "#FAC300",
+      },
+    },
   };
 
   const handleMonthChange = (newMonth) => {
@@ -68,8 +88,8 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card className="w-fit  shadow-lg">
+    <div className="flex flex-col gap-4 ">
+      <Card className="w-fit shadow-lg bg-[#FAF7FF] dark:bg-[#363637]">
         <CardContent className="p-0">
           <Calendar
             mode="single"
@@ -105,16 +125,36 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
               <span>Today</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-green-500/50" />
-              <span>Profit</span>
+              <div
+                className="w-3 h-3 rounded"
+                style={{
+                  backgroundColor: "#C0F9E5",
+                  color: "#0ED991",
+                }}
+              />
+              <span className="text-[#0ED991] dark:text-[#0ED991]">Profit</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-red-500/50" />
-              <span>Loss</span>
+              <div
+                className="w-3 h-3 rounded"
+                style={{
+                  backgroundColor: "#FFD3D8",
+                  color: "#FF8190",
+                }}
+              />
+              <span className="text-[#FF8190] dark:text-[#FF8190]">Loss</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-yellow-500/50" />
-              <span>Break Even</span>
+              <div
+                className="w-3 h-3 rounded"
+                style={{
+                  backgroundColor: "#FFF8B8",
+                  color: "#FAC300",
+                }}
+              />
+              <span className="text-[#FAC300] dark:text-[#FAC300]">
+                Break Even
+              </span>
             </div>
           </div>
         </CardContent>
@@ -122,12 +162,8 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
 
       <div>
         <h2 className="text-xl font-bold mb-2 mt-4">Performance</h2>
-       
-          <WeeklyCharts
-            selectedDate={selectedDate}
-            tradesPerDay={tradesPerDay}
-          />
-        
+
+        <WeeklyCharts selectedDate={selectedDate} tradesPerDay={tradesPerDay} />
       </div>
     </div>
   );

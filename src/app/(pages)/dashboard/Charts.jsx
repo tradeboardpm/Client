@@ -20,6 +20,7 @@ import {
   XAxis,
   YAxis,
   ResponsiveContainer,
+  ComposedChart,
 } from "recharts";
 import Cookies from "js-cookie";
 import { parseISO, isValid } from "date-fns";
@@ -60,22 +61,34 @@ export function WeeklyCharts({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Normalize the date input to a valid Date object
   const normalizeDate = (date) => {
-    if (date instanceof Date) return date;
+    let normalizedDate;
 
-    // Handle string inputs (ISO format or other parseable formats)
-    const parsedDate =
-      typeof date === "string" ? parseISO(date) : new Date(date);
+    if (date instanceof Date) {
+      normalizedDate = date;
+    } else if (typeof date === "string") {
+      normalizedDate = parseISO(date);
+    } else {
+      normalizedDate = new Date(date);
+    }
 
-    return isValid(parsedDate) ? parsedDate : new Date();
+    if (!isValid(normalizedDate)) {
+      return new Date();
+    }
+
+    return new Date(
+      Date.UTC(
+        normalizedDate.getFullYear(),
+        normalizedDate.getMonth(),
+        normalizedDate.getDate()
+      )
+    );
   };
 
   const fetchWeeklyData = async (date) => {
     setIsLoading(true);
     setError(null);
 
-    // If weeklyDataOverride is provided, use it directly
     if (weeklyDataOverride) {
       setWeeklyData(weeklyDataOverride);
       setIsLoading(false);
@@ -83,7 +96,6 @@ export function WeeklyCharts({
     }
 
     try {
-      // Normalize the date and use toISOString
       const normalizedDate = normalizeDate(date);
       const formattedDate = normalizedDate.toISOString().split("T")[0];
       const token = Cookies.get("token");
@@ -124,7 +136,6 @@ export function WeeklyCharts({
     fetchWeeklyData(selectedDate);
   }, [selectedDate]);
 
-  // Check if all daily data is zero
   const hasNoData =
     weeklyData &&
     Object.values(weeklyData).every(
@@ -137,7 +148,6 @@ export function WeeklyCharts({
         dayData.lossTrades === 0
     );
 
-  // Render loading or error state
   if (isLoading) {
     return <div>Loading weekly performance...</div>;
   }
@@ -146,20 +156,18 @@ export function WeeklyCharts({
     return <div>Error loading weekly data: {error}</div>;
   }
 
-  // Render no data state
   if (!weeklyData || hasNoData) {
     return <NoDataComponent />;
   }
 
-  // Process data for charts
   const processedData = days.map((day, index) => {
     const date = weeklyData ? Object.keys(weeklyData)[index] : null;
     const dayData = weeklyData?.[date] || {};
     return {
       day,
       tradesTaken: dayData.tradesTaken || 0,
-      win: dayData.winTrades || 0,
-      loss: dayData.lossTrades || 0,
+      winTrade: dayData.winTrades || 0,
+      lossTrade: dayData.lossTrades || 0,
       profitLoss: dayData.totalProfitLoss || 0,
       rulesFollowed: dayData.rulesFollowed || 0,
       rulesBroken: dayData.rulesUnfollowed || 0,
@@ -168,8 +176,8 @@ export function WeeklyCharts({
 
   return (
     <div className="flex flex-col gap-6 w-full max-w-4xl">
-      {/* Trades Taken Chart */}
-      <Card className="shadow-lg">
+      {/* Previous Trades Taken Chart remains unchanged */}
+      <Card className="shadow-lg bg-[#FAF7FF] dark:bg-[#363637]">
         <CardHeader className="p-4 flex flex-col justify-between">
           <CardTitle className="text-base font-semibold p-0">
             Trades Taken
@@ -206,10 +214,10 @@ export function WeeklyCharts({
                 <YAxis tickLine={false} axisLine={false} tickMargin={12} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Line
-                  type="monotone"
+                  type="linear"
                   dataKey="tradesTaken"
                   stroke="hsl(var(--primary))"
-                  strokeWidth={2}
+                  strokeWidth={3}
                   dot={{ fill: "hsl(var(--primary))", r: 4 }}
                   activeDot={{ r: 6 }}
                 />
@@ -219,14 +227,14 @@ export function WeeklyCharts({
         </CardContent>
       </Card>
 
-      {/* Win Rate Chart */}
-      <Card className="shadow-lg">
+      {/* Updated Win Rate Chart with Stacked Bars */}
+      <Card className="shadow-lg bg-[#FAF7FF] dark:bg-[#363637]">
         <CardHeader className="p-4 flex flex-row items-center justify-between">
           <CardTitle className="text-base font-semibold">Win Rate</CardTitle>
           <CustomLegend
             items={[
-              { label: "Win", color: "hsl(var(--chart-1))" },
-              { label: "Loss", color: "hsl(var(--destructive))" },
+              { label: "Win", color: "#0ED991" },
+              { label: "Loss", color: "#F44C60" },
             ]}
           />
         </CardHeader>
@@ -235,11 +243,11 @@ export function WeeklyCharts({
             config={{
               win: {
                 label: "Win",
-                color: "hsl(var(--chart-1))",
+                color: "#0ED991",
               },
               loss: {
                 label: "Loss",
-                color: "hsl(var(--destructive))",
+                color: "#F44C60",
               },
             }}
           >
@@ -247,7 +255,6 @@ export function WeeklyCharts({
               <BarChart
                 data={processedData}
                 margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
-                stackOffset="sign"
               >
                 <CartesianGrid
                   vertical={false}
@@ -263,16 +270,16 @@ export function WeeklyCharts({
                 <YAxis tickLine={false} axisLine={false} tickMargin={12} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
-                  dataKey="win"
-                  stackId="a"
-                  fill="hsl(var(--chart-1))"
+                  dataKey="winTrade"
+                  stackId="winLoss"
+                  fill="#0ED991"
                   barSize={20}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
-                  dataKey="loss"
-                  stackId="a"
-                  fill="hsl(var(--destructive))"
+                  dataKey="lossTrade"
+                  stackId="winLoss"
+                  fill="#F44C60"
                   barSize={20}
                   radius={[4, 4, 0, 0]}
                 />
@@ -282,8 +289,8 @@ export function WeeklyCharts({
         </CardContent>
       </Card>
 
-      {/* Profit & Loss Chart */}
-      <Card className="shadow-lg">
+      {/* Previous Profit & Loss Chart remains unchanged */}
+      <Card className="shadow-lg bg-[#FAF7FF] dark:bg-[#363637]">
         <CardHeader className="p-4 flex flex-row items-center justify-between">
           <CardTitle className="text-base font-semibold">
             Profit & Loss
@@ -336,10 +343,10 @@ export function WeeklyCharts({
                   }
                 />
                 <Line
-                  type="monotone"
+                  type="linear"
                   dataKey="profitLoss"
                   stroke="hsl(var(--primary))"
-                  strokeWidth={2}
+                  strokeWidth={3}
                   dot={{ fill: "hsl(var(--primary))", r: 4 }}
                   activeDot={{ r: 6 }}
                 />
@@ -349,14 +356,14 @@ export function WeeklyCharts({
         </CardContent>
       </Card>
 
-      {/* Rules Chart */}
-      <Card className="shadow-lg">
+      {/* Updated Rules Chart with Stacked Bars */}
+      <Card className="shadow-lg bg-[#FAF7FF] dark:bg-[#363637]">
         <CardHeader className="p-4 flex flex-row items-center justify-between">
           <CardTitle className="text-base font-semibold">Rules</CardTitle>
           <CustomLegend
             items={[
-              { label: "Followed", color: "hsl(var(--chart-1))" },
-              { label: "Broken", color: "hsl(var(--destructive))" },
+              { label: "Followed", color: "#0ED991" },
+              { label: "Broken", color: "#F44C60" },
             ]}
           />
         </CardHeader>
@@ -365,11 +372,11 @@ export function WeeklyCharts({
             config={{
               followed: {
                 label: "Followed",
-                color: "hsl(var(--chart-1))",
+                color: "#0ED991",
               },
               broken: {
                 label: "Broken",
-                color: "hsl(var(--destructive))",
+                color: "#F44C60 ",
               },
             }}
           >
@@ -377,7 +384,6 @@ export function WeeklyCharts({
               <BarChart
                 data={processedData}
                 margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
-                stackOffset="sign"
               >
                 <CartesianGrid
                   vertical={false}
@@ -394,15 +400,15 @@ export function WeeklyCharts({
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
                   dataKey="rulesFollowed"
-                  stackId="a"
-                  fill="hsl(var(--chart-1))"
+                  stackId="ruleStatus"
+                  fill="#0ED991"
                   barSize={20}
                   radius={[4, 4, 0, 0]}
                 />
                 <Bar
                   dataKey="rulesBroken"
-                  stackId="a"
-                  fill="hsl(var(--destructive))"
+                  stackId="ruleStatus"
+                  fill="#F44C60"
                   barSize={20}
                   radius={[4, 4, 0, 0]}
                 />

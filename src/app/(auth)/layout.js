@@ -37,15 +37,19 @@ export default function AuthLayout({ children }) {
     <div className="flex h-screen bg-background relative">
       <button
         onClick={handleHomeClick}
-        className="absolute top-4 left-4 z-10 bg-white border border-gray-300 p-2 rounded-full hover:bg-gray-100 transition-colors"
+        className="absolute top-4 left-4 z-10 bg-popover border-2 border-secondary p-0 rounded-full hover:bg-accent transition-colors overflow-hidden"
       >
-        <Home className="w-6 h-6 text-gray-700" />
+        <img
+          src="/images/tb_logo.svg"
+          alt="logo"
+          className="size-8 object-cover"
+        />
       </button>
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center overflow-y-auto">
         {children}
         <Toaster />
       </div>
-      <div className="hidden md:flex md:w-1/2 bg-primary py-12 px-6 rounded-l-[4rem]">
+      <div className="hidden md:flex md:w-1/2 primary_gradient py-12 px-6 rounded-l-[4rem]">
         <ImageCarousel />
       </div>
     </div>

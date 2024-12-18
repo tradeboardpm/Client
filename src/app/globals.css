@@ -39,7 +39,7 @@ body {
 
 @layer base {
   :root {
-    --background: 262 0% 98%;
+    --background: 270 100% 98%;
     --foreground: 262 0% 10%;
     --card: 262 0% 100%;
     --card-foreground: 262 0% 15%;
@@ -58,7 +58,7 @@ body {
     --border: 262 20% 82%;
     --input: 262 20% 50%;
     --ring: 262 80.6% 69.6%;
-    --radius: 0.5rem;
+    --radius: 0.65rem;
     --chart-1: 120 70% 40%; /* More green */
     --chart-2: 0 80% 50%; /* More red */
     --chart-3: 197 37% 24%;
@@ -95,7 +95,13 @@ body {
 }
 
 .primary_gradient {
-  @apply bg-gradient-to-b from-primary to-[#7886DD];
+  /* @apply bg-gradient-to-b from-[#A073f0] to-[#7886DD]; */
+  /* bg */
+
+
+/* Secondary color */
+background: linear-gradient(180deg, #A073F0 0%, #7886DD 100%);
+
 }
 
 @layer base {

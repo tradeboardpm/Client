@@ -23,18 +23,18 @@ const JournalCard = ({
   const router = useRouter();
 
   const getProfitColor = () => {
-    if (profit > 100) return "bg-emerald-500/20 border border-2 border-emerald-500";
-    return "bg-rose-500/20 border border-2 border-rose-500";
+    if (profit > 100) return "bg-[#5BFBC2]/35 border  border-[#5BFBC2]";
+    return "bg-[#F44C60]/25 border  border-[#F44C60]";
   };
 
   const getProfitBorderColor = () => {
-    if (profit > 100) return "border-emerald-500/50 transition-all duration-300";
-    return "border-rose-500/50 transition-all duration-300";
+    if (profit > 100) return "border-[#5BFBC2]/75 transition-all duration-300";
+    return "border-[#F44C60]/25 transition-all duration-300";
   };
 
   const getArrowColor = () => {
-    if (profit > 100) return "text-emerald-700 group-hover:text-emerald-800";
-    return "text-rose-500 group-hover:text-rose-700";
+    if (profit > 100) return "text-[#0ED991] group-hover:text-[#5BFBC2]";
+    return "text-[#F44C60] group-hover:text-[#F44C60]";
   };
 
   // Format date to "Mon, 01 Dec"
@@ -68,28 +68,28 @@ const JournalCard = ({
           </span>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6 pb-4">
-        <div>
-          <span className="font-medium text-sm text-foreground/50">Note:</span>
-          <p className="whitespace-nowrap overflow-hidden text-ellipsis">
+      <CardContent className="space-y-6 py-4">
+        <div className="flex items-center">
+          <span className="font-medium text-sm mr-1">Note:</span>
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis text-sm text-foreground/50">
             {truncateText(note)}
-          </p>
+          </span>
         </div>
-        <div>
-          <span className="font-medium text-sm text-foreground/50">
+        <div className="flex items-center">
+          <span className="font-medium text-sm mr-1">
             Mistake:
           </span>
-          <p className="whitespace-nowrap overflow-hidden text-ellipsis">
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis text-sm text-foreground/50">
             {truncateText(mistake)}
-          </p>
+          </span>
         </div>
-        <div>
-          <span className="font-medium text-sm text-foreground/50">
+        <div className="flex items-center">
+          <span className="font-medium text-sm mr-1">
             Lesson:
           </span>
-          <p className="whitespace-nowrap overflow-hidden text-ellipsis">
+          <span className="whitespace-nowrap overflow-hidden text-ellipsis text-sm text-foreground/50">
             {truncateText(lesson)}
-          </p>
+          </span>
         </div>
       </CardContent>
       <CardFooter

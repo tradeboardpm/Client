@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,60 +21,231 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Info, SquarePen, Trash2, Plus, PlusCircle, Search } from "lucide-react";
+import {
+  Info,
+  SquarePen,
+  Trash2,
+  Plus,
+  PlusCircle,
+  Search,
+  Loader2,
+  X,
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
-// const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const MAX_RULE_LENGTH = 150;
 
-const EmptyState = ({
-  setNewRuleDialog,
-  handleLoadSampleRules,
+const AddRulesDialog = ({
+  open,
+  onOpenChange,
+  selectedDate,
+  onRulesAdded,
   isLoading,
-  journal,
-  setJournal,
-  rules,
-  onFollowRule,
+  costPerRule = 0.05, // Default cost per rule
 }) => {
-  const [addRuleDialogOpen, setAddRuleDialogOpen] = useState(false);
-  const [newRuleDescription, setNewRuleDescription] = useState("");
-  const [isAddRuleLoading, setIsAddRuleLoading] = useState(false);
+  const [rulesList, setRulesList] = useState([""]);
+  const [isAddingRules, setIsAddingRules] = useState(false);
+  const inputRefs = useRef([]);
 
-  const handleAddRule = async () => {
-    setIsAddRuleLoading(true);
+  // Calculate total cost of rules
+  const totalCost = useMemo(() => {
+    const validRulesCount = rulesList.filter(
+      (rule) => rule.trim() !== ""
+    ).length;
+    return (validRulesCount * costPerRule).toFixed(2);
+  }, [rulesList, costPerRule]);
+
+  useEffect(() => {
+    if (!open) {
+      setRulesList([""]);
+      inputRefs.current = [];
+    }
+  }, [open]);
+
+  const handleAddRuleInput = () => {
+    // Prevent adding more than 10 rules
+    if (rulesList.length < 10) {
+      setRulesList([...rulesList, ""]);
+    }
+  };
+
+  const handleRemoveRuleInput = (index) => {
+    const newRulesList = rulesList.filter((_, i) => i !== index);
+    setRulesList(newRulesList.length ? newRulesList : [""]);
+  };
+
+  const handleRuleChange = (index, value) => {
+    // Truncate to 150 characters if needed
+    const truncatedValue = value.slice(0, MAX_RULE_LENGTH);
+    const newRulesList = [...rulesList];
+    newRulesList[index] = truncatedValue;
+    setRulesList(newRulesList);
+  };
+
+  const handleKeyDown = (e, index) => {
+    // If Enter is pressed and the current input is not empty
+    if (e.key === "Enter" && rulesList[index].trim() !== "") {
+      e.preventDefault(); // Prevent default Enter behavior
+
+      // If it's the last input and not at max limit, add a new input
+      if (index === rulesList.length - 1 && rulesList.length < 10) {
+        handleAddRuleInput();
+        // Focus on the newly added input
+        setTimeout(() => {
+          inputRefs.current[index + 1]?.focus();
+        }, 0);
+      }
+      // If not the last input, focus on the next input
+      else if (index < rulesList.length - 1) {
+        inputRefs.current[index + 1]?.focus();
+      }
+    }
+  };
+
+  const handleClearAll = () => {
+    setRulesList([""]);
+  };
+
+  const handleAddRules = async () => {
+    const validRules = rulesList.filter((rule) => rule.trim() !== "");
+
+    if (validRules.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please add at least one rule.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsAddingRules(true);
     try {
       const token = Cookies.get("token");
       const response = await axios.post(
-        `${API_URL}/rules`,
+        `${API_URL}/rules/bulk`,
         {
-          description: newRuleDescription,
+          rules: validRules.map((description) => ({
+            description,
+            date: selectedDate.toISOString(),
+          })),
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
 
-      if (journal) {
-        setJournal({
-          ...journal,
-          rulesUnfollowed: [...journal.rulesUnfollowed, response.data],
-        });
-      } else if (rules) {
-        onFollowRule(response.data._id);
-      }
+      onRulesAdded(response.data);
+      setRulesList([""]);
+      onOpenChange(false);
 
-      setNewRuleDescription("");
-      setAddRuleDialogOpen(false);
-      window.location.reload(); // Reload the page after successful rule addition
+      toast({
+        title: "Rules added",
+        description: `${validRules.length} rule(s) have been added successfully.`,
+      });
     } catch (error) {
-      console.error("Error adding rule:", error);
+      console.error("Error adding rules:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add rules. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsAddRuleLoading(false);
+      setIsAddingRules(false);
     }
   };
 
+  // Determine if add rule button should be disabled
+  const isAddRuleDisabled =
+    isAddingRules ||
+    rulesList.length >= 10 ||
+    rulesList[rulesList.length - 1].trim() === "";
+
   return (
-    <Card className="">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader className="border-b mb-4 py-2">
+          <DialogTitle>Add New Rules</DialogTitle>
+          <DialogDescription>
+            Here you can add Rules. Maximum 10 rules allowed.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2 py-4 max-h-[300px] overflow-y-auto pr-2">
+          {rulesList.map((rule, index) => (
+            <div key={index} className="flex flex-col space-y-1 p-2">
+              <div className="flex items-center space-x-2">
+                <Input
+                  ref={(el) => {
+                    if (el) {
+                      inputRefs.current[index] = el;
+                    }
+                  }}
+                  value={rule}
+                  onChange={(e) => handleRuleChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(e, index)}
+                  placeholder="Enter your rule"
+                  maxLength={MAX_RULE_LENGTH}
+                  className="flex-1"
+                />
+                {rulesList.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveRuleInput(index)}
+                    disabled={isAddingRules}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground text-right">
+                {rule.length}/{MAX_RULE_LENGTH}
+              </div>
+            </div>
+          ))}
+          <Button
+            variant="outline"
+            onClick={handleAddRuleInput}
+            disabled={isAddRuleDisabled}
+            className="w-full mt-2"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Another Rule
+            {rulesList.length > 0 && ` (${rulesList.length}/10)`}
+          </Button>
+        </div>
+        <DialogFooter className="flex justify-between mt-4">
+          <Button
+            variant="outline"
+            onClick={handleClearAll}
+            disabled={
+              isAddingRules || rulesList.every((rule) => rule.trim() === "")
+            }
+          >
+            Clear All
+          </Button>
+          <Button
+            onClick={handleAddRules}
+            disabled={
+              isAddingRules || rulesList.every((rule) => rule.trim() === "")
+            }
+          >
+            {isAddingRules ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            {isAddingRules ? "Adding..." : `Add Rules`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Empty State Component
+const EmptyState = ({ onAddRule, onLoadSampleRules, isLoading }) => {
+  return (
+    <Card className="h-full">
       <CardHeader>
         <div className="flex items-center w-full gap-2">
           <h2 className="text-2xl font-semibold">Rules</h2>
@@ -95,9 +266,9 @@ const EmptyState = ({
           </HoverCard>
         </div>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center">
+      <CardContent className="flex flex-col items-center justify-center ">
         <img
-          src="/images/no_rule.png"
+          src="/images/no_rule.svg"
           alt="No rules yet"
           className="mb-6 w-48"
         />
@@ -106,53 +277,27 @@ const EmptyState = ({
           Please click below to add your trading rules
         </p>
 
-        {/* Add Rule Dialog */}
-        <Dialog open={addRuleDialogOpen} onOpenChange={setAddRuleDialogOpen}>
-          <DialogTrigger asChild>
-            <Button
-              className="bg-primary hover:primary_gradient text-white mb-4"
-              onClick={() => setAddRuleDialogOpen(true)}
-            >
-              <Plus className="mr-2 h-4 w-4" /> Add Rules
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Rule</DialogTitle>
-              <DialogDescription>
-                Add a new trading rule. Maximum 150 characters.
-              </DialogDescription>
-            </DialogHeader>
-            <Input
-              value={newRuleDescription}
-              onChange={(e) => setNewRuleDescription(e.target.value)}
-              placeholder="Enter your rule"
-              maxLength={150}
-            />
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setAddRuleDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleAddRule}
-                disabled={isAddRuleLoading || newRuleDescription.trim() === ""}
-              >
-                {isAddRuleLoading ? "Adding..." : "Add Rule"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <Button
+          className="bg-primary hover:primary_gradient text-white mb-4"
+          onClick={onAddRule}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Plus className="mr-2 h-4 w-4" />
+          )}
+          Add Rules
+        </Button>
 
         <div className="text-gray-400 mb-2">OR</div>
         <Button
           variant="outline"
           className="text-primary hover:bg-primary/10"
-          onClick={handleLoadSampleRules}
+          onClick={onLoadSampleRules}
           disabled={isLoading}
         >
+          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           {isLoading ? "Loading..." : "Load Standard Rules"}
         </Button>
       </CardContent>
@@ -160,54 +305,68 @@ const EmptyState = ({
   );
 };
 
-export function RulesSection({ journal, setJournal, rules, onFollowRule }) {
+export function RulesSection({ selectedDate, onUpdate }) {
+  const [rules, setRules] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingRule, setEditingRule] = useState(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [ruleToDelete, setRuleToDelete] = useState(null);
-  const [newRuleDialog, setNewRuleDialog] = useState(false);
-  const [newRuleDescription, setNewRuleDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [newRulesDialog, setNewRulesDialog] = useState(false);
 
-  const handleAddRule = async () => {
-    setIsLoading(true);
+  const [isLoadingRules, setIsLoadingRules] = useState(false);
+  const [isLoadingAction, setIsLoadingAction] = useState({
+    addRule: false,
+    editRule: false,
+    deleteRule: false,
+    followRule: false,
+    followAllRules: false,
+    loadSampleRules: false,
+  });
+
+  useEffect(() => {
+    fetchRules();
+  }, [selectedDate]);
+
+  const fetchRules = async () => {
+    setIsLoadingRules(true);
     try {
       const token = Cookies.get("token");
-      const response = await axios.post(
-        `${API_URL}/rules`,
-        {
-          description: newRuleDescription,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (journal) {
-        setJournal({
-          ...journal,
-          rulesUnfollowed: [...journal.rulesUnfollowed, response.data],
-        });
-      } else if (rules) {
-        onFollowRule(response.data._id);
-      }
-      setNewRuleDescription("");
-      setNewRuleDialog(false);
+      const response = await axios.get(`${API_URL}/rules`, {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { date: selectedDate.toISOString() },
+      });
+
+      // Ensure each rule has the correct isFollowed status
+      const rulesWithFollowStatus = response.data.map((rule) => ({
+        ...rule,
+        isFollowed: rule.isFollowed || false,
+      }));
+
+      setRules(rulesWithFollowStatus);
     } catch (error) {
-      console.error("Error adding rule:", error);
+      console.error("Error fetching rules:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch rules. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setIsLoadingRules(false);
     }
   };
 
+  const handleAddRules = (newRules) => {
+    setRules((prevRules) => [...prevRules, ...newRules]);
+  };
+
   const handleEditRule = async () => {
-    setIsLoading(true);
+    if (!editingRule) return;
+
+    setIsLoadingAction((prev) => ({ ...prev, editRule: true }));
     try {
       const token = Cookies.get("token");
-      const isOriginalRule = !!editingRule.originalId;
-      const response = await axios.patch(
-        isOriginalRule
-          ? `${API_URL}/journals/delete-rule/${editingRule.originalId}`
-          : `${API_URL}/rules/${editingRule._id}`,
+      await axios.patch(
+        `${API_URL}/rules/${editingRule._id}`,
         {
           description: editingRule.description,
         },
@@ -215,179 +374,205 @@ export function RulesSection({ journal, setJournal, rules, onFollowRule }) {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      if (journal) {
-        const updatedJournal = {
-          ...journal,
-          rulesFollowed: journal.rulesFollowed.map((rule) =>
-            rule._id === editingRule._id ||
-            rule.originalId === editingRule.originalId
-              ? response.data
-              : rule
-          ),
-          rulesUnfollowed: journal.rulesUnfollowed.map((rule) =>
-            rule._id === editingRule._id ||
-            rule.originalId === editingRule.originalId
-              ? response.data
-              : rule
-          ),
-        };
-        setJournal(updatedJournal);
-      } else if (rules) {
-        onFollowRule(response.data._id);
-      }
+
+      setRules((prevRules) =>
+        prevRules.map((rule) =>
+          rule._id === editingRule._id
+            ? { ...rule, description: editingRule.description }
+            : rule
+        )
+      );
+
       setEditingRule(null);
+      toast({
+        title: "Rule updated",
+        description: "Your rule has been updated successfully.",
+      });
     } catch (error) {
       console.error("Error editing rule:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update the rule. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setIsLoadingAction((prev) => ({ ...prev, editRule: false }));
     }
   };
 
-  const handleDeleteRule = async (ruleId, isOriginalRule = false) => {
-    setIsLoading(true);
+  const handleDeleteRule = async (ruleId) => {
+    setIsLoadingAction((prev) => ({ ...prev, deleteRule: true }));
     try {
       const token = Cookies.get("token");
-      await axios.delete(
-        isOriginalRule
-          ? `${API_URL}/journals/delete-rule/${ruleId}`
-          : `${API_URL}/rules/${ruleId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (journal) {
-        const updatedJournal = {
-          ...journal,
-          rulesFollowed: journal.rulesFollowed.filter(
-            (rule) => rule._id !== ruleId && rule.originalId !== ruleId
-          ),
-          rulesUnfollowed: journal.rulesUnfollowed.filter(
-            (rule) => rule._id !== ruleId && rule.originalId !== ruleId
-          ),
-        };
-        setJournal(updatedJournal);
-      } else if (rules) {
-        onFollowRule(null); // Refresh rules after deletion
-      }
+      await axios.delete(`${API_URL}/rules/${ruleId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      setRules((prevRules) => prevRules.filter((rule) => rule._id !== ruleId));
+
       setIsDeleteDialogOpen(false);
       setRuleToDelete(null);
+      toast({
+        title: "Rule deleted",
+        description: "Your rule has been deleted successfully.",
+      });
     } catch (error) {
       console.error("Error deleting rule:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the rule. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setIsLoadingAction((prev) => ({ ...prev, deleteRule: false }));
     }
   };
 
   const handleToggleRuleFollow = async (ruleId, isFollowed) => {
-    setIsLoading(true);
+    setIsLoadingAction((prev) => ({ ...prev, followRule: true }));
     try {
-      if (journal) {
-        const token = Cookies.get("token");
-        const response = await axios.post(
-          `${API_URL}/journals/follow-unfollow-rule`,
-          {
-            journalId: journal._id,
-            ruleId,
-            isFollowed: !isFollowed,
-          },
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        setJournal(response.data);
-      } else if (rules) {
-        onFollowRule(ruleId);
-      }
+      const token = Cookies.get("token");
+      await axios.post(
+        `${API_URL}/rules/follow-unfollow`,
+        {
+          ruleId,
+          date: selectedDate.toISOString(),
+          isFollowed: !isFollowed,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setRules((prevRules) =>
+        prevRules.map((rule) =>
+          rule._id === ruleId ? { ...rule, isFollowed: !isFollowed } : rule
+        )
+      );
+
+      toast({
+        title: `Rule ${isFollowed ? "unfollowed" : "followed"}`,
+        description: `The rule has been ${
+          isFollowed ? "unfollowed" : "followed"
+        } successfully.`,
+      });
     } catch (error) {
       console.error("Error following/unfollowing rule:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update the rule status. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setIsLoadingAction((prev) => ({ ...prev, followRule: false }));
     }
   };
 
   const handleFollowUnfollowAll = async (isFollowed) => {
-    if (!journal) return;
-    setIsLoading(true);
+    setIsLoadingAction((prev) => ({ ...prev, followAllRules: true }));
     try {
       const token = Cookies.get("token");
-      const response = await axios.post(
-        `${API_URL}/journals/follow-unfollow-all`,
+      await axios.post(
+        `${API_URL}/rules/follow-unfollow-all`,
         {
-          journalId: journal._id,
+          date: selectedDate.toISOString(),
           isFollowed,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setJournal(response.data);
+
+      setRules((prevRules) =>
+        prevRules.map((rule) => ({ ...rule, isFollowed }))
+      );
+
+      toast({
+        title: `All rules ${isFollowed ? "followed" : "unfollowed"}`,
+        description: `All rules have been ${
+          isFollowed ? "followed" : "unfollowed"
+        } successfully.`,
+      });
     } catch (error) {
       console.error("Error following/unfollowing all rules:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update all rules. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
+      setIsLoadingAction((prev) => ({ ...prev, followAllRules: false }));
     }
   };
 
   const handleLoadSampleRules = async () => {
-    setIsLoading(true);
+    setIsLoadingAction((prev) => ({ ...prev, loadSampleRules: true }));
     try {
       const token = Cookies.get("token");
       const response = await axios.post(
         `${API_URL}/rules/load-sample`,
-        {},
+        {
+          date: selectedDate.toISOString(),
+        },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      if (journal) {
-        setJournal({
-          ...journal,
-          rulesUnfollowed: response.data,
-        });
-      } else if (rules) {
-        onFollowRule(response.data[0]._id);
-      }
+
+      setRules(response.data);
+
+      toast({
+        title: "Sample rules loaded",
+        description: "Standard trading rules have been loaded successfully.",
+      });
     } catch (error) {
       console.error("Error loading sample rules:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load sample rules. Please try again.",
+        variant: "destructive",
+      });
     } finally {
-      setIsLoading(false);
-      window.location.reload(); // Reload the window
+      setIsLoadingAction((prev) => ({ ...prev, loadSampleRules: false }));
     }
   };
 
-  const allRules = journal
-    ? [
-        ...(journal.rulesFollowed || []).map((rule) => ({
-          ...rule,
-          isFollowed: true,
-        })),
-        ...(journal.rulesUnfollowed || []).map((rule) => ({
-          ...rule,
-          isFollowed: false,
-        })),
-      ]
-    : rules || [];
-
-  const filteredRules = allRules.filter((rule) =>
+  const filteredRules = rules.filter((rule) =>
     rule.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (allRules.length === 0) {
+  if (isLoadingRules) {
     return (
-      <EmptyState
-        setNewRuleDialog={setNewRuleDialog}
-        handleLoadSampleRules={handleLoadSampleRules}
-        isLoading={isLoading}
-        journal={journal}
-        setJournal={setJournal}
-        rules={rules}
-        onFollowRule={onFollowRule}
-      />
+      <Card className="w-full max-w-4xl h-full mx-auto p-4 flex items-center justify-center">
+        <div className="flex items-center">
+          <Loader2 className="mr-2 h-8 w-8 animate-spin" />
+          <span>Loading rules...</span>
+        </div>
+      </Card>
+    );
+  }
+
+  if (rules.length === 0) {
+    return (
+      <>
+        <EmptyState
+          onAddRule={() => setNewRulesDialog(true)}
+          onLoadSampleRules={handleLoadSampleRules}
+          isLoading={isLoadingAction.loadSampleRules}
+        />
+        <AddRulesDialog
+          open={newRulesDialog}
+          onOpenChange={setNewRulesDialog}
+          selectedDate={selectedDate}
+          onRulesAdded={handleAddRules}
+          isLoading={isLoadingAction.addRule}
+        />
+      </>
     );
   }
 
   return (
-    <Card className="w-full max-w-4xl h-full mx-auto p-4 flex-1">
+    <Card className="w-full  h-full mx-auto p-4 flex-1">
       <CardHeader className="p-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -408,94 +593,83 @@ export function RulesSection({ journal, setJournal, rules, onFollowRule }) {
               </HoverCardContent>
             </HoverCard>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="relative ml-8">
+
+          <div className="flex space-x-2 items-center">
+            <div className="relative flex grow max-w-[8.5rem] mr-2 text-xs">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
               <Input
                 placeholder="Search rules"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8"
+                className="pl-8 text-xs"
               />
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
             </div>
-            <Dialog open={newRuleDialog} onOpenChange={setNewRuleDialog}>
-              <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-purple-600 px-2  w-fit text-white">
-                  <PlusCircle className="mr-1 h-4 w-4" /> Add Rules
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Rule</DialogTitle>
-                  <DialogDescription>
-                    Add a new trading rule. Maximum 150 characters.
-                  </DialogDescription>
-                </DialogHeader>
-                <Input
-                  value={newRuleDescription}
-                  onChange={(e) => setNewRuleDescription(e.target.value)}
-                  placeholder="Enter your rule"
-                  maxLength={150}
-                />
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setNewRuleDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAddRule} disabled={isLoading}>
-                    {isLoading ? "Adding..." : "Add Rule"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+
+            <Button
+              className="bg-primary text-white text-xs hover:bg-purple-600"
+              onClick={() => setNewRulesDialog(true)}
+              disabled={isLoadingAction.addRule}
+            >
+              {isLoadingAction.addRule ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="mr-2 h-4 w-4" />
+              )}
+              Add Rules
+            </Button>
+
+            <AddRulesDialog
+              open={newRulesDialog}
+              onOpenChange={setNewRulesDialog}
+              selectedDate={selectedDate}
+              onRulesAdded={handleAddRules}
+              isLoading={isLoadingAction.addRule}
+            />
           </div>
         </div>
       </CardHeader>
       <CardContent className="p-0 mt-3">
         <div className="rounded-lg overflow-hidden border">
-          <div className="sticky top-0 z-10 grid grid-cols-[auto,1fr,auto] gap-4 p-2 px-4 bg-primary/25 border-b">
+          <div className="sticky top-0 z-10 grid grid-cols-[auto,1fr,auto] gap-4 p-2 px-4 bg-[#F4E4FF] dark:bg-[#49444c] border-b">
             <div className="flex items-center">
               <Checkbox
                 checked={
                   filteredRules.length > 0 &&
                   filteredRules.every((rule) => rule.isFollowed)
                 }
-                onCheckedChange={(checked) => handleFollowUnfollowAll(checked)}
-                disabled={isLoading || !journal}
+                onCheckedChange={(checked) =>
+                  handleFollowUnfollowAll(!!checked)
+                }
+                disabled={isLoadingAction.followAllRules}
               />
             </div>
             <span className="font-medium">My Rules</span>
             <span className="font-medium text-right">Action</span>
           </div>
-          <div className="max-h-[50vh] min-h-96 overflow-y-auto">
+          <div className="max-h-[55vh] min-h-96 overflow-y-auto bg-[#FAF7FF] dark:bg-[#363637]">
             <div className="divide-y">
               {filteredRules.map((rule) => (
                 <div
-                  key={rule._id || rule.originalId}
+                  key={rule._id}
                   className="grid grid-cols-[auto,1fr,auto] gap-4 px-4 py-2 items-center hover:bg-secondary/50"
                 >
                   <div>
                     <Checkbox
                       checked={rule.isFollowed}
                       onCheckedChange={() =>
-                        handleToggleRuleFollow(
-                          rule._id || rule.originalId,
-                          rule.isFollowed
-                        )
+                        handleToggleRuleFollow(rule._id, rule.isFollowed)
                       }
-                      disabled={isLoading}
+                      disabled={isLoadingAction.followRule}
                     />
                   </div>
-                  <span className="text-gray-700">{rule.description}</span>
+                  <span className="text- text-sm">{rule.description}</span>
                   <div className="flex items-center gap-2">
                     <Button
                       variant="ghost"
                       size="icon"
                       className="text-gray-500 hover:text-gray-700"
                       onClick={() => setEditingRule(rule)}
-                      disabled={isLoading}
+                      disabled={isLoadingAction.editRule}
                     >
                       <SquarePen className="h-4 w-4" />
                     </Button>
@@ -507,7 +681,7 @@ export function RulesSection({ journal, setJournal, rules, onFollowRule }) {
                         setRuleToDelete(rule);
                         setIsDeleteDialogOpen(true);
                       }}
-                      disabled={isLoading}
+                      disabled={isLoadingAction.deleteRule}
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -519,62 +693,92 @@ export function RulesSection({ journal, setJournal, rules, onFollowRule }) {
         </div>
       </CardContent>
 
-      {/* Edit Rule Dialog */}
       <Dialog open={!!editingRule} onOpenChange={() => setEditingRule(null)}>
         <DialogContent>
-          <DialogHeader>
+          <DialogHeader className={"border-b mb-4"}>
             <DialogTitle>Edit Rule</DialogTitle>
-            <DialogDescription>
-              Edit your trading rule. Maximum 150 characters.
-            </DialogDescription>
+            <DialogDescription>Here you can edit your rules.</DialogDescription>
           </DialogHeader>
-          <Input
-            value={editingRule?.description || ""}
-            onChange={(e) =>
-              setEditingRule({ ...editingRule, description: e.target.value })
-            }
-            placeholder="Enter your rule"
-            maxLength={150}
-          />
+          <div className="flex flex-col space-y-1 mb-4">
+            <p>Rule:</p>
+            <Input
+              value={editingRule?.description || ""}
+              onChange={(e) =>
+                setEditingRule(
+                  editingRule
+                    ? {
+                        ...editingRule,
+                        description: e.target.value.slice(0, MAX_RULE_LENGTH),
+                      }
+                    : null
+                )
+              }
+              placeholder="Enter your rule"
+              maxLength={MAX_RULE_LENGTH}
+            />
+            <div className="text-xs text-muted-foreground text-right">
+              {editingRule?.description.length || 0}/{MAX_RULE_LENGTH}
+            </div>
+          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingRule(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setEditingRule(null)}
+              disabled={isLoadingAction.editRule}
+            >
               Cancel
             </Button>
-            <Button onClick={handleEditRule} disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save Changes"}
+            <Button
+              onClick={handleEditRule}
+              disabled={
+                isLoadingAction.editRule ||
+                !editingRule?.description.trim() ||
+                editingRule.description ===
+                  rules.find((r) => r._id === editingRule._id)?.description
+              }
+            >
+              {isLoadingAction.editRule ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              {isLoadingAction.editRule ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
-          <DialogHeader>
+          <DialogHeader className={"border-b mb-4"}>
             <DialogTitle>Delete Rule</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this rule? This action cannot be
-              undone.
+              Are you sure you want to delete this rule permanently?
             </DialogDescription>
           </DialogHeader>
+          <div className="flex flex-col space-y-1 mb-4">
+            <p>Rule:</p>
+            <Input
+              value={ruleToDelete?.description || ""}
+              readOnly
+              className="bg-secondary cursor-not-allowed"
+            />
+          </div>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isLoadingAction.deleteRule}
             >
               Cancel
             </Button>
             <Button
-              variant="destructive"
-              onClick={() =>
-                handleDeleteRule(
-                  ruleToDelete._id || ruleToDelete.originalId,
-                  !!ruleToDelete.originalId
-                )
-              }
-              disabled={isLoading}
+              variant=""
+              onClick={() => handleDeleteRule(ruleToDelete?._id || "")}
+              disabled={isLoadingAction.deleteRule}
             >
-              {isLoading ? "Deleting..." : "Delete"}
+              {isLoadingAction.deleteRule ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              {isLoadingAction.deleteRule ? "Deleting..." : "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

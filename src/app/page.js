@@ -22,11 +22,11 @@ import { Check, Instagram, Twitter, Facebook, Phone, Mail } from "lucide-react";
 
 const navItems = [
   { name: "Home", href: "#" },
+  { name: "Why Tradeboard", href: "#" },
   { name: "Pricing", href: "#" },
   { name: "Tutorials", href: "#" },
   { name: "Blog", href: "#" },
   { name: "FAQs", href: "#" },
-  { name: "Why Tradeboard", href: "#" },
 ];
 
 const whyTradeboardItems = [
@@ -108,6 +108,7 @@ const pricingPlans = [
     buttonText: "Get Started Now",
     buttonVariant: "default",
     highlight: true,
+    discount: true, // New property to indicate discount
   },
 ];
 
@@ -178,16 +179,16 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen">
       <div className="bg-primary ">
-        <nav className=" flex items-center justify-between p-4 text-background  mx-auto container max-w-7xl">
+        <nav className="flex items-center justify-between p-4 text-background  mx-auto container max-w-[84rem]">
           <div className="flex items-center space-x-2">
             <Image
               src="/images/home_logo.png"
               alt="Tradeboard.in Logo"
-              width={220}
-              height={40}
+              width={240}
+              height={60}
             />
           </div>
-          <div className="hidden md:flex space-x-4 text-sm">
+          <div className="hidden md:flex space-x-7 text-sm">
             {navItems.map((item) => (
               <Link
                 key={item.name}
@@ -198,12 +199,14 @@ export default function LandingPage() {
               </Link>
             ))}
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-6 text-lg">
             <Link href="/login">
-              <Button variant="ghost">Login</Button>
+              <Button variant="ghost" className=" text-base">
+                Login
+              </Button>
             </Link>
             <Link href="/sign-up">
-              <Button className="bg-background hover:bg-secondary">
+              <Button className="bg-background text-base text-foreground hover:bg-secondary px-10 rounded-xl py-6 font-semibold">
                 Sign up
               </Button>
             </Link>
@@ -212,17 +215,18 @@ export default function LandingPage() {
       </div>
 
       <main>
-        <section className=" primary_gradient text-background pt-16 ">
-          <div className="text-center">
-            <h1 className="text-5xl md:text-6xl mb-8 poppins-bold">
+        <section className=" primary_gradient text-background pt-28  ">
+          <div className="text-center min-h-screen  space-y-4">
+            <h1 className="text-5xl md:text-[4.15rem] mb-6 poppins-bold">
               Trade Better With Discipline
             </h1>
-            <p className="text-xl mb-8 max-w-3xl mx-auto">
+            <span className="text-[1.4rem] mb-4 max-w-7xl mx-auto">
               We offer traders the tools to analyse their daily trading patterns
-              and learn from it to establish themselves as successful traders.
-            </p>
-            <div className="bg-gradient-to-b from-primary from-50% to-background to-50% p-4 ">
-              <div className="relative w-full max-w-4xl mx-auto aspect-video">
+              and learn from <br />
+              it to establish themselves as successful traders.
+            </span>
+            <div className="bg-gradient-to-b from-transparent from-50% to-background to-50% p-4 ">
+              <div className="relative w-full max-w-[58rem] mx-auto aspect-video">
                 <img
                   src="/images/Dashboard.png"
                   alt="Tradeboard Dashboard"
@@ -237,16 +241,16 @@ export default function LandingPage() {
 
         <AnimatedSection>
           <section className="py-8 md:py-16">
-            <div className="container mx-auto px-4">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-8">
+            <div className="container mx-auto px-">
+              <h2 className="poppins-bold text-2xl md:text-3xl lg:text-4xl font-bold poppins-bold text-center mb-12">
                 Manage Your{" "}
                 <span className="text-primary">Trading Psychology</span>
               </h2>
-              <div className="flex flex-col gap-8 lg:px-24">
-                <div className="flex flex-col lg:flex-row-reverse items-center gap-6 justify-between">
+              <div className="flex flex-col gap-20 lg:px-24">
+                <div className="flex flex-col lg:flex-row-reverse items-center gap-16 justify-between">
                   <div className="flex flex-col gap-4 w-full lg:w-1/2">
                     <Card className="p-4">
-                      <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-4">
+                      <h3 className="text-lg md:text-[1.4rem] font-semibold  mb-2 md:mb-4">
                         Journal
                       </h3>
                       <p className="text-sm md:text-base mb-2 md:mb-4">
@@ -255,7 +259,7 @@ export default function LandingPage() {
                       </p>
                     </Card>
                     <Card className="p-4">
-                      <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-4">
+                      <h3 className="text-lg md:text-[1.4rem] font-semibold  mb-2 md:mb-4">
                         Rules
                       </h3>
                       <p className="text-sm md:text-base mb-2 md:mb-4">
@@ -264,18 +268,18 @@ export default function LandingPage() {
                       </p>
                     </Card>
                   </div>
-                  <div className="p-4 rounded-xl bg-secondary w-fit ">
+                  <div className="p-4 rounded-xl bg-[#8885FF]/15 w-fit ">
                     <img
-                      src="/images/Dashboard.png"
+                      src="/images/rules.png"
                       alt="Journal and Rules Interface"
                       layout="responsive"
-                      className="rounded-lg shadow-md max-w-md"
+                      className="rounded-lg max-w-[38rem]"
                     />
                   </div>
                 </div>
-                <div className="flex flex-col lg:flex-row items-center gap-6 justify-between">
+                <div className="flex flex-col lg:flex-row items-center gap-8 justify-between">
                   <Card className="p-4 w-full lg:w-1/2">
-                    <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-4">
+                    <h3 className="text-lg md:text-[1.4rem] font-semibold  mb-2 md:mb-4">
                       Trade Log
                     </h3>
                     <p className="text-sm md:text-base mb-2 md:mb-4">
@@ -285,12 +289,12 @@ export default function LandingPage() {
                       analytics.
                     </p>
                   </Card>
-                  <div className="p-4 rounded-xl bg-secondary w-fit ">
+                  <div className="p-4 rounded-xl bg-[#8885FF]/15 w-fit ">
                     <img
-                      src="/images/Dashboard.png"
+                      src="/images/trades.png"
                       alt="Trade Log Interface"
                       layout="responsive"
-                      className="rounded-lg shadow-md max-w-md"
+                      className="rounded-lg max-w-[38rem]"
                     />
                   </div>
                 </div>
@@ -301,18 +305,18 @@ export default function LandingPage() {
 
         <AnimatedSection>
           <section className="py-8 md:py-16 bg-muted">
-            <div className="container mx-auto px-4">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-8">
+            <div className="container mx-auto px-">
+              <h2 className="poppins-bold text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-8">
                 Analyse Your{" "}
                 <span className="text-primary">Trading Discipline</span>
               </h2>
               <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:px-24">
-                <div className="w-fit p-4 rounded-xl bg-secondary">
+                <div className="w-fit p-4 rounded-xl bg-[#8885FF]/15">
                   <img
-                    src="/images/Dashboard.png"
+                    src="/images/analytics.png"
                     alt="Trading Analysis Dashboard"
                     layout="responsive"
-                    className="rounded-lg shadow-md max-w-md"
+                    className="rounded-lg max-w-[38rem]"
                   />
                 </div>
                 <div className="w-full lg:w-1/3 space-y-6">
@@ -342,15 +346,15 @@ export default function LandingPage() {
 
         <AnimatedSection>
           <section className="py-8 md:py-16">
-            <div className="container mx-auto px-4">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-8">
+            <div className="container mx-auto px-">
+              <h2 className="poppins-bold text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-8">
                 Be Accountable For Your{" "}
                 <span className="text-primary">Trading Journey</span>
               </h2>
               <div className="flex flex-col gap-8 lg:px-24">
                 <div className="flex flex-col lg:flex-row items-center gap-6 justify-between">
                   <Card className="p-4 w-full lg:w-1/2">
-                    <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-4">
+                    <h3 className="text-lg md:text-[1.4rem] font-semibold  mb-2 md:mb-4">
                       Add An Accountability Partner
                     </h3>
                     <p className="text-sm md:text-base mb-2 md:mb-4">
@@ -360,18 +364,18 @@ export default function LandingPage() {
                       your best.
                     </p>
                   </Card>
-                  <div className="p-4 rounded-xl bg-secondary w-fit ">
+                  <div className="p-4 rounded-xl bg-[#8885FF]/15 w-fit ">
                     <img
-                      src="/images/Dashboard.png"
+                      src="/images/ap.png"
                       alt="Add Accountability Partner UI"
                       layout="responsive"
-                      className="rounded-lg shadow-md max-w-md"
+                      className="rounded-lg max-w-[38rem]"
                     />
                   </div>
                 </div>
                 <div className="flex flex-col lg:flex-row-reverse items-center gap-6 justify-between">
                   <Card className="p-4 w-full lg:w-1/2">
-                    <h3 className="text-lg md:text-xl font-semibold mb-2 md:mb-4">
+                    <h3 className="text-lg md:text-[1.4rem] font-semibold  mb-2 md:mb-4">
                       Your Progress is Shared
                     </h3>
                     <p className="text-sm md:text-base mb-2 md:mb-4">
@@ -380,12 +384,12 @@ export default function LandingPage() {
                       choose to share your progress with them.
                     </p>
                   </Card>
-                  <div className="p-4 rounded-xl bg-secondary w-fit ">
+                  <div className="p-4 rounded-xl bg-[#8885FF]/15 w-fit ">
                     <img
-                      src="/images/Dashboard.png"
+                      src="/images/apd.png"
                       alt="Trading Progress Charts"
                       layout="responsive"
-                      className="rounded-lg shadow-md max-w-md"
+                      className="rounded-lg max-w-[38rem]"
                     />
                   </div>
                 </div>
@@ -396,17 +400,17 @@ export default function LandingPage() {
 
         <AnimatedSection>
           <section className="py-16">
-            <div className="container mx-auto px-4">
-              <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">
+            <div className="container mx-auto px-">
+              <h2 className="poppins-bold text-3xl md:text-4xl font-bold text-center mb-8">
                 Why <span className="text-primary">TradeBoard</span>?
               </h2>
-              <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-8 container lg:px-24">
+              <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-14 container lg:px-24">
                 {whyTradeboardItems.map((item, index) => (
                   <Card key={index} className="p-0">
                     <CardHeader className="px-4">
-                      <CardTitle>{item.title}</CardTitle>
+                      <CardTitle className="text-lg">{item.title}</CardTitle>
                     </CardHeader>
-                    <CardContent className="px-4 text-sm text-accent-foreground/80">
+                    <CardContent className="px-4 text-base text-accent-foreground/80">
                       <p>{item.description}</p>
                     </CardContent>
                   </Card>
@@ -418,47 +422,115 @@ export default function LandingPage() {
 
         <AnimatedSection>
           <section className="py-20 primary_gradient text-background">
-            <div className="container mx-auto px-4">
-              <h2 className="text-xl text-center mb-4">
+            <div className="container mx-auto px-">
+              <h2 className="text-2xl text-center mb-4">
                 Simple Pricing, Great Value
               </h2>
-              <p className="text-3xl font-bold text-center mb-8">
+              <p className="text-4xl poppins-bold  text-center mb-14">
                 Every Plan Offers Complete{" "}
                 <span className="text-foreground">Features Access</span>
               </p>
-              <div className="grid md:grid-cols-3 gap-8 container lg:px-48">
+              <div className="flex gap-14 justify-center items-center container lg:px-48 relative">
                 {pricingPlans.map((plan, index) => (
-                  <Card
-                    key={index}
-                    className={`${
-                      plan.highlight ? "border-primary" : ""
-                    } bg-background text-foreground`}
-                  >
-                    <CardHeader>
-                      <CardTitle className="text-lg">{plan.name}</CardTitle>
-                      <div className="text-3xl font-bold">
-                        {plan.price}
-                        <span className="text-sm font-normal">
-                          /{plan.period}
+                  <div key={index} className="relative">
+                    {plan.discount && (
+                      <div className="absolute -top-8 -right-10 flex items-center">
+                        <Image
+                          src="/images/arrow.svg"
+                          alt="Discount"
+                          width={50}
+                          height={50}
+                          className="mr-2"
+                        />
+                        <span className="text-base font-bold text-green-400">
+                          SAVE UP TO 30%
                         </span>
                       </div>
-                    </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-2">
-                        {plan.features.map((feature, featureIndex) => (
-                          <li key={featureIndex} className="flex items-center">
-                            <Check className="mr-2 h-4 w-4 text-primary" />
-                            {feature}
-                          </li>
-                        ))}
-                      </ul>
-                    </CardContent>
-                    <CardFooter>
-                      <Button className="w-full" variant={plan.buttonVariant}>
-                        {plan.buttonText}
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                    )}
+                    {plan.discount ? (
+                      <Card
+                        className={`${
+                          plan.highlight ? "border-primary" : ""
+                        } bg-background text-foreground w-[20rem] rounded-3xl p-2 border-2 shadow-[0_20px_50px_rgba(255,_255,_255,_0.5)]`}
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-xl mb-2">
+                            {plan.name}
+                          </CardTitle>
+                          <div className="text-2xl font-bold">
+                            {plan.price}
+                            {plan.period && (
+                              <span className="text-sm font-normal">
+                                /{plan.period}
+                              </span>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-3">
+                            {plan.features.map((feature, featureIndex) => (
+                              <li
+                                key={featureIndex}
+                                className="flex items-center"
+                              >
+                                <Check className="mr-2 h-3 w-3  text-background rounded ring-1 ring-green-600 bg-green-500" />
+                                {feature}
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                        <CardFooter>
+                          <Button
+                            className="w-full"
+                            variant={plan.buttonVariant}
+                          >
+                            {plan.buttonText}
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ) : (
+                      <Card
+                        className={`${
+                          plan.highlight ? "border-primary" : ""
+                        } bg-background text-foreground w-[20rem] rounded-3xl p-2`}
+                      >
+                        <CardHeader>
+                          <CardTitle className="text-xl mb-2">
+                            {plan.name}
+                          </CardTitle>
+                          <div className="text-2xl font-bold">
+                            {plan.price}
+                            {plan.period && (
+                              <span className="text-sm font-normal">
+                                /{plan.period}
+                              </span>
+                            )}
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <ul className="space-y-3">
+                            {plan.features.map((feature, featureIndex) => (
+                              <li
+                                key={featureIndex}
+                                className="flex items-center"
+                              >
+                                <Check className="mr-2 h-3 w-3  text-background rounded ring-1 ring-green-600 bg-green-500" />
+                                {feature}
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                        <CardFooter>
+                          <Button
+                            className="w-full"
+                            variant={plan.buttonVariant}
+                          >
+                            {plan.buttonText}
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -467,8 +539,8 @@ export default function LandingPage() {
 
         <AnimatedSection>
           <section className="py-16">
-            <div className="container mx-auto px-4">
-              <h2 className="text-3xl md:text-4xl font-bold text-center mb-8">
+            <div className="container mx-auto px-">
+              <h2 className="poppins-bold text-3xl md:text-4xl font-bold text-center mb-8">
                 Frequently Asked Questions
               </h2>
               <Accordion
@@ -487,21 +559,21 @@ export default function LandingPage() {
           </section>
         </AnimatedSection>
 
-        <div className="flex items-center justify-center bg-gradient-to-b from-background from-50% to-foreground to-50%">
-          <section className="py-16 primary_gradient w-full md:w-fit rounded-3xl px-6 text-background my-8">
+        <div className="flex items-center justify-center bg-gradient-to-b from-background from-50% to-[#12141D] to-50%">
+          <section className="py-12 primary_gradient w-full max-w-5xl rounded-3xl px-6 text-background my-8">
             <div className="container mx-auto px-4 text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              <h2 className="poppins-bold text-3xl md:text-4xl font-bold mb-4">
                 Ready to Get Started with{" "}
                 <span className="text-foreground">TradeBoard?</span>
               </h2>
               <p className="text-base mb-8">
                 Give trading psychology a chance in your trading journey. Best
-                time to upgrade your trading game with us is NOW.
+                time to upgrade your trading game <br/> with us is NOW.
               </p>
               <Link href="/sign-up">
                 <Button
                   size="lg"
-                  className="bg-background hover:bg-secondary hover:text-primary"
+                  className="bg-background hover:bg-secondary font-semibold text-base py-6 px-5 rounded-xl text-foreground hover:text-primary"
                 >
                   Sign up with free
                 </Button>
@@ -511,20 +583,29 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <footer className="bg-foreground text-background pt-8 px-4 md:pt-12 md:px-8 lg:px-24">
+      <footer className="bg-[#12141D] text-background pt-8 px-4 md:pt-12 md:px-8 lg:px-24">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between gap-8">
             <div className="max-w-sm">
-              <h3 className="text-xl md:text-2xl font-bold mb-4">TradeBoard</h3>
-              <p className="text-sm">
+              <h3 className="text-xl md:text-4xl poppins-bold font-bold mb-4">
+                TradeBoard
+              </h3>
+              <p className="text-base">
                 We offer traders the tools to analyse their daily trading
                 patterns and learn from it to establish themselves as successful
                 traders.
               </p>
-              <div className="flex space-x-4 mt-4">
-                <Instagram className="h-5 w-5" />
-                <Twitter className="h-5 w-5" />
-                <Facebook className="h-5 w-5" />
+              <p className="mt-3">Follow us on:</p>
+              <div className="flex space-x-4 mt-2">
+                <span className=" bg-[#4B4B4B] rounded-full p-1">
+                  <Instagram className="h-5 w-5" />
+                </span>
+                <span className=" bg-[#4B4B4B] rounded-full p-1">
+                  <Twitter className="h-5 w-5" />
+                </span>
+                <span className=" bg-[#4B4B4B] rounded-full p-1">
+                  <Facebook className="h-5 w-5" />
+                </span>
               </div>
             </div>
             <div className="mt-6 md:mt-0">
@@ -552,7 +633,11 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
+
           <div className="mt-8 py-4 border-t border-background/10 text-sm flex flex-col md:flex-row items-center justify-between">
+            <p className="text-sm text-center md:text-right mt-4 md:mt-0">
+              Version: 0.63
+            </p>
             <p className="text-center md:text-left mb-4 md:mb-0">
               © Copyright 2024. All Rights Reserved by TradeBoard
             </p>

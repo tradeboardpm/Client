@@ -22,6 +22,7 @@ import Cookies from "js-cookie";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import GoogleLoginButton from "@/components/buttons/google-button";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const countryCodes = [
   { value: "91", label: "India (+91)" },
@@ -166,7 +167,7 @@ export default function SignUp() {
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
       <div className="flex-1 flex items-center justify-center px-6 py-2">
-        <Card className="w-full max-w-lg bg-transparent shadow-none">
+        <Card className="w-full max-w-md bg-transparent shadow-none">
           <CardContent className="px-2 py-3">
             <h1 className="text-3xl font-bold mb-2">Sign up</h1>
             <p className="text-gray-300 mb-6">Please create an account</p>
@@ -200,7 +201,7 @@ export default function SignUp() {
               <div>
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
-                  className="text-base h-10"
+                  className="text-sm h-10"
                   id="fullName"
                   placeholder="Full name"
                   value={formData.fullName}
@@ -211,7 +212,7 @@ export default function SignUp() {
               <div>
                 <Label htmlFor="email">Email ID</Label>
                 <Input
-                  className="text-base h-10"
+                  className="text-sm h-10"
                   id="email"
                   type="email"
                   placeholder="Email ID"
@@ -227,7 +228,7 @@ export default function SignUp() {
                     value={formData.countryCode}
                     onValueChange={handleCountryCodeChange}
                   >
-                    <SelectTrigger className="w-[140px]">
+                    <SelectTrigger className="w-[140px] h-10">
                       <SelectValue placeholder="Country Code" />
                     </SelectTrigger>
                     <SelectContent>
@@ -239,7 +240,7 @@ export default function SignUp() {
                     </SelectContent>
                   </Select>
                   <Input
-                    className="text-base h-10 flex-1 ml-2"
+                    className="text-sm h-10 flex-1 ml-2"
                     id="mobile"
                     type="tel"
                     placeholder="Mobile number"
@@ -253,7 +254,7 @@ export default function SignUp() {
                 <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Input
-                    className="text-base h-10"
+                    className="text-sm h-10"
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
@@ -280,7 +281,7 @@ export default function SignUp() {
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
                   <Input
-                    className="text-base h-10"
+                    className="text-sm h-10"
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm Password"
@@ -303,16 +304,22 @@ export default function SignUp() {
                   </Button>
                 </div>
               </div>
-              <div className="text-sm text-gray-600">
-                By creating an account you agree to our{" "}
-                <Link href="/terms" className="text-primary hover:underline">
-                  Terms & Conditions
-                </Link>{" "}
-                and{" "}
-                <Link href="/privacy" className="text-primary hover:underline">
-                  Privacy Policy
-                </Link>
-                .
+              <div className="text-sm text-gray-600 flex gap-1">
+                <Checkbox />
+                <p>
+                  By creating an account you agree to our{" "}
+                  <Link href="/terms" className="text-primary hover:underline">
+                    Terms & Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy"
+                    className="text-primary hover:underline"
+                  >
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
               </div>
               <Button
                 className="w-full text-background"
