@@ -201,7 +201,7 @@ const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-2 py-4 overflow-auto h-[75vh]">
+          <div className="grid gap-2 py-4 overflow-auto max-h-[75vh]">
             {rules.map((ruleItem, index) => (
               <div
                 key={index}

@@ -6,6 +6,7 @@ export function middleware(request) {
 
   // Paths that don't require authentication
   const publicPaths = [
+    "/",
     "/login",
     "/sign-up",
     "/reset-password",
