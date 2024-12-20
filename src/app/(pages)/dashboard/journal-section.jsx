@@ -211,8 +211,8 @@ export function JournalSection({ selectedDate }) {
   }
 
   return (
-    <Card className="flex-1 w-full h-full flex justify-between flex-col pb-6">
-      <CardHeader>
+    <Card className="flex-1 w-full h-full flex justify-between flex-col pb-4  shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
+      <CardHeader className="p-4">
         <CardTitle className="flex text-xl items-center gap-2">
           Today's Journal
           {isSaving && (
@@ -222,40 +222,40 @@ export function JournalSection({ selectedDate }) {
           )}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4 h-full flex flex-col">
+      <CardContent className="space-y-4 h-full flex flex-col px-4">
         <div className="space-y-2 flex flex-col flex-1">
-          <label className="text-sm font-medium">Notes</label>
+          <label className="text-xs font-medium">Notes</label>
           <Textarea
             name="note"
             placeholder="Type your notes here..."
             value={localJournal.note}
             onChange={handleChange}
             onBlur={handleBlur}
-            className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0"
+            className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0 text-[0.8rem]"
           />
         </div>
 
         <div className="space-y-2 flex flex-col flex-1">
-          <label className="text-sm font-medium">Mistakes</label>
+          <label className="text-xs font-medium">Mistakes</label>
           <Textarea
             name="mistake"
             placeholder="Type your mistakes here..."
             value={localJournal.mistake}
             onChange={handleChange}
             onBlur={handleBlur}
-            className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0"
+            className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0 text-[0.8rem]"
           />
         </div>
 
         <div className="space-y-2 flex flex-col flex-1">
-          <label className="text-sm font-medium">Lessons</label>
+          <label className="text-xs font-medium">Lessons</label>
           <Textarea
             name="lesson"
             placeholder="Type your lessons here..."
             value={localJournal.lesson}
             onChange={handleChange}
             onBlur={handleBlur}
-            className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0"
+            className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0 text-[0.8rem]"
           />
         </div>
       </CardContent>
@@ -264,7 +264,7 @@ export function JournalSection({ selectedDate }) {
           {files.map((fileKey, index) => (
             <div
               key={index}
-              className="relative group rounded-lg overflow-hidden w-20 h-9 shadow border"
+              className="relative group rounded-lg overflow-hidden w-20 h-8 shadow border"
             >
               <img
                 src={fileKey}
@@ -297,7 +297,7 @@ export function JournalSection({ selectedDate }) {
         <div className="flex items-center gap-2">
           <HoverCard>
             <HoverCardTrigger>
-              <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+              <Info className="h-4 w-4 text-background fill-gray-500/50 cursor-pointer" />
             </HoverCardTrigger>
             <HoverCardContent className="w-80">
               <div className="flex flex-col gap-2">
@@ -312,8 +312,9 @@ export function JournalSection({ selectedDate }) {
           <Button
             variant="outline"
             className={cn(
-              "w-fit flex items-center",
-              (files.length >= 3 || isFileUploading) && "opacity-50 cursor-not-allowed"
+              "w-fit flex items-center h-fit px-2 py-1.5 text-xs",
+              (files.length >= 3 || isFileUploading) &&
+                "opacity-50 cursor-not-allowed"
             )}
             onClick={() => document.getElementById("file-upload")?.click()}
             disabled={files.length >= 3 || isFileUploading}

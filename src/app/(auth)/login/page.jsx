@@ -96,7 +96,7 @@ export default function LoginOptionsPage() {
 
           <Button
             variant="secondary"
-            className="w-full justify-center border border-primary/15 bg-accent/25 shadow font-semibold text-xs"
+            className="w-full bg-[#F3F6F8] justify-center border border-primary/15  font-semibold text-xs shadow-[0px_6px_16px_rgba(0,0,0,0.04)]"
             onClick={() => router.push("/login/email")}
             disabled={isLoading}
           >
@@ -106,7 +106,7 @@ export default function LoginOptionsPage() {
 
           <Button
             variant="secondary"
-            className="w-full justify-center border border-primary/15 bg-accent/25 shadow font-semibold text-xs"
+            className="w-full bg-[#F3F6F8] justify-center border border-primary/15  font-semibold text-xs shadow-[0px_6px_16px_rgba(0,0,0,0.04)]"
             onClick={() => router.push("/login/phone")}
             disabled={isLoading}
           >

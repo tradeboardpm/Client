@@ -59,6 +59,15 @@ export default function AccountPage() {
     tradesPerDay: 0,
   });
 
+  // Validation states
+  const [passwordValidation, setPasswordValidation] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    symbol: false,
+  });
+
   const [isGoogleUser, setIsGoogleUser] = useState(false);
   const [createPasswordOpen, setCreatePasswordOpen] = useState(false);
   const [addPhoneOpen, setAddPhoneOpen] = useState(false);
@@ -69,7 +78,7 @@ export default function AccountPage() {
 
   // Axios instance with interceptor for bearer token
   const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL, // Replace with your API base URL
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
     headers: {
       "Content-Type": "application/json",
     },
@@ -89,6 +98,20 @@ export default function AccountPage() {
     }
   );
 
+  // Password validation function
+  const validatePassword = (password) => {
+    const validationRules = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      symbol: /[!@#$%^&*(),.?":{}|<>]/.test(password),
+    };
+
+    setPasswordValidation(validationRules);
+    return Object.values(validationRules).every(Boolean);
+  };
+
   useEffect(() => {
     fetchUserData();
     fetchSettings();
@@ -103,7 +126,8 @@ export default function AccountPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch user data",
+        description:
+          error.response?.data?.message || "Failed to fetch user data",
         variant: "destructive",
       });
     }
@@ -117,7 +141,8 @@ export default function AccountPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to fetch settings",
+        description:
+          error.response?.data?.message || "Failed to fetch settings",
         variant: "destructive",
       });
     }
@@ -128,25 +153,47 @@ export default function AccountPage() {
       await api.patch("/user/profile", personalForm);
       setUser(personalForm);
       setPersonalDetailsOpen(false);
-      toast({ title: "Success", description: "Profile updated successfully" });
+      toast({
+        title: "Success",
+        description: "Profile updated successfully",
+        variant: "default",
+      });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description:
+          error.response?.data?.message || "Failed to update profile",
         variant: "destructive",
       });
     }
   };
 
   const handlePasswordSubmit = async () => {
+    // Validate password before submission
+    if (!validatePassword(passwordForm.newPassword)) {
+      toast({
+        title: "Invalid Password",
+        description: "Please meet all password requirements",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await api.patch("/user/change-password", passwordForm);
       setPasswordDialogOpen(false);
-      toast({ title: "Success", description: "Password updated successfully" });
+      toast({
+        title: "Success",
+        description: "Password updated successfully",
+        variant: "default",
+      });
+      // Reset password form
+      setPasswordForm({ currentPassword: "", newPassword: "" });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update password",
+        description:
+          error.response?.data?.message || "Failed to update password",
         variant: "destructive",
       });
     }
@@ -157,34 +204,65 @@ export default function AccountPage() {
       const response = await api.patch("/user/settings", settingsForm);
       setSettings(response.data);
       setSettingsDialogOpen(false);
-      toast({ title: "Success", description: "Settings updated successfully" });
+      toast({
+        title: "Success",
+        description: "Settings updated successfully",
+        variant: "default",
+      });
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to update settings",
+        description:
+          error.response?.data?.message || "Failed to update settings",
         variant: "destructive",
       });
     }
   };
 
   const handleCreatePassword = async () => {
+    // Validate password before submission
+    if (!validatePassword(newPassword)) {
+      toast({
+        title: "Invalid Password",
+        description: "Please meet all password requirements",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await api.post("/user/create-password", { password: newPassword });
       setCreatePasswordOpen(false);
       toast({
         title: "Success",
         description: "Password created successfully",
+        variant: "default",
       });
+      // Reset new password
+      setNewPassword("");
+      // Refresh the page
+      window.location.reload();
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create password",
+        description:
+          error.response?.data?.message || "Failed to create password",
         variant: "destructive",
       });
     }
   };
 
   const handleAddPhone = async () => {
+    // Validate phone number is not empty
+    if (!phoneNumber.trim()) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await api.post("/user/add-phone", { phone: phoneNumber });
       setAddPhoneOpen(false);
@@ -192,13 +270,26 @@ export default function AccountPage() {
       toast({
         title: "Success",
         description: "OTP sent to your phone number",
+        variant: "default",
       });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add phone number",
-        variant: "destructive",
-      });
+      // Specifically handle phone number already in use error
+      if (error.response && error.response.status === 400) {
+        toast({
+          title: "Phone Number Error",
+          description:
+            error.response.data.error || "Phone number is already in use",
+          variant: "destructive",
+        });
+      } else {
+        // Generic error handling for other types of errors
+        toast({
+          title: "Error",
+          description:
+            error.response?.data?.message || "Failed to add phone number",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -211,6 +302,8 @@ export default function AccountPage() {
         title: "Success",
         description: "Phone number verified successfully",
       });
+      // Refresh the page
+      window.location.reload();
     } catch (error) {
       toast({
         title: "Error",
@@ -514,13 +607,65 @@ export default function AccountPage() {
                   id="newPassword"
                   type="password"
                   value={passwordForm.newPassword}
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const newPassword = e.target.value;
                     setPasswordForm({
                       ...passwordForm,
-                      newPassword: e.target.value,
-                    })
-                  }
+                      newPassword: newPassword,
+                    });
+                    validatePassword(newPassword);
+                  }}
                 />
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Password Requirements:
+                <ul className="list-disc pl-5">
+                  <li
+                    className={
+                      passwordValidation.length
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    At least 8 characters
+                  </li>
+                  <li
+                    className={
+                      passwordValidation.uppercase
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    Contains an uppercase letter
+                  </li>
+                  <li
+                    className={
+                      passwordValidation.lowercase
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    Contains a lowercase letter
+                  </li>
+                  <li
+                    className={
+                      passwordValidation.number
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    Contains a number
+                  </li>
+                  <li
+                    className={
+                      passwordValidation.symbol
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    Contains a special symbol
+                  </li>
+                </ul>
               </div>
             </div>
             <DialogFooter>
@@ -616,8 +761,62 @@ export default function AccountPage() {
                   id="newPassword"
                   type="password"
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  onChange={(e) => {
+                    const password = e.target.value;
+                    setNewPassword(password);
+                    validatePassword(password);
+                  }}
                 />
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Password Requirements:
+                <ul className="list-disc pl-5">
+                  <li
+                    className={
+                      passwordValidation.length
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    At least 8 characters
+                  </li>
+                  <li
+                    className={
+                      passwordValidation.uppercase
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    Contains an uppercase letter
+                  </li>
+                  <li
+                    className={
+                      passwordValidation.lowercase
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    Contains a lowercase letter
+                  </li>
+                  <li
+                    className={
+                      passwordValidation.number
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    Contains a number
+                  </li>
+                  <li
+                    className={
+                      passwordValidation.symbol
+                        ? "text-green-600"
+                        : "text-red-600"
+                    }
+                  >
+                    Contains a special symbol
+                  </li>
+                </ul>
               </div>
             </div>
             <DialogFooter>
@@ -649,6 +848,7 @@ export default function AccountPage() {
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder="Enter your phone number"
                 />
               </div>
             </div>

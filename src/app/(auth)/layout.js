@@ -2,6 +2,7 @@
 
 import ImageCarousel from "@/components/cards/ImageCarousel";
 import { Toaster } from "@/components/ui/sonner";
+import { Toaster as Toaster2 } from "@/components/ui/toaster";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Home } from "lucide-react";
@@ -48,6 +49,7 @@ export default function AuthLayout({ children }) {
       <div className="flex-1 flex items-center justify-center overflow-y-auto">
         {children}
         <Toaster />
+        <Toaster2 />
       </div>
       <div className="hidden md:flex md:w-1/2 primary_gradient py-12 px-6 rounded-l-[4rem]">
         <ImageCarousel />

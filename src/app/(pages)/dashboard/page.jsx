@@ -161,11 +161,11 @@ export default function JournalTradePage() {
       <main className="flex-1 overflow-y-auto p-4 w-full bg-background rounded-t-xl">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-2">
-            <h2 className="text-xl md:text-2xl font-bold">
+            <h2 className="text-xl font-bold">
               Welcome back, {userName}!
             </h2>
           </div>
-          <p className="text-lg">{formatTime(currentTime)}</p>
+          <p className="text-lg font-bold">{formatTime(currentTime)}</p>
           {isMobile && (
             <Sheet open={isSideSheetOpen} onOpenChange={setIsSideSheetOpen}>
               <SheetTrigger asChild>
@@ -225,7 +225,7 @@ export default function JournalTradePage() {
         <div
           className={`relative h-full transition-all duration-300 ease-in-out ${
             sidebarExpanded
-              ? "w-[19rem]  bg-card"
+              ? "w-[20rem]  bg-card"
               : "w-12 border-0 bg-background"
           }`}
         >

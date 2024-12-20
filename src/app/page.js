@@ -176,10 +176,43 @@ const AnimatedSection = ({ children }) => {
 };
 
 export default function LandingPage() {
+  const [isSticky, setIsSticky] = useState(false);
+  const [showNav, setShowNav] = useState(true);
+  const heroSectionRef = useRef(null);
+  const lastScrollY = useRef(0);
+
+
+ useEffect(() => {
+   const handleScroll = () => {
+     const currentScrollY = window.scrollY;
+
+     if (heroSectionRef.current) {
+       const heroBottom = heroSectionRef.current.getBoundingClientRect().bottom;
+       const isInHeroSection = heroBottom > 0;
+
+       // Hide navigation when in hero section
+       if (isInHeroSection) {
+         setShowNav(false);
+         setIsSticky(false);
+       } else {
+         setShowNav(true);
+         setIsSticky(true);
+       }
+     }
+
+     lastScrollY.current = currentScrollY;
+   };
+
+   window.addEventListener("scroll", handleScroll);
+   return () => window.removeEventListener("scroll", handleScroll);
+ }, []);
+
   return (
     <div className="min-h-screen">
-      <div className="bg-primary ">
-        <nav className="flex items-center justify-between p-4 text-background  mx-auto container max-w-[84rem]">
+      {/* Sticky Navigation */}
+      {/* Initial Navigation (visible only at top) */}
+      <div className="bg-primary">
+        <nav className="flex items-center justify-between p-4 text-background mx-auto container max-w-[84rem]">
           <div className="flex items-center space-x-2">
             <Image
               src="/images/home_logo.png"
@@ -201,7 +234,48 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center space-x-6 text-lg">
             <Link href="/login">
-              <Button variant="ghost" className=" text-base">
+              <Button variant="ghost" className="text-base">
+                Login
+              </Button>
+            </Link>
+            <Link href="/sign-up">
+              <Button className="bg-background text-base text-foreground hover:bg-secondary px-10 rounded-xl py-6 font-semibold">
+                Sign up
+              </Button>
+            </Link>
+          </div>
+        </nav>
+      </div>
+
+      {/* Sticky Navigation */}
+      <div
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          showNav ? "translate-y-0" : "-translate-y-full"
+        } ${isSticky ? "bg-primary shadow-md" : "bg-transparent"}`}
+      >
+        <nav className="flex items-center justify-between p-4 text-background mx-auto container max-w-[84rem]">
+          <div className="flex items-center space-x-2">
+            <Image
+              src="/images/home_logo.png"
+              alt="Tradeboard.in Logo"
+              width={240}
+              height={60}
+            />
+          </div>
+          <div className="hidden md:flex space-x-7 text-sm">
+            {navItems.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="hover:text-foreground transition-all duration-300 ease-in-out"
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+          <div className="flex items-center space-x-6 text-lg">
+            <Link href="/login">
+              <Button variant="ghost" className="text-base">
                 Login
               </Button>
             </Link>
@@ -215,7 +289,10 @@ export default function LandingPage() {
       </div>
 
       <main>
-        <section className=" primary_gradient text-background pt-28  ">
+        <section
+          ref={heroSectionRef}
+          className=" primary_gradient text-background pt-28  "
+        >
           <div className="text-center min-h-screen  space-y-4">
             <h1 className="text-5xl md:text-[4.15rem] mb-6 poppins-bold">
               Trade Better With Discipline
@@ -538,20 +615,28 @@ export default function LandingPage() {
         </AnimatedSection>
 
         <AnimatedSection>
-          <section className="py-16">
+          <section className="py-24">
             <div className="container mx-auto px-">
-              <h2 className="poppins-bold text-3xl md:text-4xl font-bold text-center mb-8">
+              <h2 className="poppins-bold text-3xl md:text-[2.5rem] font-bold text-center mb-14">
                 Frequently Asked Questions
               </h2>
               <Accordion
                 type="single"
                 collapsible
-                className="w-full max-w-3xl mx-auto"
+                className="w-full max-w-5xl mx-auto"
               >
                 {faqs.map((faq, index) => (
-                  <AccordionItem key={index} value={`item-${index}`}>
-                    <AccordionTrigger>{faq.question}</AccordionTrigger>
-                    <AccordionContent>{faq.answer}</AccordionContent>
+                  <AccordionItem
+                    key={index}
+                    value={`item-${index}`}
+                    className="px-8"
+                  >
+                    <AccordionTrigger className="text-lg font-semibold">
+                      {faq.question}
+                    </AccordionTrigger>
+                    <AccordionContent className="text-base">
+                      {faq.answer}
+                    </AccordionContent>
                   </AccordionItem>
                 ))}
               </Accordion>
@@ -568,7 +653,7 @@ export default function LandingPage() {
               </h2>
               <p className="text-base mb-8">
                 Give trading psychology a chance in your trading journey. Best
-                time to upgrade your trading game <br/> with us is NOW.
+                time to upgrade your trading game <br /> with us is NOW.
               </p>
               <Link href="/sign-up">
                 <Button
@@ -609,11 +694,14 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="mt-6 md:mt-0">
-              <h3 className="text-base font-semibold mb-4">Quick Links</h3>
+              <h3 className="text-xl font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 {navItems.map((item) => (
                   <li key={item.name}>
-                    <Link href={item.href} className="text-sm hover:underline">
+                    <Link
+                      href={item.href}
+                      className="text-base hover:underline"
+                    >
                       {item.name}
                     </Link>
                   </li>
@@ -621,13 +709,11 @@ export default function LandingPage() {
               </ul>
             </div>
             <div className="mt-6 md:mt-0">
-              <h3 className="text-base font-semibold mb-4">
-                Contact & Support
-              </h3>
-              <p className="text-sm flex items-center gap-2">
+              <h3 className="text-xl font-semibold mb-4">Contact & Support</h3>
+              <p className="text-base flex items-center gap-2 mb-4">
                 <Phone size={14} /> +91 8457691231
               </p>
-              <p className="text-sm flex items-center gap-2 hover:underline cursor-pointer">
+              <p className="text-base flex items-center gap-2 hover:underline cursor-pointer underline">
                 <Mail size={14} />
                 info@tradeboard.in
               </p>
@@ -635,17 +721,17 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-8 py-4 border-t border-background/10 text-sm flex flex-col md:flex-row items-center justify-between">
-            <p className="text-sm text-center md:text-right mt-4 md:mt-0">
+            {/* <p className="text-sm text-center md:text-right mt-4 md:mt-0">
               Version: 0.63
-            </p>
+            </p> */}
             <p className="text-center md:text-left mb-4 md:mb-0">
               © Copyright 2024. All Rights Reserved by TradeBoard
             </p>
             <div className="flex items-center gap-3">
-              <Button variant="link" className="text-background">
+              <Button variant="link" className="text-background underline">
                 Terms & Conditions
               </Button>
-              <Button variant="link" className="text-background">
+              <Button variant="link" className="text-background underline">
                 Privacy Policy
               </Button>
             </div>

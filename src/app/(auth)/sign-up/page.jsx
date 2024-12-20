@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,10 +17,9 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import Cookies from "js-cookie";
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import GoogleLoginButton from "@/components/buttons/google-button";
 import { Checkbox } from "@/components/ui/checkbox";
 
@@ -43,28 +42,57 @@ export default function SignUp() {
     password: "",
     confirmPassword: "",
   });
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const router = useRouter();
+  const { toast } = useToast();
+
+  const validatePassword = (password) => {
+    const errors = [];
+    if (password.length < 8) errors.push("8+ characters");
+    if (!/[A-Z]/.test(password)) errors.push("uppercase");
+    if (!/[a-z]/.test(password)) errors.push("lowercase");
+    if (!/\d/.test(password)) errors.push("number");
+    if (!/[!@#$%^&*]/.test(password)) errors.push("symbol");
+    return errors;
+  };
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.id]: e.target.value });
+    const { id, value } = e.target;
+    setFormData({ ...formData, [id]: value });
+    if (id === "password") {
+      const passwordErrors = validatePassword(value);
+      setErrors((prev) => ({ ...prev, password: passwordErrors }));
+    }
+    if (id === "confirmPassword") {
+      setErrors((prev) => ({
+        ...prev,
+        confirmPassword:
+          value !== formData.password ? ["Passwords do not match"] : [],
+      }));
+    }
   };
 
   const handleCountryCodeChange = (value) => {
     setFormData({ ...formData, countryCode: value });
   };
 
+  const isFormValid = () => {
+    return (
+      formData.fullName &&
+      formData.email &&
+      formData.mobile &&
+      formData.password &&
+      formData.confirmPassword &&
+      Object.values(errors).every((error) => error.length === 0) &&
+      termsAccepted
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
     setIsLoading(true);
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      setIsLoading(false);
-      return;
-    }
 
     try {
       const response = await fetch(
@@ -87,7 +115,6 @@ export default function SignUp() {
         throw new Error(data.error || "Registration failed");
       }
 
-      // Save email and phone to localStorage
       localStorage.setItem("userEmail", formData.email);
       localStorage.setItem(
         "userPhone",
@@ -96,7 +123,11 @@ export default function SignUp() {
 
       router.push("/sign-up/verify-otp");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: err instanceof Error ? err.message : "An error occurred",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -121,7 +152,7 @@ export default function SignUp() {
 
       // Store token and user info
       Cookies.set("token", token, {
-        expires: expiresIn / 86400, // Convert seconds to days
+        expires: expiresIn / 86400,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
       });
@@ -150,18 +181,29 @@ export default function SignUp() {
         sameSite: "strict",
       });
 
-      toast.success("Sign-up successful");
+      toast({
+        title: "Success",
+        description: "Sign-up successful",
+      });
       router.push("/dashboard");
     } catch (error) {
       console.error("Google signup error:", error);
-      toast.error("Signup failed. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Signup failed. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleGoogleError = () => {
-    toast.error("Google signup failed");
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: "Google signup failed",
+    });
   };
 
   return (
@@ -169,14 +211,8 @@ export default function SignUp() {
       <div className="flex-1 flex items-center justify-center px-6 py-2">
         <Card className="w-full max-w-md bg-transparent shadow-none">
           <CardContent className="px-2 py-3">
-            <h1 className="text-3xl font-bold mb-2">Sign up</h1>
-            <p className="text-gray-300 mb-6">Please create an account</p>
-
-            {error && (
-              <Alert variant="destructive" className="mb-4">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+            <h1 className="text-3xl font-bold">Sign up</h1>
+            <p className="text-gray-300 mb-2">Please create an account</p>
 
             <div className="w-full mb-4">
               <GoogleLoginButton
@@ -188,7 +224,7 @@ export default function SignUp() {
               />
             </div>
 
-            <div className="relative mb-4">
+            <div className="relative mb-2">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
               </div>
@@ -197,7 +233,7 @@ export default function SignUp() {
               </div>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
+            <form className="space-y-2" onSubmit={handleSubmit}>
               <div>
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
@@ -276,6 +312,11 @@ export default function SignUp() {
                     )}
                   </Button>
                 </div>
+                {errors.password && errors.password.length > 0 && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Missing: {errors.password.join(", ")}
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -303,10 +344,22 @@ export default function SignUp() {
                     )}
                   </Button>
                 </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.confirmPassword[0]}
+                  </p>
+                )}
               </div>
-              <div className="text-sm text-gray-600 flex gap-1">
-                <Checkbox />
-                <p>
+              <div className="flex items-center  space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={termsAccepted}
+                  onCheckedChange={(checked) => setTermsAccepted(checked)}
+                />
+                <label
+                  htmlFor="terms"
+                  className="text-xs mt-2 text-gray-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
                   By creating an account you agree to our{" "}
                   <Link href="/terms" className="text-primary hover:underline">
                     Terms & Conditions
@@ -319,18 +372,18 @@ export default function SignUp() {
                     Privacy Policy
                   </Link>
                   .
-                </p>
+                </label>
               </div>
               <Button
                 className="w-full text-background"
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !isFormValid()}
               >
                 {isLoading ? "Signing up..." : "Sign up"}
               </Button>
             </form>
 
-            <p className="text-center mt-6">
+            <p className="text-center text-sm mt-6 text-foreground/25">
               Already have an account?{" "}
               <Link href="/login" className="text-primary hover:underline">
                 Log in

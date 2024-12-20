@@ -131,7 +131,7 @@ const changeDate = (days) => {
           <section className=" p-6  bg-background rounded-t-xl">
             {renderDateNavigation()}
             <div className="grid grid-cols-2 gap-4">
-              <Card className="flex-1 w-full h-full flex justify-between flex-col pb-6">
+              <Card className="flex-1 w-full h-full flex justify-between flex-col pb-6 shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
                 <CardHeader>
                   <CardTitle className="text-xl">Journal</CardTitle>
                 </CardHeader>
@@ -183,7 +183,7 @@ const changeDate = (days) => {
                 </CardFooter>
               </Card>
 
-              <Card className="w-full max-w-4xl h-full mx-auto p-4 flex-1">
+              <Card className="w-full max-w-4xl h-full mx-auto p-4 flex-1 shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
                 <CardHeader className="p-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -193,7 +193,7 @@ const changeDate = (days) => {
                 </CardHeader>
                 <CardContent className="p-0 mt-3">
                   <div className="rounded-lg overflow-hidden border">
-                    <div className="sticky top-0 z-10 grid grid-cols-[auto,1fr,auto] gap-4 p-2 px-4 bg-primary/25 border-b">
+                    <div className="sticky top-0 z-10 grid grid-cols-[auto,1fr,auto] gap-4 p-2 px-4 bg-[#F4E4FF] dark:bg-[#49444c] border-b">
                       <div className="flex items-center">
                         <Checkbox
                           checked={false}
@@ -216,27 +216,9 @@ const changeDate = (days) => {
                                 // Add onCheckedChange handler
                               />
                             </div>
-                            <span className="text-gray-700">
+                            <span className="text-gray-700 text-[0.8rem]">
                               {rule.description}
                             </span>
-                            {/* <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-gray-500 hover:text-gray-700"
-                              // Add onClick for edit
-                            >
-                              <SquarePen className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-gray-500 hover:text-gray-700"
-                              // Add onClick for delete
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div> */}
                           </div>
                         ))}
 
@@ -254,7 +236,7 @@ const changeDate = (days) => {
             </div>
 
             {journalData.trades?.length > 0 && (
-              <Card className="mt-4 ">
+              <Card className="mt-4 shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                   <div className="space-y-1 text-xl">
                     <CardTitle>Trades</CardTitle>
@@ -263,24 +245,24 @@ const changeDate = (days) => {
                 <CardContent>
                   <div className="rounded-lg overflow-hidden border">
                     <Table className="rounded-b-lg overflow-hidden bg-background">
-                      <TableHeader className="bg-primary/25">
+                      <TableHeader className="bg-[#F4E4FF] dark:bg-[#49444c]">
                         <TableRow className="border-none">
-                          <TableHead className="text-nowrap">Time</TableHead>
-                          <TableHead className="text-nowrap">
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">Time</TableHead>
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">
                             Instrument
                           </TableHead>
-                          <TableHead className="text-nowrap">Type</TableHead>
-                          <TableHead className="text-nowrap">Action</TableHead>
-                          <TableHead className="text-nowrap">
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">Type</TableHead>
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">Action</TableHead>
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">
                             Quantity
                           </TableHead>
-                          <TableHead className="text-nowrap">
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">
                             Buying Price
                           </TableHead>
-                          <TableHead className="text-nowrap">
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">
                             Selling Price
                           </TableHead>
-                          <TableHead className="text-nowrap">
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">
                             Brokerage
                           </TableHead>
                         </TableRow>
@@ -288,40 +270,40 @@ const changeDate = (days) => {
                       <TableBody>
                         {journalData.trades.map((trade) => (
                           <TableRow key={trade._id}>
-                            <TableCell className="text-nowrap">
+                            <TableCell className="text-nowrap text-[0.8rem] text-center">
                               {trade.time}
                             </TableCell>
                             <TableCell
                               className={cn(
                                 !trade.buyingPrice || !trade.sellingPrice
-                                  ? "text-foreground font-semibold"
+                                  ? "text-foreground font-semibold  text-center"
                                   : trade.buyingPrice < trade.sellingPrice
-                                  ? "text-green-500 font-semibold"
-                                  : "text-red-500 font-semibold"
+                                  ? "text-green-500 font-semibold  text-center"
+                                  : "text-red-500 font-semibold  text-center"
                               )}
                             >
                               {trade.instrumentName}
                             </TableCell>
-                            <TableCell className="text-nowrap">
+                            <TableCell className="text-nowrap text-[0.8rem] text-center">
                               {trade.equityType}
                             </TableCell>
-                            <TableCell className="text-nowrap">
+                            <TableCell className="text-nowrap text-[0.8rem] text-center">
                               {trade.action}
                             </TableCell>
-                            <TableCell className="text-nowrap">
+                            <TableCell className="text-nowrap text-[0.8rem] text-center">
                               {trade.quantity}
                             </TableCell>
-                            <TableCell className="text-nowrap">
+                            <TableCell className="text-nowrap text-[0.8rem] text-center">
                               {trade.buyingPrice
                                 ? `₹${trade.buyingPrice.toFixed(2)}`
                                 : "-"}
                             </TableCell>
-                            <TableCell className="text-nowrap">
+                            <TableCell className="text-nowrap text-[0.8rem] text-center">
                               {trade.sellingPrice
                                 ? `₹${trade.sellingPrice.toFixed(2)}`
                                 : "-"}
                             </TableCell>
-                            <TableCell className="text-nowrap">
+                            <TableCell className="text-nowrap text-[0.8rem] text-center">
                               {trade.brokerage
                                 ? `₹${trade.brokerage.toFixed(2)}`
                                 : "-"}

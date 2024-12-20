@@ -245,7 +245,7 @@ const AddRulesDialog = ({
 // Empty State Component
 const EmptyState = ({ onAddRule, onLoadSampleRules, isLoading }) => {
   return (
-    <Card className="h-full">
+    <Card className="h-full  shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)] ">
       <CardHeader>
         <div className="flex items-center w-full gap-2">
           <h2 className="text-2xl font-semibold">Rules</h2>
@@ -572,7 +572,7 @@ export function RulesSection({ selectedDate, onUpdate }) {
   }
 
   return (
-    <Card className="w-full  h-full mx-auto p-4 flex-1">
+    <Card className="w-full  h-full mx-auto p-4 flex-1  shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)] ">
       <CardHeader className="p-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -595,18 +595,18 @@ export function RulesSection({ selectedDate, onUpdate }) {
           </div>
 
           <div className="flex space-x-2 items-center">
-            <div className="relative flex grow max-w-[8.5rem] mr-2 text-xs">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <div className="relative flex grow max-w-[10.25rem] mr-2 text-xs">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search rules"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 text-xs"
+                className="p-2 pl-8 text-xs text-gray-400 h-fit "
               />
             </div>
 
             <Button
-              className="bg-primary text-white text-xs hover:bg-purple-600"
+              className="bg-primary h-fit text-white text-xs px-3 hover:bg-purple-600"
               onClick={() => setNewRulesDialog(true)}
               disabled={isLoadingAction.addRule}
             >
@@ -643,8 +643,8 @@ export function RulesSection({ selectedDate, onUpdate }) {
                 disabled={isLoadingAction.followAllRules}
               />
             </div>
-            <span className="font-medium">My Rules</span>
-            <span className="font-medium text-right">Action</span>
+            <span className="font-semibold text-xs">My Rules</span>
+            <span className="font-semibold text-xs text-right">Action</span>
           </div>
           <div className="max-h-[55vh] min-h-96 overflow-y-auto bg-[#FAF7FF] dark:bg-[#363637]">
             <div className="divide-y">
@@ -662,21 +662,21 @@ export function RulesSection({ selectedDate, onUpdate }) {
                       disabled={isLoadingAction.followRule}
                     />
                   </div>
-                  <span className="text- text-sm">{rule.description}</span>
-                  <div className="flex items-center gap-2">
-                    <Button
+                  <span className=" text-xs">{rule.description}</span>
+                  <div className="flex items-center gap-2 p-0">
+                    <button
                       variant="ghost"
                       size="icon"
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-gray-500 hover:text-gray-700 p-0"
                       onClick={() => setEditingRule(rule)}
                       disabled={isLoadingAction.editRule}
                     >
                       <SquarePen className="h-4 w-4" />
-                    </Button>
-                    <Button
+                    </button>
+                    <button
                       variant="ghost"
                       size="icon"
-                      className="text-gray-500 hover:text-gray-700"
+                      className="text-gray-500 hover:text-gray-700 p-0"
                       onClick={() => {
                         setRuleToDelete(rule);
                         setIsDeleteDialogOpen(true);
@@ -684,7 +684,7 @@ export function RulesSection({ selectedDate, onUpdate }) {
                       disabled={isLoadingAction.deleteRule}
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </button>
                   </div>
                 </div>
               ))}

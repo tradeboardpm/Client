@@ -4,18 +4,9 @@ import { useState, useEffect } from "react";
 import Topbar from "@/components/navigation/Topbar";
 import Sidebar from "@/components/navigation/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
+import { Toaster as Toaster2 } from "@/components/ui/toaster";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
-// import {
-//   AlertDialog,
-//   AlertDialogAction,
-//   AlertDialogContent,
-//   AlertDialogDescription,
-//   AlertDialogFooter,
-//   AlertDialogHeader,
-//   AlertDialogTitle,
-// } from "@/components/ui/alert-dialog";
-// import { Spinner } from "@/components/ui/spinner";
 import AnnouncementManager from "@/components/AnnouncementManager";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -24,6 +15,58 @@ export default function MainLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const router = useRouter();
+
+  const clearCookiesAndRedirect = () => {
+    Cookies.remove("userName");
+    Cookies.remove("token");
+    Cookies.remove("expiry");
+    Cookies.remove("userEmail");
+    Cookies.remove("userId");
+    router.push("/");
+  };
+
+  const validateToken = async () => {
+    try {
+      const token = Cookies.get("token");
+      if (!token) {
+        clearCookiesAndRedirect();
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/validate-token`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || data.error || data === false) {
+        toast.error("Your session has expired. Please log in again.");
+        clearCookiesAndRedirect();
+      }
+    } catch (error) {
+      console.error("Token validation error:", error);
+      toast.error("An error occurred. Please try logging in again.");
+      clearCookiesAndRedirect();
+    }
+  };
+
+  useEffect(() => {
+    // Initial token validation
+    validateToken();
+
+    // Set up interval to validate token every minute
+    const intervalId = setInterval(validateToken, 60000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -64,17 +107,7 @@ export default function MainLayout({ children }) {
         }
       );
 
-      // Clear cookies regardless of API response
-      Cookies.remove("userName");
-      Cookies.remove("token");
-      Cookies.remove("expiry");
-      Cookies.remove("userEmail");
-      Cookies.remove("userId");
-
-      // Redirect to login
-      router.push("/login");
-
-      // Show logout success toast
+      clearCookiesAndRedirect();
       toast.success("Logged out successfully");
     } catch (error) {
       console.error("Logout error:", error);
@@ -101,6 +134,7 @@ export default function MainLayout({ children }) {
         <Sidebar isOpen={sidebarOpen} />
         <div className="flex-1 overflow-auto">
           <Toaster />
+          <Toaster2 />
           <TooltipProvider>{children}</TooltipProvider>
         </div>
       </div>

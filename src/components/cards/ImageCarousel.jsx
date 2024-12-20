@@ -72,8 +72,8 @@ export default function ImageCarousel() {
             onClick={() => handleIndicatorClick(index)}
             className={`h-2 w-28 transition-all rounded-full duration-300 ${
               currentIndex === index
-                ? "bg-white scale-110"
-                : "bg-gray-400 hover:bg-gray-300"
+                ? "bg-white "
+                : "bg-gray-300/25 hover:bg-gray-300"
             }`}
           />
         ))}

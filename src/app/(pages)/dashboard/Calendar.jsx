@@ -89,7 +89,7 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
 
   return (
     <div className="flex flex-col gap-4 ">
-      <Card className="w-fit shadow-lg bg-[#FAF7FF] dark:bg-[#363637]">
+      <Card className="w-fit border border-primary/15 bg-[#FAF7FF] dark:bg-[#363637]  shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
         <CardContent className="p-0">
           <Calendar
             mode="single"
@@ -103,58 +103,54 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
             classNames={{
               nav_button_previous: "hover:bg-muted",
               head_cell:
-                "text-muted-foreground font-medium uppercase text-xs w-9 text-center",
+                "text-muted-foreground font-semibold text-xs w-9 text-center",
               cell: cn(
-                "h-9 w-9 text-center text-sm relative rounded-sm",
-                "[&:has([aria-selected])]:border-2",
-                "first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
-                "focus-within:relative focus-within:z-20"
+                "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 w-9 h-8",
+                "[&:has([aria-selected])]:bg-transparent"
               ),
               day: cn(
-                "h-8 w-8 p-0 rounded font-normal",
-                "aria-selected:text-primary-foreground"
+                "h-8 w-8 p-0 font-normal text-xs rounded-sm",
+                "hover:bg-transparent focus:bg-transparent"
               ),
               day_selected:
                 "bg-primary/15 text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground z-10",
             }}
           />
           {/* Legend */}
-          <div className="py-2 px-2 border-t flex flex-wrap gap-1 text-xs">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded bg-purple-500" />
+          <div className="py-2 px-2 border-t border-primary/15 flex items-center justify-between gap-1 text-[0.65rem]">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 bg-purple-500" />
               <span>Today</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <div
-                className="w-3 h-3 rounded"
+                className="w-2 h-2"
                 style={{
                   backgroundColor: "#C0F9E5",
                   color: "#0ED991",
                 }}
               />
-              <span className="text-[#0ED991] dark:text-[#0ED991]">Profit</span>
+              <span>Profit</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <div
-                className="w-3 h-3 rounded"
+                className="w-2 h-2"
                 style={{
                   backgroundColor: "#FFD3D8",
                   color: "#FF8190",
                 }}
               />
-              <span className="text-[#FF8190] dark:text-[#FF8190]">Loss</span>
+              <span>Loss</span>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               <div
-                className="w-3 h-3 rounded"
+                className="w-2 h-2"
                 style={{
                   backgroundColor: "#FFF8B8",
                   color: "#FAC300",
                 }}
               />
-              <span className="text-[#FAC300] dark:text-[#FAC300]">
-                Break Even
-              </span>
+              <span>Break Even</span>
             </div>
           </div>
         </CardContent>

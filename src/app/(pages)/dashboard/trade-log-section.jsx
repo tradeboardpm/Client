@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,13 +28,14 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Plus, Import, Search, SquarePen, Trash2, Info } from "lucide-react";
+import { Plus, Import, Search, SquarePen, Trash2, Info } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { ImportTradeDialog } from "./import-trade";
 import { calculateExchangeCharges } from "@/utils/calculateExchangeCharges";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+
 
 export function TradesSection({ selectedDate, brokerage }) {
   const [trades, setTrades] = useState([]);
@@ -151,14 +152,22 @@ export function TradesSection({ selectedDate, brokerage }) {
   };
 
   const handleOpenTradeEdit = async () => {
+    if (!selectedTrade) return;
     setIsLoading(true);
     try {
       const token = Cookies.get("token");
+      const exchangeCharges = calculateExchangeCharges(
+        selectedTrade.equityType,
+        selectedTrade.action,
+        selectedTrade.action === "buy" ? selectedTrade.buyingPrice : selectedTrade.sellingPrice,
+        selectedTrade.quantity
+      );
       await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/trades/open/${selectedTrade._id}`,
         {
           ...selectedTrade,
-          instrumentName: selectedTrade.instrumentName.toUpperCase(), // Capitalize before sending
+          instrumentName: selectedTrade.instrumentName.toUpperCase(),
+          exchangeRate: exchangeCharges,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -175,14 +184,29 @@ export function TradesSection({ selectedDate, brokerage }) {
   };
 
   const handleCompleteTradeEdit = async () => {
+    if (!selectedTrade) return;
     setIsLoading(true);
     try {
       const token = Cookies.get("token");
+      const buyExchangeCharges = calculateExchangeCharges(
+        selectedTrade.equityType,
+        "buy",
+        selectedTrade.buyingPrice,
+        selectedTrade.quantity
+      );
+      const sellExchangeCharges = calculateExchangeCharges(
+        selectedTrade.equityType,
+        "sell",
+        selectedTrade.sellingPrice,
+        selectedTrade.quantity
+      );
+      const totalExchangeCharges = buyExchangeCharges + sellExchangeCharges;
       await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/trades/complete/${selectedTrade._id}`,
         {
           ...selectedTrade,
-          instrumentName: selectedTrade.instrumentName.toUpperCase(), // Capitalize before sending
+          instrumentName: selectedTrade.instrumentName.toUpperCase(),
+          exchangeRate: totalExchangeCharges,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -199,6 +223,7 @@ export function TradesSection({ selectedDate, brokerage }) {
   };
 
   const handleTradeDelete = async () => {
+    if (!selectedTrade) return;
     setIsLoading(true);
     try {
       const token = Cookies.get("token");
@@ -239,12 +264,12 @@ export function TradesSection({ selectedDate, brokerage }) {
   const calculateTotalOrder = (trade) => {
     const price =
       trade.action === "buy" ? trade.buyingPrice : trade.sellingPrice;
-    return trade.quantity * price + trade.exchangeRate + (trade.brokerage || 0);
+    return trade.quantity * price + trade.exchangeRate + trade.brokerage;
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+    <Card className=" shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)] p-4">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 p-0 pb-3 border-b border-primary/15">
         <div className="space-y-1 text-xl">
           <CardTitle>Trade Log</CardTitle>
         </div>
@@ -263,12 +288,12 @@ export function TradesSection({ selectedDate, brokerage }) {
           />
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0 mt-3">
         {trades.length > 0 ? (
           <>
             <div className="flex items-center justify-between mb-4">
-              <div className="text-sm font-medium">
-                Trades ({filteredTrades.length})
+              <div className="text-sm font-semibold">
+                Total Trades ({filteredTrades.length})
               </div>
               <div className="relative w-64">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -276,7 +301,7 @@ export function TradesSection({ selectedDate, brokerage }) {
                   placeholder="Search trades..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
+                  className=" text-xs pl-8"
                 />
               </div>
             </div>
@@ -284,67 +309,78 @@ export function TradesSection({ selectedDate, brokerage }) {
             <div className="rounded-lg overflow-hidden">
               <div className="rounded-lg overflow-hidden border">
                 <Table className="rounded-b-lg overflow-hidden bg-background">
-                  <TableHeader className="bg-primary/25">
-                    <TableRow className="border-none">
-                      <TableHead className="text-nowrap">Date</TableHead>
-                      <TableHead className="text-nowrap">Time</TableHead>
-                      <TableHead className="text-nowrap">Instrument</TableHead>
-                      <TableHead className="text-nowrap">Equity Type</TableHead>
-                      <TableHead className="text-nowrap">Quantity</TableHead>
-                      <TableHead className="text-nowrap">
+                  <TableHeader className="bg-[#F4E4FF] dark:bg-[#49444c]">
+                    <TableRow className="border-none text-xs">
+                      <TableHead className="text-nowrap text-center font-semibold  text-foreground">
+                        Date
+                      </TableHead>
+                      <TableHead className="text-nowrap text-center font-semibold  text-foreground">
+                        Instrument
+                      </TableHead>
+                      <TableHead className="text-nowrap text-center font-semibold  text-foreground">
+                        Equity Type
+                      </TableHead>
+                      <TableHead className="text-nowrap text-center font-semibold  text-foreground">
+                        Quantity
+                      </TableHead>
+                      <TableHead className="text-nowrap text-center font-semibold  text-foreground">
                         Buying Price
                       </TableHead>
-                      <TableHead className="text-nowrap">
+                      <TableHead className="text-nowrap text-center font-semibold  text-foreground">
                         Selling Price
                       </TableHead>
-                      <TableHead className="text-nowrap">
+                      <TableHead className="text-nowrap text-center font-semibold  text-foreground">
                         Exchange charges
                       </TableHead>
-                      <TableHead className="text-nowrap">Brokerage</TableHead>
-                      <TableHead className="text-nowrap">Actions</TableHead>
+                      <TableHead className="text-nowrap text-center font-semibold  text-foreground">
+                        Brokerage
+                      </TableHead>
+                      <TableHead className="text-nowrap text-center font-semibold  text-foreground">
+                        Actions
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className="text-xs">
                     {filteredTrades.map((trade) => (
                       <TableRow key={trade._id}>
-                        <TableCell className="text-nowrap">
+                        <TableCell className="text-nowrap text-center">
                           {format(new Date(trade.date), "dd-MM-yyyy")}
-                        </TableCell>
-                        <TableCell className="text-nowrap">
+                          {", "}
                           {trade.time}
                         </TableCell>
                         <TableCell
                           className={cn(
                             !trade.buyingPrice || !trade.sellingPrice
-                              ? "text-foreground font-semibold"
+                              ? "text-foreground font-semibold text-center"
                               : trade.buyingPrice < trade.sellingPrice
-                              ? "text-green-500 font-semibold"
-                              : "text-red-500 font-semibold"
+                              ? "text-green-500 font-semibold text-center"
+                              : "text-red-500 font-semibold text-center"
                           )}
                         >
                           {trade.instrumentName}
                         </TableCell>
-                        <TableCell className="text-nowrap">
+                        <TableCell className="text-nowrap text-center">
                           {trade.equityType}
                         </TableCell>
-                        <TableCell className="text-nowrap">
+                        <TableCell className="text-nowrap text-center">
                           {trade.quantity}
                         </TableCell>
-                        <TableCell className="text-nowrap">
+                        <TableCell className="text-nowrap text-center">
                           {trade.buyingPrice ? `₹ ${trade.buyingPrice}` : "-"}
                         </TableCell>
-                        <TableCell className="text-nowrap">
+                        <TableCell className="text-nowrap text-center">
                           {trade.sellingPrice ? `₹ ${trade.sellingPrice}` : "-"}
                         </TableCell>
-                        <TableCell className="text-nowrap">
+                        <TableCell className="text-nowrap text-center">
                           ₹ {trade.exchangeRate.toFixed(2)}
                         </TableCell>
-                        <TableCell className="text-nowrap">
+                        <TableCell className="text-nowrap text-center">
                           ₹ {trade.brokerage}
                         </TableCell>
-                        <TableCell className="text-nowrap">
+                        <TableCell className="text-nowrap text-center">
                           <div className="flex items-center gap-2">
-                            <Button
+                            <button
+                            className="text-gray-500/35"
                               variant="ghost"
                               size="icon"
                               onClick={() => {
@@ -355,8 +391,9 @@ export function TradesSection({ selectedDate, brokerage }) {
                               }}
                             >
                               <SquarePen className="h-4 w-4" />
-                            </Button>
-                            <Button
+                            </button>
+                            <button
+                            className="text-gray-500/35"
                               variant="ghost"
                               size="icon"
                               onClick={() => {
@@ -365,7 +402,7 @@ export function TradesSection({ selectedDate, brokerage }) {
                               }}
                             >
                               <Trash2 className="h-4 w-4" />
-                            </Button>
+                            </button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -497,7 +534,7 @@ export function TradesSection({ selectedDate, brokerage }) {
                 <Label>Quantity</Label>
                 <Input
                   type="number"
-                  value={newTrade.quantity}
+                  value={newTrade.quantity ?? ""}
                   onChange={(e) =>
                     setNewTrade({
                       ...newTrade,
@@ -549,8 +586,8 @@ export function TradesSection({ selectedDate, brokerage }) {
                   type="number"
                   value={
                     newTrade.action === "buy"
-                      ? newTrade.buyingPrice
-                      : newTrade.sellingPrice
+                      ? newTrade.buyingPrice ?? ""
+                      : newTrade.sellingPrice ?? ""
                   }
                   onChange={(e) => {
                     const price = Number(e.target.value);
@@ -717,8 +754,8 @@ export function TradesSection({ selectedDate, brokerage }) {
                     type="number"
                     value={
                       selectedTrade.action === "buy"
-                        ? selectedTrade.buyingPrice
-                        : selectedTrade.sellingPrice
+                        ? selectedTrade.buyingPrice ?? ""
+                        : selectedTrade.sellingPrice ?? ""
                     }
                     onChange={(e) => {
                       const price = Number(e.target.value);
@@ -772,7 +809,14 @@ export function TradesSection({ selectedDate, brokerage }) {
                   <Label>Exchange Charges (₹)</Label>
                   <Input
                     type="number"
-                    value={selectedTrade.exchangeRate}
+                    value={calculateExchangeCharges(
+                      selectedTrade.equityType,
+                      selectedTrade.action,
+                      selectedTrade.action === "buy"
+                        ? selectedTrade.buyingPrice
+                        : selectedTrade.sellingPrice,
+                      selectedTrade.quantity
+                    )}
                     readOnly
                   />
                 </div>
@@ -857,7 +901,7 @@ export function TradesSection({ selectedDate, brokerage }) {
                   <Label>Buying Price</Label>
                   <Input
                     type="number"
-                    value={selectedTrade.buyingPrice}
+                    value={selectedTrade.buyingPrice ?? ""}
                     onChange={(e) =>
                       setSelectedTrade({
                         ...selectedTrade,
@@ -870,7 +914,7 @@ export function TradesSection({ selectedDate, brokerage }) {
                   <Label>Selling Price</Label>
                   <Input
                     type="number"
-                    value={selectedTrade.sellingPrice}
+                    value={selectedTrade.sellingPrice ?? ""}
                     onChange={(e) =>
                       setSelectedTrade({
                         ...selectedTrade,
@@ -920,7 +964,20 @@ export function TradesSection({ selectedDate, brokerage }) {
                   <Label>Exchange Charges (₹)</Label>
                   <Input
                     type="number"
-                    value={selectedTrade.exchangeRate}
+                    value={
+                      calculateExchangeCharges(
+                        selectedTrade.equityType,
+                        "buy",
+                        selectedTrade.buyingPrice,
+                        selectedTrade.quantity
+                      ) +
+                      calculateExchangeCharges(
+                        selectedTrade.equityType,
+                        "sell",
+                        selectedTrade.sellingPrice,
+                        selectedTrade.quantity
+                      )
+                    }
                     readOnly
                   />
                 </div>
@@ -988,3 +1045,4 @@ export function TradesSection({ selectedDate, brokerage }) {
     </Card>
   );
 }
+

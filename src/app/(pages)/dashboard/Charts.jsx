@@ -177,17 +177,18 @@ export function WeeklyCharts({
   return (
     <div className="flex flex-col gap-6 w-full max-w-4xl">
       {/* Previous Trades Taken Chart remains unchanged */}
-      <Card className="shadow-lg bg-[#FAF7FF] dark:bg-[#363637]">
-        <CardHeader className="p-4 flex flex-col justify-between">
-          <CardTitle className="text-base font-semibold p-0">
-            Trades Taken
+      <Card className="border border-primary/15 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
+        <CardHeader className="p-2 flex flex-col justify-between">
+          <CardTitle className="text-base font-semibold p-0 flex items-center gap-1">
+            Trades Taken{" "}
+            <CardDescription className="p-0 text-[0.65rem] font-light">
+              (Daily trade limit: {tradesPerDay})
+            </CardDescription>
           </CardTitle>
-          <CardDescription className="p-0 text-xs">
-            Daily trade count (limit: {tradesPerDay})
-          </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <ChartContainer
+            className="p-0 "
             config={{
               trades: {
                 label: "Trades",
@@ -195,10 +196,10 @@ export function WeeklyCharts({
               },
             }}
           >
-            <ResponsiveContainer width="100%" height={400}>
+            <ResponsiveContainer width="100%">
               <LineChart
                 data={processedData}
-                margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+                margin={{ top: 10, right: 20, bottom: 0, left: 0 }}
               >
                 <CartesianGrid
                   vertical={false}
@@ -211,14 +212,14 @@ export function WeeklyCharts({
                   axisLine={false}
                   tickMargin={12}
                 />
-                <YAxis tickLine={false} axisLine={false} tickMargin={12} />
+                <YAxis tickLine={false} axisLine={false} tickMargin={11} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Line
                   type="linear"
                   dataKey="tradesTaken"
                   stroke="hsl(var(--primary))"
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--primary))", r: 3 }}
                   activeDot={{ r: 6 }}
                 />
               </LineChart>
@@ -226,9 +227,8 @@ export function WeeklyCharts({
           </ChartContainer>
         </CardContent>
       </Card>
-
       {/* Updated Win Rate Chart with Stacked Bars */}
-      <Card className="shadow-lg bg-[#FAF7FF] dark:bg-[#363637]">
+      <Card className="border border-primary/15 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
         <CardHeader className="p-4 flex flex-row items-center justify-between">
           <CardTitle className="text-base font-semibold">Win Rate</CardTitle>
           <CustomLegend
@@ -254,7 +254,7 @@ export function WeeklyCharts({
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
                 data={processedData}
-                margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+                margin={{ top: 10, right: 20, bottom: 0, left: 0 }}
               >
                 <CartesianGrid
                   vertical={false}
@@ -288,9 +288,8 @@ export function WeeklyCharts({
           </ChartContainer>
         </CardContent>
       </Card>
-
       {/* Previous Profit & Loss Chart remains unchanged */}
-      <Card className="shadow-lg bg-[#FAF7FF] dark:bg-[#363637]">
+      <Card className="border border-primary/15 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
         <CardHeader className="p-4 flex flex-row items-center justify-between">
           <CardTitle className="text-base font-semibold">
             Profit & Loss
@@ -308,7 +307,7 @@ export function WeeklyCharts({
             <ResponsiveContainer width="100%" height={400}>
               <LineChart
                 data={processedData}
-                margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+                margin={{ top: 10, right: 20, bottom: 0, left: 0 }}
               >
                 <CartesianGrid
                   vertical={false}
@@ -346,8 +345,8 @@ export function WeeklyCharts({
                   type="linear"
                   dataKey="profitLoss"
                   stroke="hsl(var(--primary))"
-                  strokeWidth={3}
-                  dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                  strokeWidth={2}
+                  dot={{ fill: "hsl(var(--primary))", r: 3 }}
                   activeDot={{ r: 6 }}
                 />
               </LineChart>
@@ -355,9 +354,8 @@ export function WeeklyCharts({
           </ChartContainer>
         </CardContent>
       </Card>
-
       {/* Updated Rules Chart with Stacked Bars */}
-      <Card className="shadow-lg bg-[#FAF7FF] dark:bg-[#363637]">
+      <Card className="border border-primary/15 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
         <CardHeader className="p-4 flex flex-row items-center justify-between">
           <CardTitle className="text-base font-semibold">Rules</CardTitle>
           <CustomLegend
@@ -383,7 +381,7 @@ export function WeeklyCharts({
             <ResponsiveContainer width="100%" height={400}>
               <BarChart
                 data={processedData}
-                margin={{ top: 20, right: 20, bottom: 20, left: 0 }}
+                margin={{ top: 10, right: 20, bottom: 0, left: 0 }}
               >
                 <CartesianGrid
                   vertical={false}

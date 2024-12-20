@@ -23,7 +23,7 @@ const GoogleLoginButton = ({
     <div className={`relative w-full ${className}`}>
       <Button
         variant="ghost"
-        className="w-full justify-center border border-primary/15 bg-accent/25 shadow font-semibold text-xs"
+        className="w-full bg-[#F3F6F8] justify-center border border-primary/15  font-semibold text-xs shadow-[0px_6px_16px_rgba(0,0,0,0.04)]"
         onClick={handleClick}
         disabled={disabled}
       >
@@ -31,7 +31,6 @@ const GoogleLoginButton = ({
 
         {text}
       </Button>
-
       {/* Hidden Google Login component */}
       <div className="google-login-trigger absolute top-0 left-0 w-full h-full opacity-0">
         <GoogleLogin
