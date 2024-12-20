@@ -721,11 +721,12 @@ export default function LandingPage() {
           </div>
 
           <div className="mt-8 py-4 border-t border-background/10 text-sm flex flex-col md:flex-row items-center justify-between">
-            {/* <p className="text-sm text-center md:text-right mt-4 md:mt-0">
-              Version: 0.63
-            </p> */}
             <p className="text-center md:text-left mb-4 md:mb-0">
               © Copyright 2024. All Rights Reserved by TradeBoard
+            </p>
+
+            <p className="text-sm text-center md:text-right mt-4 md:mt-0">
+              Version: 0.64
             </p>
             <div className="flex items-center gap-3">
               <Button variant="link" className="text-background underline">
