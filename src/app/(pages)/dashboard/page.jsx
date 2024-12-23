@@ -158,14 +158,14 @@ export default function JournalTradePage() {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-card">
-      <main className="flex-1 overflow-y-auto p-4 w-full bg-background rounded-t-xl">
+      <main className="flex-1 overflow-y-auto p-6 w-full bg-background rounded-t-xl">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-2">
-            <h2 className="text-xl font-bold">
+            <h2 className="text-xl font-medium">
               Welcome back, {userName}!
             </h2>
           </div>
-          <p className="text-lg font-bold">{formatTime(currentTime)}</p>
+          <p className="text-lg font-medium">{formatTime(currentTime)}</p>
           {isMobile && (
             <Sheet open={isSideSheetOpen} onOpenChange={setIsSideSheetOpen}>
               <SheetTrigger asChild>
@@ -186,21 +186,21 @@ export default function JournalTradePage() {
           )}
         </div>
 
-        <div className="primary_gradient rounded-xl p-2 sm:p-3 md:p-4 mb-4">
+        <div className="primary_gradient rounded-xl p-2 sm:p-3 md:p-4 mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-center relative">
             <div className="flex-1 w-full sm:w-auto order-2 sm:order-1"></div>
             <div className="w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 bg-accent/40 text-center text-background px-2 py-1 rounded-lg mb-2 sm:mb-0 order-1 sm:order-2">
-              <p className="text-sm sm:text-base lg:text-xl">
+              <p className="text-base px-3 py-1 ">
                 {formatDate(selectedDate)}
               </p>
             </div>
-            <p className="text-background text-sm sm:text-base lg:text-xl order-3">
+            <p className="text-background text-sm sm:text-base lg:text-xl order-3 px-4">
               Capital: ₹ {capital.toFixed(2)}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6   mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5  mb-8">
           <JournalSection
             selectedDate={selectedDate}
             journalData={journalData}

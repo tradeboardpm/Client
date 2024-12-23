@@ -79,7 +79,7 @@ return (
       </Card>
 
       <Card className="bg-transparent flex-shrink-0 pt-12 relative shadow-none">
-        <CardContent className="p-4 text-center flex flex-col items-center bg-[#EBEEFF] dark:bg-[#38383c] rounded-xl">
+        <CardContent className="p-4 text-center flex flex-col items-center bg-[#EBEEFF] dark:bg-[#38383c] rounded-3xl">
           <Image
             src="/images/Feature.png"
             width={175}

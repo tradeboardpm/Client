@@ -20,9 +20,9 @@ export function JournalSection({ selectedDate }) {
   const [isFileUploading, setIsFileUploading] = useState(false);
   const [isDeletingFile, setIsDeletingFile] = useState(false);
   const [localJournal, setLocalJournal] = useState({
-    note: " ",
-    mistake: " ",
-    lesson: " ",
+    note: "",
+    mistake: "",
+    lesson: "",
   });
   const [files, setFiles] = useState([]);
   const [deletingFileKey, setDeletingFileKey] = useState(null);
@@ -213,7 +213,7 @@ export function JournalSection({ selectedDate }) {
   return (
     <Card className="flex-1 w-full h-full flex justify-between flex-col pb-4  shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
       <CardHeader className="p-4">
-        <CardTitle className="flex text-xl items-center gap-2">
+        <CardTitle className="flex font-medium text-xl items-center gap-2">
           Today's Journal
           {isSaving && (
             <span className="text-sm font-normal text-muted-foreground">

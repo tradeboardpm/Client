@@ -103,13 +103,13 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
             classNames={{
               nav_button_previous: "hover:bg-muted",
               head_cell:
-                "text-muted-foreground font-semibold text-xs w-9 text-center",
+                "text-muted-foreground font-medium text-[0.7rem] w-9 text-center",
               cell: cn(
                 "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 w-9 h-8",
                 "[&:has([aria-selected])]:bg-transparent"
               ),
               day: cn(
-                "h-8 w-8 p-0 font-normal text-xs rounded-sm",
+                "h-7 w-7 p-0 font-normal text-[0.74rem] rounded-[4px]",
                 "hover:bg-transparent focus:bg-transparent"
               ),
               day_selected:
@@ -117,37 +117,34 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
             }}
           />
           {/* Legend */}
-          <div className="py-2 px-2 border-t border-primary/15 flex items-center justify-between gap-1 text-[0.65rem]">
+          <div className="p-3 border-t border-primary/15 flex items-center justify-between gap-1 text-[0.65rem]">
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-purple-500" />
+              <div className="w-2.5 h-2.5 rounded-[3px] bg-purple-500" />
               <span>Today</span>
             </div>
             <div className="flex items-center gap-1">
               <div
-                className="w-2 h-2"
+                className="w-2.5 h-2.5 rounded-[3px]"
                 style={{
-                  backgroundColor: "#C0F9E5",
-                  color: "#0ED991",
+                  backgroundColor: "#0ED991",
                 }}
               />
               <span>Profit</span>
             </div>
             <div className="flex items-center gap-1">
               <div
-                className="w-2 h-2"
+                className="w-2.5 h-2.5 rounded-[3px]"
                 style={{
-                  backgroundColor: "#FFD3D8",
-                  color: "#FF8190",
+                  backgroundColor: "#FF8190",
                 }}
               />
               <span>Loss</span>
             </div>
             <div className="flex items-center gap-1">
               <div
-                className="w-2 h-2"
+                className="w-2.5 h-2.5 rounded-[3px]"
                 style={{
-                  backgroundColor: "#FFF8B8",
-                  color: "#FAC300",
+                  backgroundColor: "#FAC300",
                 }}
               />
               <span>Break Even</span>
@@ -157,7 +154,7 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
       </Card>
 
       <div>
-        <h2 className="text-xl font-bold mb-2 mt-4">Performance</h2>
+        <h2 className="text-xl font-medium mb-2 mt-4">Performance</h2>
 
         <WeeklyCharts selectedDate={selectedDate} tradesPerDay={tradesPerDay} />
       </div>

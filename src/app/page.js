@@ -302,7 +302,7 @@ export default function LandingPage() {
               and learn from <br />
               it to establish themselves as successful traders.
             </span>
-            <div className="bg-gradient-to-b from-transparent from-50% to-background to-50% p-4 ">
+            <div className="bg-gradient-to-b from-transparent from-50% to-[#ffffff] to-50% p-4 ">
               <div className="relative w-full max-w-[58rem] mx-auto aspect-video">
                 <img
                   src="/images/Dashboard.png"
@@ -317,7 +317,7 @@ export default function LandingPage() {
         </section>
 
         <AnimatedSection>
-          <section className="py-8 md:py-16">
+          <section className="py-8 md:py-16 bg-[#ffffff]">
             <div className="container mx-auto px-">
               <h2 className="poppins-bold text-2xl md:text-3xl lg:text-4xl font-bold poppins-bold text-center mb-12">
                 Manage Your{" "}
@@ -381,7 +381,7 @@ export default function LandingPage() {
         </AnimatedSection>
 
         <AnimatedSection>
-          <section className="py-8 md:py-16 bg-muted">
+          <section className="py-8 md:py-16 bg-[#FAF7FF]">
             <div className="container mx-auto px-">
               <h2 className="poppins-bold text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-8">
                 Analyse Your{" "}
@@ -422,7 +422,7 @@ export default function LandingPage() {
         </AnimatedSection>
 
         <AnimatedSection>
-          <section className="py-8 md:py-16">
+          <section className="py-8 md:py-16 bg-[#ffffff]">
             <div className="container mx-auto px-">
               <h2 className="poppins-bold text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-8">
                 Be Accountable For Your{" "}
@@ -476,7 +476,7 @@ export default function LandingPage() {
         </AnimatedSection>
 
         <AnimatedSection>
-          <section className="py-16">
+          <section className="py-16 bg-[#FAF7FF]">
             <div className="container mx-auto px-">
               <h2 className="poppins-bold text-3xl md:text-4xl font-bold text-center mb-8">
                 Why <span className="text-primary">TradeBoard</span>?
@@ -615,7 +615,7 @@ export default function LandingPage() {
         </AnimatedSection>
 
         <AnimatedSection>
-          <section className="py-24">
+          <section className="py-24 bg-[#ffffff]">
             <div className="container mx-auto px-">
               <h2 className="poppins-bold text-3xl md:text-[2.5rem] font-bold text-center mb-14">
                 Frequently Asked Questions
@@ -631,10 +631,10 @@ export default function LandingPage() {
                     value={`item-${index}`}
                     className="px-8"
                   >
-                    <AccordionTrigger className="text-lg font-semibold">
+                    <AccordionTrigger className="text-lg font-semibold text-[#1C1D22]">
                       {faq.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-base">
+                    <AccordionContent className="text-base text-[#53545C]">
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>
@@ -668,7 +668,7 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <footer className="bg-[#12141D] text-background pt-8 px-4 md:pt-12 md:px-8 lg:px-24">
+      <footer className="bg-[#12141D] text-[#ffffff] pt-8 px-4 md:pt-12 md:px-8 lg:px-24">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between gap-8">
             <div className="max-w-sm">
@@ -720,19 +720,19 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="mt-8 py-4 border-t border-background/10 text-sm flex flex-col md:flex-row items-center justify-between">
+          <div className="mt-8 py-4 border-t border-[#BEC0CA]/50 text-xs flex flex-col md:flex-row items-center justify-between">
             <p className="text-center md:text-left mb-4 md:mb-0">
               © Copyright 2024. All Rights Reserved by TradeBoard
             </p>
 
-            <p className="text-sm text-center md:text-right mt-4 md:mt-0">
+            <p className="text-center md:text-right mt-4 md:mt-0">
               Version: 0.64
             </p>
             <div className="flex items-center gap-3">
-              <Button variant="link" className="text-background underline">
-                Terms & Conditions
+              <Button variant="link" className="text-background underline text-xs">
+                Terms and Conditions
               </Button>
-              <Button variant="link" className="text-background underline">
+              <Button variant="link" className="text-background underline text-xs">
                 Privacy Policy
               </Button>
             </div>

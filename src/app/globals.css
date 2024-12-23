@@ -4,7 +4,7 @@
 
 @font-face {
   font-family: "Poppins";
-  src: url("/fonts/Poppins-Regular.ttf");
+  src: url("/fonts/Poppins.ttf");
 }
 
 @font-face {
@@ -46,16 +46,16 @@ body {
     --popover: 262 0% 100%;
     --popover-foreground: 262 95% 10%;
     --primary: 262 80.6% 69.6%;
-    --primary-foreground: 0 0% 0%;
+    --primary-foreground: 210 8% 14%;
     --secondary: 262 10% 90%;
-    --secondary-foreground: 0 0% 0%;
+    --secondary-foreground: 210 8% 14%;
     --muted: 224 10% 95%;
     --muted-foreground: 262 0% 40%;
     --accent: 224 10% 90%;
     --accent-foreground: 262 0% 15%;
     --destructive: 0 50% 50%;
     --destructive-foreground: 262 0% 100%;
-    --border: 262 20% 82%;
+    --border: 240 7% 91%;
     --input: 262 20% 50%;
     --ring: 262 80.6% 69.6%;
     --radius: 0.65rem;
@@ -73,7 +73,7 @@ body {
     --popover: 262 10% 5%;
     --popover-foreground: 262 0% 100%;
     --primary: 262 80.6% 69.6%;
-    --primary-foreground: 0 0% 0%;
+    --primary-foreground: 210 8% 14%;
     --secondary: 262 10% 20%;
     --secondary-foreground: 0 0% 100%;
     --muted: 224 10% 25%;

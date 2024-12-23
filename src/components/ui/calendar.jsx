@@ -15,19 +15,19 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }) {
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-between pt-1 relative items-center  border-b",
-        caption_label: "text-lg font-bold order-1",
+        caption_label: "text-xl font-medium order-1",
         nav: "space-x-1 flex items-center order-2",
         nav_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "h-7 w-7 bg-transparent p-0  hover:opacity-100"
         ),
         nav_button_previous: "order-1",
         nav_button_next: "order-3",
-        table: "w-full border-collapse space-y-1",
+        table: "w-full border-collapse space-y",
         head_row: "flex",
         head_cell:
           "text-muted-foreground rounded-md w-8 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
+        row: "flex w-full mt-1.5",
         cell: cn(
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-range-end)]:rounded-r-md",
           props.mode === "range"

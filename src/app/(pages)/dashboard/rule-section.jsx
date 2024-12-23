@@ -248,7 +248,7 @@ const EmptyState = ({ onAddRule, onLoadSampleRules, isLoading }) => {
     <Card className="h-full  shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)] ">
       <CardHeader>
         <div className="flex items-center w-full gap-2">
-          <h2 className="text-2xl font-semibold">Rules</h2>
+          <h2 className="text-xl font-medium">Rules</h2>
           <HoverCard>
             <HoverCardTrigger>
               <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
@@ -576,7 +576,7 @@ export function RulesSection({ selectedDate, onUpdate }) {
       <CardHeader className="p-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CardTitle className="text-xl">Rules</CardTitle>
+            <CardTitle className="text-xl font-medium">Rules</CardTitle>
             <HoverCard>
               <HoverCardTrigger>
                 <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
@@ -641,6 +641,7 @@ export function RulesSection({ selectedDate, onUpdate }) {
                   handleFollowUnfollowAll(!!checked)
                 }
                 disabled={isLoadingAction.followAllRules}
+                className="border-[#ffffff]"
               />
             </div>
             <span className="font-semibold text-xs">My Rules</span>
@@ -667,7 +668,7 @@ export function RulesSection({ selectedDate, onUpdate }) {
                     <button
                       variant="ghost"
                       size="icon"
-                      className="text-gray-500 hover:text-gray-700 p-0"
+                      className="text-gray-500/50 hover:text-gray-700 p-0"
                       onClick={() => setEditingRule(rule)}
                       disabled={isLoadingAction.editRule}
                     >
@@ -676,7 +677,7 @@ export function RulesSection({ selectedDate, onUpdate }) {
                     <button
                       variant="ghost"
                       size="icon"
-                      className="text-gray-500 hover:text-gray-700 p-0"
+                      className="text-gray-500/50 hover:text-red-700 p-0"
                       onClick={() => {
                         setRuleToDelete(rule);
                         setIsDeleteDialogOpen(true);

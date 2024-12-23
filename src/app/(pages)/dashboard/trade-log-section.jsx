@@ -353,8 +353,8 @@ export function TradesSection({ selectedDate, brokerage }) {
                             !trade.buyingPrice || !trade.sellingPrice
                               ? "text-foreground font-semibold text-center"
                               : trade.buyingPrice < trade.sellingPrice
-                              ? "text-green-500 font-semibold text-center"
-                              : "text-red-500 font-semibold text-center"
+                              ? "text-[#0ED991] font-semibold text-center"
+                              : "text-[#F44C60]/25 font-semibold text-center"
                           )}
                         >
                           {trade.instrumentName}
@@ -380,7 +380,7 @@ export function TradesSection({ selectedDate, brokerage }) {
                         <TableCell className="text-nowrap text-center">
                           <div className="flex items-center gap-2">
                             <button
-                            className="text-gray-500/35"
+                              className="text-gray-500/35"
                               variant="ghost"
                               size="icon"
                               onClick={() => {
@@ -393,7 +393,7 @@ export function TradesSection({ selectedDate, brokerage }) {
                               <SquarePen className="h-4 w-4" />
                             </button>
                             <button
-                            className="text-gray-500/35"
+                              className="text-gray-500/35"
                               variant="ghost"
                               size="icon"
                               onClick={() => {
@@ -414,33 +414,33 @@ export function TradesSection({ selectedDate, brokerage }) {
               {trades.length > 0 && (
                 <div className="flex gap-6 items-center justify-between mt-6">
                   <div
-                    className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
+                    className={`rounded-lg p-1 flex items-center gap-2 w-fit px-4 ${
                       tradeSummary.totalPnL >= 0
-                        ? "bg-green-600/20"
-                        : "bg-red-600/20"
+                        ? "bg-[#0ED991]/15"
+                        : "bg-[#F44C60]/15"
                     }`}
                   >
                     <div
-                      className={`text-sm font-medium ${
+                      className={`text-sm font-normal ${
                         tradeSummary.totalPnL >= 0
-                          ? "text-green-800"
-                          : "text-red-800"
+                          ? "text-[#0ED991]"
+                          : "text-[#F44C60]"
                       }`}
                     >
                       Today's Profit:
                     </div>
                     <div
-                      className={`text-lg font-bold ${
+                      className={`text-base font-medium ${
                         tradeSummary.totalPnL >= 0
-                          ? "text-green-900"
-                          : "text-red-900"
+                          ? "text-[#0ED991]"
+                          : "text-[#F44C60]"
                       }`}
                     >
                       ₹ {tradeSummary.totalPnL.toFixed(2)}
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-primary/20 flex items-center gap-2 p-2 w-fit">
+                  <div className="rounded-lg bg-primary/20 flex items-center gap-2 p-1 w-fit px-4">
                     <div className="text-sm font-medium text-primary">
                       <span className="flex gap-1 items-center">
                         Today's Charges
@@ -459,32 +459,32 @@ export function TradesSection({ selectedDate, brokerage }) {
                         :
                       </span>
                     </div>
-                    <div className="text-lg font-bold text-primary">
+                    <div className="text-base font-medium text-primary">
                       ₹ {tradeSummary.totalCharges.toFixed(2)}
                     </div>
                   </div>
 
                   <div
-                    className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
+                    className={`rounded-lg p-1 flex items-center gap-2 w-fit px-4 ${
                       tradeSummary.totalNetPnL >= 0
-                        ? "bg-green-600/20"
-                        : "bg-red-600/20"
+                        ? "bg-[#0ED991]/15"
+                        : "bg-[#F44C60]/15"
                     }`}
                   >
                     <div
-                      className={`text-sm font-medium ${
+                      className={`text-sm font-normal ${
                         tradeSummary.totalNetPnL >= 0
-                          ? "text-green-800"
-                          : "text-red-800"
+                          ? "text-[#0ED991]"
+                          : "text-[#F44C60]"
                       }`}
                     >
                       Net Realised P&L:
                     </div>
                     <div
-                      className={`text-lg font-bold ${
+                      className={`text-base font-medium ${
                         tradeSummary.totalNetPnL >= 0
-                          ? "text-green-900"
-                          : "text-red-900"
+                          ? "text-[#0ED991]"
+                          : "text-[#F44C60]"
                       }`}
                     >
                       ₹ {tradeSummary.totalNetPnL?.toFixed(2)}
@@ -655,7 +655,7 @@ export function TradesSection({ selectedDate, brokerage }) {
             <div className="bg-secondary/50 p-4 rounded-lg">
               <div className="flex justify-between items-center">
                 <span className="font-medium">Total Order Amount:</span>
-                <span className="text-lg font-bold">
+                <span className="text-base font-medium">
                   ₹ {calculateTotalOrder(newTrade)}
                 </span>
               </div>
@@ -837,7 +837,7 @@ export function TradesSection({ selectedDate, brokerage }) {
               <div className="bg-secondary/50 p-4 rounded-lg">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Total Order Amount:</span>
-                  <span className="text-lg font-bold">
+                  <span className="text-base font-medium">
                     ₹ {calculateTotalOrder(selectedTrade)}
                   </span>
                 </div>
@@ -998,7 +998,7 @@ export function TradesSection({ selectedDate, brokerage }) {
               <div className="bg-secondary/50 p-4 rounded-lg">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Total Order Amount:</span>
-                  <span className="text-lg font-bold">
+                  <span className="text-base font-medium">
                     ₹ {calculateTotalOrder(selectedTrade)}
                   </span>
                 </div>

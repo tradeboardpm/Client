@@ -20,7 +20,6 @@ import {
   XAxis,
   YAxis,
   ResponsiveContainer,
-  ComposedChart,
 } from "recharts";
 import Cookies from "js-cookie";
 import { parseISO, isValid } from "date-fns";
@@ -42,9 +41,9 @@ const CustomLegend = ({ items }) => (
 );
 
 const DefaultNoDataComponent = () => (
-  <div className="flex flex-col items-center justify-start p-8 text-center min-h-screen h-full">
-    <img src="/images/no_charts.svg" alt="No Data" className="mb-4 w-42 h-42" />
-    <h2 className="text-xl font-semibold mb-2">No Data</h2>
+  <div className="flex flex-col items-center justify-start p-8 text-center min-h-[160px]">
+    <img src="/images/no_charts.svg" alt="No Data" className="mb-4 w-24 h-24" />
+    <h2 className="text-xl font-medium mb-2">No Data</h2>
     <p className="text-muted-foreground">
       Please start journaling daily to see your performance here
     </p>
@@ -63,7 +62,6 @@ export function WeeklyCharts({
 
   const normalizeDate = (date) => {
     let normalizedDate;
-
     if (date instanceof Date) {
       normalizedDate = date;
     } else if (typeof date === "string") {
@@ -71,18 +69,22 @@ export function WeeklyCharts({
     } else {
       normalizedDate = new Date(date);
     }
+    return !isValid(normalizedDate)
+      ? new Date()
+      : new Date(
+          Date.UTC(
+            normalizedDate.getFullYear(),
+            normalizedDate.getMonth(),
+            normalizedDate.getDate()
+          )
+        );
+  };
 
-    if (!isValid(normalizedDate)) {
-      return new Date();
-    }
-
-    return new Date(
-      Date.UTC(
-        normalizedDate.getFullYear(),
-        normalizedDate.getMonth(),
-        normalizedDate.getDate()
-      )
-    );
+  const chartConfig = {
+    containerHeight: "h-32", // Tailwind height class
+    margin: { top: 5, right: 15, bottom: 5, left: 0 },
+    className:
+      "border  bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]",
   };
 
   const fetchWeeklyData = async (date) => {
@@ -100,14 +102,11 @@ export function WeeklyCharts({
       const formattedDate = normalizedDate.toISOString().split("T")[0];
       const token = Cookies.get("token");
 
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
+      if (!token) throw new Error("No authentication token found");
 
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/metrics/weekly?date=${formattedDate}`,
         {
-          method: "GET",
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -148,17 +147,9 @@ export function WeeklyCharts({
         dayData.lossTrades === 0
     );
 
-  if (isLoading) {
-    return <div>Loading weekly performance...</div>;
-  }
-
-  if (error) {
-    return <div>Error loading weekly data: {error}</div>;
-  }
-
-  if (!weeklyData || hasNoData) {
-    return <NoDataComponent />;
-  }
+  if (isLoading) return <div>Loading weekly performance...</div>;
+  if (error) return <div>Error loading weekly data: {error}</div>;
+  if (!weeklyData || hasNoData) return <NoDataComponent />;
 
   const processedData = days.map((day, index) => {
     const date = weeklyData ? Object.keys(weeklyData)[index] : null;
@@ -174,63 +165,57 @@ export function WeeklyCharts({
     };
   });
 
+
   return (
-    <div className="flex flex-col gap-6 w-full max-w-4xl">
-      {/* Previous Trades Taken Chart remains unchanged */}
-      <Card className="border border-primary/15 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
-        <CardHeader className="p-2 flex flex-col justify-between">
-          <CardTitle className="text-base font-semibold p-0 flex items-center gap-1">
-            Trades Taken{" "}
-            <CardDescription className="p-0 text-[0.65rem] font-light">
-              (Daily trade limit: {tradesPerDay})
+    <div className="flex flex-col gap-4 w-full max-w-4xl">
+      <Card className={chartConfig.className}>
+        <CardHeader className="py-2 px-4">
+          <CardTitle className="text-sm font-medium flex items-center gap-1">
+            Trades Taken
+            <CardDescription className="text-xs font-light">
+              (Daily limit: {tradesPerDay})
             </CardDescription>
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className={`p-0 ${chartConfig.containerHeight}`}>
           <ChartContainer
-            className="p-0 "
+          className="h-32 w-full"
             config={{
-              trades: {
-                label: "Trades",
-                color: "hsl(var(--primary))",
-              },
+              trades: { label: "Trades", color: "hsl(var(--primary))" },
             }}
           >
-            <ResponsiveContainer width="100%">
-              <LineChart
-                data={processedData}
-                margin={{ top: 10, right: 20, bottom: 0, left: 0 }}
-              >
+            <ResponsiveContainer>
+              <LineChart data={processedData} margin={chartConfig.margin}>
                 <CartesianGrid
                   vertical={false}
                   stroke="hsl(var(--border))"
                   strokeDasharray="3 3"
                 />
-                <XAxis
+                <XAxis className="text-xs"
                   dataKey="day"
                   tickLine={false}
                   axisLine={false}
-                  tickMargin={12}
+                  tickMargin={8}
                 />
-                <YAxis tickLine={false} axisLine={false} tickMargin={11} />
+                <YAxis className="text-xs" tickLine={false} axisLine={false} tickMargin={8} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Line
                   type="linear"
                   dataKey="tradesTaken"
                   stroke="hsl(var(--primary))"
                   strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))", r: 3 }}
-                  activeDot={{ r: 6 }}
+                  dot={{ fill: "hsl(var(--primary))", r: 2 }}
+                  activeDot={{ r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
-      {/* Updated Win Rate Chart with Stacked Bars */}
-      <Card className="border border-primary/15 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
-        <CardHeader className="p-4 flex flex-row items-center justify-between">
-          <CardTitle className="text-base font-semibold">Win Rate</CardTitle>
+
+      <Card className={chartConfig.className}>
+        <CardHeader className="py-2 px-4 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
           <CustomLegend
             items={[
               { label: "Win", color: "#0ED991" },
@@ -238,92 +223,77 @@ export function WeeklyCharts({
             ]}
           />
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className={`p-0 ${chartConfig.containerHeight}`}>
           <ChartContainer
+          className="h-32 w-full"
             config={{
-              win: {
-                label: "Win",
-                color: "#0ED991",
-              },
-              loss: {
-                label: "Loss",
-                color: "#F44C60",
-              },
+              win: { label: "Win", color: "#0ED991" },
+              loss: { label: "Loss", color: "#F44C60" },
             }}
           >
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart
-                data={processedData}
-                margin={{ top: 10, right: 20, bottom: 0, left: 0 }}
-              >
+            <ResponsiveContainer className="h-[400px]">
+              <BarChart data={processedData} margin={chartConfig.margin}>
                 <CartesianGrid
                   vertical={false}
                   stroke="hsl(var(--border))"
                   strokeDasharray="3 3"
                 />
-                <XAxis
+                <XAxis className="text-xs"
                   dataKey="day"
                   tickLine={false}
                   axisLine={false}
-                  tickMargin={12}
+                  tickMargin={8}
                 />
-                <YAxis tickLine={false} axisLine={false} tickMargin={12} />
+                <YAxis className="text-xs" tickLine={false} axisLine={false} tickMargin={8} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
                   dataKey="winTrade"
                   stackId="winLoss"
                   fill="#0ED991"
-                  barSize={20}
-                  radius={[4, 4, 0, 0]}
+                  barSize={16}
+                  radius={[2, 2, 0, 0]}
                 />
                 <Bar
                   dataKey="lossTrade"
                   stackId="winLoss"
                   fill="#F44C60"
-                  barSize={20}
-                  radius={[4, 4, 0, 0]}
+                  barSize={16}
+                  radius={[2, 2, 0, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
-      {/* Previous Profit & Loss Chart remains unchanged */}
-      <Card className="border border-primary/15 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
-        <CardHeader className="p-4 flex flex-row items-center justify-between">
-          <CardTitle className="text-base font-semibold">
-            Profit & Loss
-          </CardTitle>
+
+      <Card className={chartConfig.className}>
+        <CardHeader className="py-2 px-4">
+          <CardTitle className="text-sm font-medium">Profit & Loss</CardTitle>
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className={`p-0 ${chartConfig.containerHeight}`}>
           <ChartContainer
+          className="h-32 w-full"
             config={{
-              amount: {
-                label: "Amount",
-                color: "hsl(var(--primary))",
-              },
+              amount: { label: "Amount", color: "hsl(var(--primary))" },
             }}
           >
-            <ResponsiveContainer width="100%" height={400}>
-              <LineChart
-                data={processedData}
-                margin={{ top: 10, right: 20, bottom: 0, left: 0 }}
-              >
+            <ResponsiveContainer className="h-[400px]">
+              <LineChart data={processedData} margin={chartConfig.margin}>
                 <CartesianGrid
                   vertical={false}
                   stroke="hsl(var(--border))"
                   strokeDasharray="3 3"
                 />
-                <XAxis
+                <XAxis className="text-xs"
                   dataKey="day"
                   tickLine={false}
                   axisLine={false}
-                  tickMargin={12}
+                  tickMargin={8}
                 />
-                <YAxis
+                <YAxis className="text-xs"
                   tickLine={false}
                   axisLine={false}
-                  tickMargin={12}
+                  tickMargin={8}
                   tickFormatter={(value) =>
                     value >= 0
                       ? `+${(value / 1000).toFixed(0)}K`
@@ -346,18 +316,18 @@ export function WeeklyCharts({
                   dataKey="profitLoss"
                   stroke="hsl(var(--primary))"
                   strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))", r: 3 }}
-                  activeDot={{ r: 6 }}
+                  dot={{ fill: "hsl(var(--primary))", r: 2 }}
+                  activeDot={{ r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
-      {/* Updated Rules Chart with Stacked Bars */}
-      <Card className="border border-primary/15 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
-        <CardHeader className="p-4 flex flex-row items-center justify-between">
-          <CardTitle className="text-base font-semibold">Rules</CardTitle>
+
+      <Card className={chartConfig.className}>
+        <CardHeader className="py-2 px-4 flex flex-row items-center justify-between">
+          <CardTitle className="text-sm font-medium">Rules</CardTitle>
           <CustomLegend
             items={[
               { label: "Followed", color: "#0ED991" },
@@ -365,50 +335,42 @@ export function WeeklyCharts({
             ]}
           />
         </CardHeader>
-        <CardContent className="p-0">
+        <CardContent className={`p-0 ${chartConfig.containerHeight}`}>
           <ChartContainer
+          className="h-32 w-full"
             config={{
-              followed: {
-                label: "Followed",
-                color: "#0ED991",
-              },
-              broken: {
-                label: "Broken",
-                color: "#F44C60 ",
-              },
+              followed: { label: "Followed", color: "#0ED991" },
+              broken: { label: "Broken", color: "#F44C60" },
             }}
           >
-            <ResponsiveContainer width="100%" height={400}>
-              <BarChart
-                data={processedData}
-                margin={{ top: 10, right: 20, bottom: 0, left: 0 }}
-              >
+            <ResponsiveContainer className="h-[400px]">
+              <BarChart data={processedData} margin={chartConfig.margin}>
                 <CartesianGrid
                   vertical={false}
                   stroke="hsl(var(--border))"
                   strokeDasharray="3 3"
                 />
-                <XAxis
+                <XAxis className="text-xs"
                   dataKey="day"
                   tickLine={false}
                   axisLine={false}
-                  tickMargin={12}
+                  tickMargin={8}
                 />
-                <YAxis tickLine={false} axisLine={false} tickMargin={12} />
+                <YAxis className="text-xs" tickLine={false} axisLine={false} tickMargin={8} />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
                   dataKey="rulesFollowed"
                   stackId="ruleStatus"
                   fill="#0ED991"
-                  barSize={20}
-                  radius={[4, 4, 0, 0]}
+                  barSize={16}
+                  radius={[2, 2, 0, 0]}
                 />
                 <Bar
                   dataKey="rulesBroken"
                   stackId="ruleStatus"
                   fill="#F44C60"
-                  barSize={20}
-                  radius={[4, 4, 0, 0]}
+                  barSize={16}
+                  radius={[2, 2, 0, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
