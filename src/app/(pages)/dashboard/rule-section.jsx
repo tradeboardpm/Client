@@ -165,15 +165,16 @@ const AddRulesDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogHeader className="border-b mb-4 py-2">
-          <DialogTitle>Add New Rules</DialogTitle>
-          <DialogDescription>
-            Here you can add Rules. Maximum 10 rules allowed.
+        <DialogHeader className={"border-b pb-2 mb-2"}>
+          <DialogTitle className="text-xl mb-1">Add Rules</DialogTitle>
+          <DialogDescription className="text-xs">
+            Here you can add Rules.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2 py-4 max-h-[300px] overflow-y-auto pr-2">
           {rulesList.map((rule, index) => (
             <div key={index} className="flex flex-col space-y-1 p-2">
+              <p className="text-xs">Rule</p>
               <div className="flex items-center space-x-2">
                 <Input
                   ref={(el) => {
@@ -186,7 +187,7 @@ const AddRulesDialog = ({
                   onKeyDown={(e) => handleKeyDown(e, index)}
                   placeholder="Enter your rule"
                   maxLength={MAX_RULE_LENGTH}
-                  className="flex-1"
+                  className="flex-1 text-sm"
                 />
                 {rulesList.length > 1 && (
                   <Button
@@ -696,11 +697,11 @@ export function RulesSection({ selectedDate, onUpdate }) {
 
       <Dialog open={!!editingRule} onOpenChange={() => setEditingRule(null)}>
         <DialogContent>
-          <DialogHeader className={"border-b mb-4"}>
-            <DialogTitle>Edit Rule</DialogTitle>
-            <DialogDescription>Here you can edit your rules.</DialogDescription>
+          <DialogHeader className={"border-b pb-2 mb-2"}>
+            <DialogTitle className="text-xl mb-1">Edit Rule</DialogTitle>
+            <DialogDescription className="text-xs">Here you can edit your rules.</DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col space-y-1 mb-4">
+          <div className="flex flex-col space-y-1 mb-4 text-sm">
             <p>Rule:</p>
             <Input
               value={editingRule?.description || ""}
@@ -749,13 +750,13 @@ export function RulesSection({ selectedDate, onUpdate }) {
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
-          <DialogHeader className={"border-b mb-4"}>
-            <DialogTitle>Delete Rule</DialogTitle>
-            <DialogDescription>
+          <DialogHeader className={"border-b pb-2 mb-2"}>
+            <DialogTitle className="text-xl mb-1">Delete Rule</DialogTitle>
+            <DialogDescription className="text-xs">
               Are you sure you want to delete this rule permanently?
             </DialogDescription>
           </DialogHeader>
-          <div className="flex flex-col space-y-1 mb-4">
+          <div className="flex flex-col space-y-1 mb-4 text-sm">
             <p>Rule:</p>
             <Input
               value={ruleToDelete?.description || ""}

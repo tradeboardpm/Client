@@ -95,7 +95,7 @@ function SetNewPasswordContent() {
         <ArrowLeft className="h-4 w-4" />
       </Button>
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Set a new password</h1>
+        <h1 className="text-3xl font-semibold">Set a new password</h1>
         <p className="text-muted-foreground text-sm">
           Create a new password. Ensure it differs from previous ones for
           security.

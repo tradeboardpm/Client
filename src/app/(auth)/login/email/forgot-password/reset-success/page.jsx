@@ -17,7 +17,7 @@ export default function PasswordResetConfirmationPage() {
         <ArrowLeft className="h-4 w-4" />
       </Button>
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Password Reset</h1>
+        <h1 className="text-3xl font-semibold">Password Reset</h1>
         <p className="text-muted-foreground text-sm">
           Your password has been successfully changed. Click here to log in.
         </p>

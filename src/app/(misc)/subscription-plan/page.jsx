@@ -80,7 +80,7 @@ export default function PricingPage() {
                 <CardTitle className="text-xl">{plan.name}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="mb-6 text-3xl font-bold">
+                <div className="mb-6 text-3xl font-semibold">
                   {plan.price}
                   <span className="text-base font-normal text-gray-600">
                     {plan.period}

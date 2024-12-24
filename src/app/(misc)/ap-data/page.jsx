@@ -125,8 +125,8 @@ function ApDataInner() {
   return (
     <div className="container mx-auto p-6">
       <div className="mb-4">
-        <h1 className="text-xl font-bold ">Welcome {sharedData.apName},</h1>
-        <h1 className="text-xl font-bold ">
+        <h1 className="text-xl font-semibold ">Welcome {sharedData.apName},</h1>
+        <h1 className="text-xl font-semibold ">
           You are viewing the monthly progress of {sharedData.userName}
         </h1>
         <p>

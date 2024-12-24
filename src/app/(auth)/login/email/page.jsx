@@ -69,7 +69,7 @@ export default function LoginPage() {
         <ArrowLeft className="h-4 w-4" />
       </Button>
       <div className="space-y-2 text-start">
-        <h1 className="text-3xl font-bold">Log in with Email</h1>
+        <h1 className="text-3xl font-semibold">Log in with Email</h1>
         <p className="text-muted-foreground text-sm">
           Please enter your registered email and password
         </p>

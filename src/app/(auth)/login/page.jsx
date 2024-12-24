@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import Cookies from "js-cookie";
 import GoogleLoginButton from "@/components/buttons/google-button";
 import { Mail, Phone } from "lucide-react";
+import GoogleSignUpButton from "@/components/buttons/google-signup-button";
 
 export default function LoginOptionsPage() {
   const router = useRouter();
@@ -81,13 +82,13 @@ export default function LoginOptionsPage() {
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
       <div className="w-fit max-w-lg  space-y-8">
         <div className="space-y-2 text-start">
-          <h1 className="text-3xl font-bold">Log in to your account</h1>
+          <h1 className="text-3xl font-semibold">Log in to your account</h1>
           <p className="text-muted-foreground/65 text-sm ">
             Please select any one of them
           </p>
         </div>
         <div className="space-y-4">
-          <GoogleLoginButton
+          <GoogleSignUpButton
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
             disabled={isLoading}
@@ -96,7 +97,7 @@ export default function LoginOptionsPage() {
 
           <Button
             variant="secondary"
-            className="w-full bg-[#F3F6F8] justify-center border border-[#E7E7EA] font-medium text-xs shadow-[0px_6px_16px_rgba(0,0,0,0.04)]"
+            className="w-full bg-[#F3F6F8] justify-center border border-[#E7E7EA]  font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
             onClick={() => router.push("/login/email")}
             disabled={isLoading}
           >
@@ -106,7 +107,7 @@ export default function LoginOptionsPage() {
 
           <Button
             variant="secondary"
-            className="w-full bg-[#F3F6F8] justify-center border border-[#E7E7EA] font-medium text-xs shadow-[0px_6px_16px_rgba(0,0,0,0.04)]"
+            className="w-full bg-[#F3F6F8] justify-center border border-[#E7E7EA]  font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
             onClick={() => router.push("/login/phone")}
             disabled={isLoading}
           >
@@ -115,7 +116,7 @@ export default function LoginOptionsPage() {
           </Button>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground">
+        <p className="text-center text-sm text-[#A6A8B1]">
           Don't have an account?{" "}
           <Link href="/sign-up" className="text-primary hover:underline">
             Sign up

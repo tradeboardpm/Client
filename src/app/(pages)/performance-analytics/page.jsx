@@ -133,7 +133,7 @@ const StatCard = ({ title, stats, colorClass }) => (
         ].map(({ label, value, suffix }) => (
           <div key={label}>
             <p className="text-sm text-muted-foreground">{label}</p>
-            <p className={`text-xl font-bold ${colorClass}`}>
+            <p className={`text-xl font-semibold ${colorClass}`}>
               {value.toFixed(label === "Words Journaled" ? 0 : 2)}
               {suffix}
             </p>
@@ -175,7 +175,7 @@ const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
           <p className="text-sm text-muted-foreground">{rules[0]?.rule}</p>
           <p className="mt-2">
             <span
-              className={`text-2xl font-bold ${
+              className={`text-2xl font-semibold ${
                 isTopFollowedRules
                   ? "text-green-400"
                   : rules[0]?.count
@@ -211,7 +211,7 @@ const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
                   <p className="font-medium text-sm">{ruleItem.rule}</p>
                 </div>
                 <div
-                  className={`font-bold w-36 text-right ${
+                  className={`font-semibold w-36 text-right ${
                     isTopFollowedRules
                       ? "text-green-500"
                       : ruleItem.count
@@ -428,7 +428,7 @@ export default function EnhancedMetricsDashboard() {
         {/* Tradeboard Intelligence section (same as before) */}
         <div className="bg-card/75 shadow-md border border-border/50 p-4 rounded-xl">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-xl font-bold">Tradeboard Intelligence</h1>
+            <h1 className="text-xl font-semibold">Tradeboard Intelligence</h1>
 
             <div className="flex flex-wrap gap-4">
               <Select value={period} onValueChange={setPeriod}>

@@ -30,6 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Monitor, MonitorX } from "lucide-react";
+import PhoneNumberInput from "@/components/ui/phone-input";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -353,7 +354,7 @@ export default function AccountPage() {
     <div className="bg-card">
       <div className="p-6 bg-background rounded-t-xl">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">My Account</h1>
+          <h1 className="text-3xl font-semibold">My Account</h1>
           <div className="flex items-center space-x-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -550,13 +551,13 @@ export default function AccountPage() {
               {user?.phone && (
                 <div>
                   <Label htmlFor="phone">Phone</Label>
-                  <Input
+                  <PhoneNumberInput
                     id="phone"
                     value={personalForm.phone}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setPersonalForm({
                         ...personalForm,
-                        phone: e.target.value,
+                        phone: value || "",
                       })
                     }
                   />
@@ -843,12 +844,10 @@ export default function AccountPage() {
             <div className="grid gap-4 py-4">
               <div>
                 <Label htmlFor="phoneNumber">Phone Number</Label>
-                <Input
+                <PhoneNumberInput
                   id="phoneNumber"
-                  type="tel"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="Enter your phone number"
+                  onChange={(value) => setPhoneNumber(value || "")}
                 />
               </div>
             </div>

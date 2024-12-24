@@ -104,7 +104,7 @@ export default function OTPVerification() {
     <div className="flex-1 flex items-center justify-center px-6 py-2">
       <Card className="w-full max-w-lg bg-transparent shadow-none">
         <CardContent className="px-2 py-3">
-          <h1 className="text-3xl font-bold mb-2">Verify OTP</h1>
+          <h1 className="text-3xl font-semibold mb-2">Verify OTP</h1>
           <p className="text-gray-300 mb-6">
             {step === "email"
               ? "Please enter the OTP sent to your email"
@@ -164,7 +164,7 @@ export default function OTPVerification() {
       <Dialog open={isSuccessDialogOpen} onOpenChange={setIsSuccessDialogOpen}>
         <DialogContent className="flex flex-col items-center">
           <CheckCircle className="text-green-500 w-16 h-16 mb-4" />
-          <h2 className="text-2xl font-bold">Account Created Successfully!</h2>
+          <h2 className="text-2xl font-semibold">Account Created Successfully!</h2>
           <p className="text-gray-500 mt-2">Redirecting to login...</p>
         </DialogContent>
       </Dialog>

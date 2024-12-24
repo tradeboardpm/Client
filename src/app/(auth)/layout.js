@@ -35,7 +35,7 @@ export default function AuthLayout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-background relative">
+    <div className="flex min-h-screen bg-background relative">
       <button
         onClick={handleHomeClick}
         className="absolute top-4 left-4 z-10 bg-popover border-2 border-secondary p-0 rounded-full hover:bg-accent transition-colors overflow-hidden"
@@ -46,7 +46,7 @@ export default function AuthLayout({ children }) {
           className="size-8 object-cover"
         />
       </button>
-      <div className="flex-1 flex items-center justify-center overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center">
         {children}
         <Toaster />
         <Toaster2 />

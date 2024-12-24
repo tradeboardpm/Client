@@ -20,8 +20,9 @@ import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import Cookies from "js-cookie";
 
-import GoogleLoginButton from "@/components/buttons/google-button";
+import GoogleSignUpButton from "@/components/buttons/google-signup-button";
 import { Checkbox } from "@/components/ui/checkbox";
+import PhoneNumberInput from "@/components/ui/phone-input";
 
 const countryCodes = [
   { value: "91", label: "India (+91)" },
@@ -208,14 +209,14 @@ export default function SignUp() {
 
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
-      <div className="flex-1 flex items-center justify-center px-6 py-2">
+      <div className="flex-1 flex items-center justify-center px-6 py-16">
         <Card className="w-full max-w-md bg-transparent shadow-none">
           <CardContent className="px-2 py-3">
-            <h1 className="text-3xl font-bold">Sign up</h1>
-            <p className="text-gray-300 mb-2">Please create an account</p>
+            <h1 className="text-3xl font-semibold mb-3">Sign up</h1>
+            <p className="text-[#A6A8B1] mb-6">Please create an account</p>
 
             <div className="w-full mb-4">
-              <GoogleLoginButton
+              <GoogleSignUpButton
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 useOneTap
@@ -225,19 +226,16 @@ export default function SignUp() {
             </div>
 
             <div className="relative mb-2">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-background text-gray-500">OR</span>
-              </div>
+              <img src="/images/or.svg" alt="or" />
             </div>
 
-            <form className="space-y-2" onSubmit={handleSubmit}>
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label className="font-normal mb-4 text-xs" htmlFor="fullName">
+                  Full Name
+                </Label>
                 <Input
-                  className="text-sm h-10"
+                  className="text-xs h-10"
                   id="fullName"
                   placeholder="Full name"
                   value={formData.fullName}
@@ -246,9 +244,11 @@ export default function SignUp() {
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email ID</Label>
+                <Label className="font-normal mb-4 text-xs" htmlFor="email">
+                  Email ID
+                </Label>
                 <Input
-                  className="text-sm h-10"
+                  className="text-xs h-10"
                   id="email"
                   type="email"
                   placeholder="Email ID"
@@ -258,39 +258,41 @@ export default function SignUp() {
                 />
               </div>
               <div>
-                <Label htmlFor="mobile">Mobile Number</Label>
-                <div className="flex">
-                  <Select
-                    value={formData.countryCode}
-                    onValueChange={handleCountryCodeChange}
-                  >
-                    <SelectTrigger className="w-[140px] h-10">
-                      <SelectValue placeholder="Country Code" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {countryCodes.map((code) => (
-                        <SelectItem key={code.value} value={code.value}>
-                          {code.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Input
-                    className="text-sm h-10 flex-1 ml-2"
-                    id="mobile"
-                    type="tel"
-                    placeholder="Mobile number"
-                    value={formData.mobile}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
+                <PhoneNumberInput
+                  label="Mobile Number"
+                  id="phone"
+                  value={`+${formData.countryCode}${formData.mobile}`}
+                  onChange={(value) => {
+                    if (value) {
+                      const countryCode = value.slice(
+                        1,
+                        value.length - formData.mobile.length
+                      );
+                      const mobile = value.slice(countryCode.length + 1);
+                      setFormData((prev) => ({
+                        ...prev,
+                        countryCode,
+                        mobile,
+                      }));
+                    } else {
+                      setFormData((prev) => ({
+                        ...prev,
+                        countryCode: "91",
+                        mobile: "",
+                      }));
+                    }
+                  }}
+                  required
+                />
               </div>
+
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label className="font-normal mb-4 text-xs" htmlFor="password">
+                  Password
+                </Label>
                 <div className="relative">
                   <Input
-                    className="text-sm h-10"
+                    className="text-xs h-10"
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
@@ -319,10 +321,15 @@ export default function SignUp() {
                 )}
               </div>
               <div>
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label
+                  className="font-normal mb-4 text-xs"
+                  htmlFor="confirmPassword"
+                >
+                  Confirm Password
+                </Label>
                 <div className="relative">
                   <Input
-                    className="text-sm h-10"
+                    className="text-xs h-10"
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm Password"
@@ -383,7 +390,7 @@ export default function SignUp() {
               </Button>
             </form>
 
-            <p className="text-center text-sm mt-6 text-foreground/25">
+            <p className="text-center text-sm mt-6 text-[#A6A8B1]">
               Already have an account?{" "}
               <Link href="/login" className="text-primary hover:underline">
                 Log in
@@ -395,3 +402,5 @@ export default function SignUp() {
     </GoogleOAuthProvider>
   );
 }
+
+

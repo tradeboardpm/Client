@@ -115,7 +115,7 @@ function VerifyOTPContent() {
         <ArrowLeft className="h-4 w-4" />
       </Button>
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Verify OTP</h1>
+        <h1 className="text-3xl font-semibold">Verify OTP</h1>
         <p className="text-muted-foreground text-sm">
           Please enter the OTP sent to your email
         </p>

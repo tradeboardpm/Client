@@ -19,7 +19,7 @@ export default function OTPVerificationPage() {
         <ArrowLeft className="h-4 w-4" />
       </Button>
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">OTP Verification</h1>
+        <h1 className="text-3xl font-semibold">OTP Verification</h1>
       </div>
       <Suspense fallback={<div>Loading...</div>}>
         <OTPVerificationContent />
