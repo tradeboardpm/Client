@@ -21,12 +21,12 @@ import {
 import { Check, Instagram, Twitter, Facebook, Phone, Mail } from "lucide-react";
 
 const navItems = [
-  { name: "Home", href: "#" },
-  { name: "Why Tradeboard", href: "#" },
-  { name: "Pricing", href: "#" },
+  { name: "Home", href: "#home" },
+  { name: "Why Tradeboard", href: "#why_tradeboard" },
+  { name: "Pricing", href: "#pricing" },
   { name: "Tutorials", href: "#" },
   { name: "Blog", href: "#" },
-  { name: "FAQs", href: "#" },
+  { name: "FAQs", href: "#faqs" },
 ];
 
 const whyTradeboardItems = [
@@ -208,101 +208,98 @@ export default function LandingPage() {
  }, []);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen ">
       {/* Sticky Navigation */}
-      {/* Initial Navigation (visible only at top) */}
-      <div className="bg-primary">
-        <nav className="flex items-center justify-between p-4 text-background mx-auto container max-w-[84rem]">
-          <div className="flex items-center space-x-2">
-            <Image
-              src="/images/home_logo.png"
-              alt="Tradeboard.in Logo"
-              width={240}
-              height={60}
-            />
-          </div>
-          <div className="hidden md:flex space-x-7 text-sm">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="hover:text-foreground transition-all duration-300 ease-in-out"
-              >
-                {item.name}
+      <div className=" primary_gradient  " id="home">
+        {/* Initial Navigation (visible only at top) */}
+        <div className="bg-transparent">
+          <nav className="flex items-center justify-between p-4 text-background mx-auto container max-w-[84rem]">
+            <div className="flex items-center space-x-2">
+              <Image
+                src="/images/home_logo.png"
+                alt="Tradeboard.in Logo"
+                width={240}
+                height={60}
+              />
+            </div>
+            <div className="hidden md:flex space-x-7 text-sm">
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="hover:text-foreground transition-all duration-300 ease-in-out"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+            <div className="flex items-center space-x-6 text-lg">
+              <Link href="/login">
+                <Button variant="link" className="text-base text-background">
+                  Login
+                </Button>
               </Link>
-            ))}
-          </div>
-          <div className="flex items-center space-x-6 text-lg">
-            <Link href="/login">
-              <Button variant="ghost" className="text-base">
-                Login
-              </Button>
-            </Link>
-            <Link href="/sign-up">
-              <Button className="bg-background text-base text-foreground hover:bg-secondary px-10 rounded-xl py-6 font-semibold">
-                Sign up
-              </Button>
-            </Link>
-          </div>
-        </nav>
-      </div>
-
-      {/* Sticky Navigation */}
-      <div
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          showNav ? "translate-y-0" : "-translate-y-full"
-        } ${isSticky ? "bg-primary shadow-md" : "bg-transparent"}`}
-      >
-        <nav className="flex items-center justify-between p-4 text-background mx-auto container max-w-[84rem]">
-          <div className="flex items-center space-x-2">
-            <Image
-              src="/images/home_logo.png"
-              alt="Tradeboard.in Logo"
-              width={240}
-              height={60}
-            />
-          </div>
-          <div className="hidden md:flex space-x-7 text-sm">
-            {navItems.map((item) => (
-              <Link
-                key={item.name}
-                href={item.href}
-                className="hover:text-foreground transition-all duration-300 ease-in-out"
-              >
-                {item.name}
+              <Link href="/sign-up">
+                <Button className="bg-background text-base text-foreground hover:bg-secondary px-10 rounded-xl py-6 font-medium">
+                  Sign up
+                </Button>
               </Link>
-            ))}
-          </div>
-          <div className="flex items-center space-x-6 text-lg">
-            <Link href="/login">
-              <Button variant="ghost" className="text-base">
-                Login
-              </Button>
-            </Link>
-            <Link href="/sign-up">
-              <Button className="bg-background text-base text-foreground hover:bg-secondary px-10 rounded-xl py-6 font-semibold">
-                Sign up
-              </Button>
-            </Link>
-          </div>
-        </nav>
-      </div>
+            </div>
+          </nav>
+        </div>
 
-      <main>
-        <section
-          ref={heroSectionRef}
-          className=" primary_gradient text-background pt-28  "
+        {/* Sticky Navigation */}
+        <div
+          className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+            showNav ? "translate-y-0" : "-translate-y-full"
+          } ${isSticky ? "bg-primary shadow-md" : "bg-transparent"}`}
         >
-          <div className="text-center min-h-screen  space-y-4">
-            <h1 className="text-5xl md:text-[4.15rem] mb-6 poppins-bold">
+          <nav className="flex items-center justify-between p-4 text-background mx-auto container max-w-[84rem]">
+            <div className="flex items-center space-x-2">
+              <Image
+                src="/images/home_logo.png"
+                alt="Tradeboard.in Logo"
+                width={240}
+                height={60}
+              />
+            </div>
+            <div className="hidden md:flex space-x-7 text-sm">
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className="hover:text-foreground transition-all duration-300 ease-in-out"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+            <div className="flex items-center space-x-6 text-lg">
+              <Link href="/login">
+                <Button variant="link" className="text-base text-background">
+                  Login
+                </Button>
+              </Link>
+              <Link href="/sign-up">
+                <Button className="bg-background text-base text-foreground hover:bg-secondary px-10 rounded-xl py-6 font-medium">
+                  Sign up
+                </Button>
+              </Link>
+            </div>
+          </nav>
+        </div>
+
+        <section ref={heroSectionRef} className=" text-background pt-[6rem] ">
+          <div className="text-center   space-y-4">
+            <h1 className="text-5xl md:text-[4.15rem] mb-8 font-bold">
               Trade Better With Discipline
             </h1>
-            <span className="text-[1.4rem] mb-4 max-w-7xl mx-auto">
+            <span className="text-[1.4rem]  max-w-7xl mx-auto">
               We offer traders the tools to analyse their daily trading patterns
               and learn from <br />
               it to establish themselves as successful traders.
             </span>
-            <div className="bg-gradient-to-b from-transparent from-50% to-[#ffffff] to-50% p-4 ">
+            <div className="bg-gradient-to-b from-transparent from-50% to-card to-50% p-3">
               <div className="relative w-full max-w-[58rem] mx-auto aspect-video">
                 <img
                   src="/images/Dashboard.png"
@@ -315,18 +312,21 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+      </div>
 
+      <main>
+        {/* Trading Psychology */}
         <AnimatedSection>
-          <section className="py-8 md:py-16 bg-[#ffffff]">
+          <section className="py-8 md:py-16 bg-card">
             <div className="container mx-auto px-">
-              <h2 className="poppins-bold text-2xl md:text-3xl lg:text-4xl font-bold poppins-bold text-center mb-12">
+              <h2 className=" text-2xl md:text-3xl lg:text-4xl  font-bold text-center mb-12">
                 Manage Your{" "}
                 <span className="text-primary">Trading Psychology</span>
               </h2>
               <div className="flex flex-col gap-20 lg:px-24">
                 <div className="flex flex-col lg:flex-row-reverse items-center gap-16 justify-between">
                   <div className="flex flex-col gap-4 w-full lg:w-1/2">
-                    <Card className="p-4">
+                    <Card className=" border shadow-[0px_8px_24px_rgba(0,0,0,0.04)] p-4">
                       <h3 className="text-lg md:text-[1.4rem] font-semibold  mb-2 md:mb-4">
                         Journal
                       </h3>
@@ -335,7 +335,7 @@ export default function LandingPage() {
                         thought process during trading.
                       </p>
                     </Card>
-                    <Card className="p-4">
+                    <Card className=" border shadow-[0px_8px_24px_rgba(0,0,0,0.04)] p-4">
                       <h3 className="text-lg md:text-[1.4rem] font-semibold  mb-2 md:mb-4">
                         Rules
                       </h3>
@@ -355,7 +355,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="flex flex-col lg:flex-row items-center gap-8 justify-between">
-                  <Card className="p-4 w-full lg:w-1/2">
+                  <Card className=" border shadow-[0px_8px_24px_rgba(0,0,0,0.04)] p-4 w-full lg:w-1/2">
                     <h3 className="text-lg md:text-[1.4rem] font-semibold  mb-2 md:mb-4">
                       Trade Log
                     </h3>
@@ -380,10 +380,11 @@ export default function LandingPage() {
           </section>
         </AnimatedSection>
 
+        {/* Trading Discipline */}
         <AnimatedSection>
-          <section className="py-8 md:py-16 bg-[#FAF7FF]">
+          <section className="py-8 md:py-16 bg-background">
             <div className="container mx-auto px-">
-              <h2 className="poppins-bold text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-8">
+              <h2 className="font-bold text-2xl md:text-3xl lg:text-4xl text-center mb-8">
                 Analyse Your{" "}
                 <span className="text-primary">Trading Discipline</span>
               </h2>
@@ -397,7 +398,7 @@ export default function LandingPage() {
                   />
                 </div>
                 <div className="w-full lg:w-1/3 space-y-6">
-                  <Card className="p-4">
+                  <Card className=" border shadow-[0px_8px_24px_rgba(0,0,0,0.04)] p-4">
                     <h3 className="text-lg md:text-xl font-semibold mb-2">
                       Tradeboard Intelligence
                     </h3>
@@ -406,7 +407,7 @@ export default function LandingPage() {
                       pattern for specific period.
                     </p>
                   </Card>
-                  <Card className="p-4">
+                  <Card className=" border shadow-[0px_8px_24px_rgba(0,0,0,0.04)] p-4">
                     <h3 className="text-lg md:text-xl font-semibold mb-2">
                       Journal Analysis
                     </h3>
@@ -421,16 +422,17 @@ export default function LandingPage() {
           </section>
         </AnimatedSection>
 
+        {/*Trading journey */}
         <AnimatedSection>
-          <section className="py-8 md:py-16 bg-[#ffffff]">
+          <section className="py-8 md:py-16 bg-card">
             <div className="container mx-auto px-">
-              <h2 className="poppins-bold text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-8">
+              <h2 className="font-bold text-2xl md:text-3xl lg:text-4xl text-center mb-8">
                 Be Accountable For Your{" "}
                 <span className="text-primary">Trading Journey</span>
               </h2>
               <div className="flex flex-col gap-8 lg:px-24">
                 <div className="flex flex-col lg:flex-row items-center gap-6 justify-between">
-                  <Card className="p-4 w-full lg:w-1/2">
+                  <Card className=" border shadow-[0px_8px_24px_rgba(0,0,0,0.04)] p-4 w-full lg:w-1/2">
                     <h3 className="text-lg md:text-[1.4rem] font-semibold  mb-2 md:mb-4">
                       Add An Accountability Partner
                     </h3>
@@ -451,7 +453,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="flex flex-col lg:flex-row-reverse items-center gap-6 justify-between">
-                  <Card className="p-4 w-full lg:w-1/2">
+                  <Card className=" border shadow-[0px_8px_24px_rgba(0,0,0,0.04)] p-4 w-full lg:w-1/2">
                     <h3 className="text-lg md:text-[1.4rem] font-semibold  mb-2 md:mb-4">
                       Your Progress is Shared
                     </h3>
@@ -475,15 +477,19 @@ export default function LandingPage() {
           </section>
         </AnimatedSection>
 
+        {/* why tradeboard */}
         <AnimatedSection>
-          <section className="py-16 bg-[#FAF7FF]">
+          <section className="py-16 bg-card" id="why_tradeboard">
             <div className="container mx-auto px-">
-              <h2 className="poppins-bold text-3xl md:text-4xl font-bold text-center mb-8">
+              <h2 className="font-bold text-3xl md:text-4xl text-center mb-8">
                 Why <span className="text-primary">TradeBoard</span>?
               </h2>
               <div className="grid md:grid-cols-2 lg:grid-cols-2 gap-14 container lg:px-24">
                 {whyTradeboardItems.map((item, index) => (
-                  <Card key={index} className="p-0">
+                  <Card
+                    key={index}
+                    className=" border shadow-[0px_8px_24px_rgba(0,0,0,0.04)] p-0"
+                  >
                     <CardHeader className="px-4">
                       <CardTitle className="text-lg">{item.title}</CardTitle>
                     </CardHeader>
@@ -497,13 +503,17 @@ export default function LandingPage() {
           </section>
         </AnimatedSection>
 
+        {/* pricing */}
         <AnimatedSection>
-          <section className="py-20 primary_gradient text-background">
+          <section
+            className="py-20 primary_gradient text-background"
+            id="pricing"
+          >
             <div className="container mx-auto px-">
               <h2 className="text-2xl text-center mb-4">
                 Simple Pricing, Great Value
               </h2>
-              <p className="text-4xl poppins-bold  text-center mb-14">
+              <p className="text-4xl font-semibold  text-center mb-14">
                 Every Plan Offers Complete{" "}
                 <span className="text-foreground">Features Access</span>
               </p>
@@ -531,10 +541,10 @@ export default function LandingPage() {
                         } bg-background text-foreground w-[20rem] rounded-3xl p-2 border-2 shadow-[0_20px_50px_rgba(255,_255,_255,_0.5)]`}
                       >
                         <CardHeader>
-                          <CardTitle className="text-xl mb-2">
+                          <CardTitle className="text-xl mb-2 font-medium">
                             {plan.name}
                           </CardTitle>
-                          <div className="text-2xl font-bold">
+                          <div className="text-2xl font-semibold">
                             {plan.price}
                             {plan.period && (
                               <span className="text-sm font-normal">
@@ -550,7 +560,7 @@ export default function LandingPage() {
                                 key={featureIndex}
                                 className="flex items-center"
                               >
-                                <Check className="mr-2 h-3 w-3  text-background rounded ring-1 ring-green-600 bg-green-500" />
+                                <Check className="mr-2 h-3 w-3 outline-double outline-[#0ED991] text-background rounded  bg-[#0ED991]" />
                                 {feature}
                               </li>
                             ))}
@@ -572,10 +582,10 @@ export default function LandingPage() {
                         } bg-background text-foreground w-[20rem] rounded-3xl p-2`}
                       >
                         <CardHeader>
-                          <CardTitle className="text-xl mb-2">
+                          <CardTitle className="text-xl mb-2  font-medium">
                             {plan.name}
                           </CardTitle>
-                          <div className="text-2xl font-bold">
+                          <div className="text-2xl font-semibold">
                             {plan.price}
                             {plan.period && (
                               <span className="text-sm font-normal">
@@ -591,7 +601,7 @@ export default function LandingPage() {
                                 key={featureIndex}
                                 className="flex items-center"
                               >
-                                <Check className="mr-2 h-3 w-3  text-background rounded ring-1 ring-green-600 bg-green-500" />
+                                <Check className="mr-2 h-3 w-3 outline-double outline-[#0ED991] text-background rounded  bg-[#0ED991]" />
                                 {feature}
                               </li>
                             ))}
@@ -614,10 +624,11 @@ export default function LandingPage() {
           </section>
         </AnimatedSection>
 
+        {/* faq */}
         <AnimatedSection>
-          <section className="py-24 bg-[#ffffff]">
+          <section className="py-24 bg-card" id="faqs">
             <div className="container mx-auto px-">
-              <h2 className="poppins-bold text-3xl md:text-[2.5rem] font-bold text-center mb-14">
+              <h2 className="font-bold text-3xl md:text-[2.5rem]  text-center mb-14">
                 Frequently Asked Questions
               </h2>
               <Accordion
@@ -631,7 +642,7 @@ export default function LandingPage() {
                     value={`item-${index}`}
                     className="px-8"
                   >
-                    <AccordionTrigger className="text-lg font-semibold text-[#1C1D22]">
+                    <AccordionTrigger className="text-lg font-semibold text-foreground">
                       {faq.question}
                     </AccordionTrigger>
                     <AccordionContent className="text-base text-[#53545C]">
@@ -645,9 +656,9 @@ export default function LandingPage() {
         </AnimatedSection>
 
         <div className="flex items-center justify-center bg-gradient-to-b from-background from-50% to-[#12141D] to-50%">
-          <section className="py-12 primary_gradient w-full max-w-5xl rounded-3xl px-6 text-background my-8">
+          <section className="py-12 bg-gradient-to-b from-[#A073F0] to-[#7886DD] w-full max-w-5xl rounded-3xl px-6 text-background my-8">
             <div className="container mx-auto px-4 text-center">
-              <h2 className="poppins-bold text-3xl md:text-4xl font-bold mb-4">
+              <h2 className="font-bold text-3xl md:text-4xl  mb-4">
                 Ready to Get Started with{" "}
                 <span className="text-foreground">TradeBoard?</span>
               </h2>
@@ -668,13 +679,11 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <footer className="bg-[#12141D] text-[#ffffff] pt-8 px-4 md:pt-12 md:px-8 lg:px-24">
+      <footer className="bg-[#12141D] text-card pt-8 px-4 md:pt-12 md:px-8 lg:px-24">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between gap-8">
             <div className="max-w-sm">
-              <h3 className="text-xl md:text-4xl poppins-bold font-bold mb-4">
-                TradeBoard
-              </h3>
+              <h3 className="text-xl md:text-4xl font-bold mb-4">TradeBoard</h3>
               <p className="text-base">
                 We offer traders the tools to analyse their daily trading
                 patterns and learn from it to establish themselves as successful
@@ -729,10 +738,16 @@ export default function LandingPage() {
               Version: 0.65
             </p>
             <div className="flex items-center gap-3">
-              <Button variant="link" className="text-background underline text-xs">
+              <Button
+                variant="link"
+                className="text-background underline text-xs"
+              >
                 Terms and Conditions
               </Button>
-              <Button variant="link" className="text-background underline text-xs">
+              <Button
+                variant="link"
+                className="text-background underline text-xs"
+              >
                 Privacy Policy
               </Button>
             </div>

@@ -21,16 +21,16 @@ const GoogleSignUpButton = ({
 
   return (
     <div className={`relative w-full ${className}`}>
-      <Button
+      <button
         variant="ghost"
-        className="w-full bg-[#F3F6F8] justify-center border border-[#E7E7EA]  font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
+        className="flex items-center py-2.5 rounded-md w-full bg-[#F3F6F8] justify-center border border-[#E7E7EA]  font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)]"
         onClick={handleClick}
         disabled={disabled}
       >
         <img src="/images/google.svg" alt="google img" className="h-5 mr-2" />
 
         {text}
-      </Button>
+      </button>
       {/* Hidden Google Login component */}
       <div className="google-login-trigger absolute top-0 left-0 w-full h-full opacity-0">
         <GoogleLogin

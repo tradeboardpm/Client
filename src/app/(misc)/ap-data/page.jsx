@@ -160,7 +160,7 @@ function ApDataInner() {
                   config={{
                     trades: {
                       label: "Trades",
-                      color: "hsl(var(--primary))",
+                      color: "var(--primary)",
                     },
                   }}
                 >
@@ -171,7 +171,7 @@ function ApDataInner() {
                     >
                       <CartesianGrid
                         vertical={false}
-                        stroke="hsl(var(--border))"
+                        stroke="var(--border)"
                         strokeDasharray="3 3"
                       />
                       <XAxis
@@ -189,9 +189,9 @@ function ApDataInner() {
                       <Line
                         type="monotone"
                         dataKey="tradesTaken"
-                        stroke="hsl(var(--primary))"
+                        stroke="var(--primary)"
                         strokeWidth={2}
-                        dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                        dot={{ fill: "var(--primary)", r: 4 }}
                         activeDot={{ r: 6 }}
                       />
                     </LineChart>
@@ -208,8 +208,8 @@ function ApDataInner() {
                 </CardTitle>
                 <CustomLegend
                   items={[
-                    { label: "Win", color: "hsl(var(--chart-1))" },
-                    { label: "Loss", color: "hsl(var(--destructive))" },
+                    { label: "Win", color: "var(--chart-1)" },
+                    { label: "Loss", color: "var(--destructive)" },
                   ]}
                 />
               </CardHeader>
@@ -218,11 +218,11 @@ function ApDataInner() {
                   config={{
                     win: {
                       label: "Win",
-                      color: "hsl(var(--chart-1))",
+                      color: "var(--chart-1)",
                     },
                     loss: {
                       label: "Loss",
-                      color: "hsl(var(--destructive))",
+                      color: "var(--destructive)",
                     },
                   }}
                 >
@@ -234,7 +234,7 @@ function ApDataInner() {
                     >
                       <CartesianGrid
                         vertical={false}
-                        stroke="hsl(var(--border))"
+                        stroke="var(--border)"
                         strokeDasharray="3 3"
                       />
                       <XAxis
@@ -252,14 +252,14 @@ function ApDataInner() {
                       <Bar
                         dataKey="winTrades"
                         stackId="a"
-                        fill="hsl(var(--chart-1))"
+                        fill="var(--chart-1)"
                         barSize={20}
                         radius={[4, 4, 0, 0]}
                       />
                       <Bar
                         dataKey="lossTrades"
                         stackId="a"
-                        fill="hsl(var(--destructive))"
+                        fill="var(--destructive)"
                         barSize={20}
                         radius={[4, 4, 0, 0]}
                       />
@@ -281,7 +281,7 @@ function ApDataInner() {
                   config={{
                     amount: {
                       label: "Amount",
-                      color: "hsl(var(--primary))",
+                      color: "var(--primary)",
                     },
                   }}
                 >
@@ -292,7 +292,7 @@ function ApDataInner() {
                     >
                       <CartesianGrid
                         vertical={false}
-                        stroke="hsl(var(--border))"
+                        stroke="var(--border)"
                         strokeDasharray="3 3"
                       />
                       <XAxis
@@ -325,9 +325,9 @@ function ApDataInner() {
                       <Line
                         type="monotone"
                         dataKey="totalProfitLoss"
-                        stroke="hsl(var(--primary))"
+                        stroke="var(--primary)"
                         strokeWidth={2}
-                        dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                        dot={{ fill: "var(--primary)", r: 4 }}
                         activeDot={{ r: 6 }}
                       />
                     </LineChart>
@@ -342,8 +342,8 @@ function ApDataInner() {
                 <CardTitle className="text-base font-semibold">Rules</CardTitle>
                 <CustomLegend
                   items={[
-                    { label: "Followed", color: "hsl(var(--chart-1))" },
-                    { label: "Broken", color: "hsl(var(--destructive))" },
+                    { label: "Followed", color: "var(--chart-1)" },
+                    { label: "Broken", color: "var(--destructive)" },
                   ]}
                 />
               </CardHeader>
@@ -352,11 +352,11 @@ function ApDataInner() {
                   config={{
                     followed: {
                       label: "Followed",
-                      color: "hsl(var(--chart-1))",
+                      color: "var(--chart-1)",
                     },
                     broken: {
                       label: "Broken",
-                      color: "hsl(var(--destructive))",
+                      color: "var(--destructive)",
                     },
                   }}
                 >
@@ -368,7 +368,7 @@ function ApDataInner() {
                     >
                       <CartesianGrid
                         vertical={false}
-                        stroke="hsl(var(--border))"
+                        stroke="var(--border)"
                         strokeDasharray="3 3"
                       />
                       <XAxis
@@ -386,14 +386,14 @@ function ApDataInner() {
                       <Bar
                         dataKey="rulesFollowed"
                         stackId="a"
-                        fill="hsl(var(--chart-1))"
+                        fill="var(--chart-1)"
                         barSize={20}
                         radius={[4, 4, 0, 0]}
                       />
                       <Bar
                         dataKey="rulesUnfollowed"
                         stackId="a"
-                        fill="hsl(var(--destructive))"
+                        fill="var(--destructive)"
                         barSize={20}
                         radius={[4, 4, 0, 0]}
                       />

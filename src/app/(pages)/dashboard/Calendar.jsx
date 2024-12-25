@@ -89,7 +89,7 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
 
   return (
     <div className="flex flex-col gap-4 ">
-      <Card className="w-fit border border-primary/15 bg-[#FAF7FF] dark:bg-[#363637]  shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
+      <Card className="w-full border border-primary/15 bg-background dark:bg-[#363637]  shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
         <CardContent className="p-0">
           <Calendar
             mode="single"
@@ -103,13 +103,13 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
             classNames={{
               nav_button_previous: "hover:bg-muted",
               head_cell:
-                "text-muted-foreground font-medium text-[0.7rem] w-9 text-center",
+                "text-muted-foreground font-medium text-[0.7rem] w-[2.4rem] text-center",
               cell: cn(
-                "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 w-9 h-8",
+                "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 w-[2.4rem] h-8",
                 "[&:has([aria-selected])]:bg-transparent"
               ),
               day: cn(
-                "h-7 w-7 p-0 font-normal text-[0.74rem] rounded-[4px]",
+                "h-8 w-8 p-0 font-normal text-[0.74rem] rounded-[4px]",
                 "hover:bg-transparent focus:bg-transparent"
               ),
               day_selected:

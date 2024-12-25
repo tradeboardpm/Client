@@ -63,7 +63,7 @@ return (
           >
             <ChevronsLeft className="h-5 w-5" />
           </button>
-          <h2 className="text-xl font-medium text-white px-4 py-2 rounded-lg bg-white/10">
+          <h2 className="text-xl font-medium text-white px-4 py-2 rounded-lg bg-[#ffffff]/30">
             {currentDate.toLocaleString("default", {
               month: "long",
               year: "numeric",

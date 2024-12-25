@@ -84,7 +84,7 @@ export function WeeklyCharts({
     containerHeight: "h-32", // Tailwind height class
     margin: { top: 5, right: 15, bottom: 5, left: 0 },
     className:
-      "border  bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]",
+      "border  bg-background shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]",
   };
 
   const fetchWeeklyData = async (date) => {
@@ -181,14 +181,14 @@ export function WeeklyCharts({
           <ChartContainer
           className="h-32 w-full"
             config={{
-              trades: { label: "Trades", color: "hsl(var(--primary))" },
+              trades: { label: "Trades", color: "var(--primary)" },
             }}
           >
             <ResponsiveContainer>
               <LineChart data={processedData} margin={chartConfig.margin}>
                 <CartesianGrid
                   vertical={false}
-                  stroke="hsl(var(--border))"
+                  stroke="var(--border)"
                   strokeDasharray="3 3"
                 />
                 <XAxis className="text-xs"
@@ -202,9 +202,9 @@ export function WeeklyCharts({
                 <Line
                   type="linear"
                   dataKey="tradesTaken"
-                  stroke="hsl(var(--primary))"
+                  stroke="var(--primary)"
                   strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))", r: 2 }}
+                  dot={{ fill: "var(--primary)", r: 2 }}
                   activeDot={{ r: 4 }}
                 />
               </LineChart>
@@ -235,7 +235,7 @@ export function WeeklyCharts({
               <BarChart data={processedData} margin={chartConfig.margin}>
                 <CartesianGrid
                   vertical={false}
-                  stroke="hsl(var(--border))"
+                  stroke="var(--border)"
                   strokeDasharray="3 3"
                 />
                 <XAxis className="text-xs"
@@ -274,14 +274,14 @@ export function WeeklyCharts({
           <ChartContainer
           className="h-32 w-full"
             config={{
-              amount: { label: "Amount", color: "hsl(var(--primary))" },
+              amount: { label: "Amount", color: "var(--primary)" },
             }}
           >
             <ResponsiveContainer className="h-[400px]">
               <LineChart data={processedData} margin={chartConfig.margin}>
                 <CartesianGrid
                   vertical={false}
-                  stroke="hsl(var(--border))"
+                  stroke="var(--border)"
                   strokeDasharray="3 3"
                 />
                 <XAxis className="text-xs"
@@ -314,9 +314,9 @@ export function WeeklyCharts({
                 <Line
                   type="linear"
                   dataKey="profitLoss"
-                  stroke="hsl(var(--primary))"
+                  stroke="var(--primary)"
                   strokeWidth={2}
-                  dot={{ fill: "hsl(var(--primary))", r: 2 }}
+                  dot={{ fill: "var(--primary)", r: 2 }}
                   activeDot={{ r: 4 }}
                 />
               </LineChart>
@@ -347,7 +347,7 @@ export function WeeklyCharts({
               <BarChart data={processedData} margin={chartConfig.margin}>
                 <CartesianGrid
                   vertical={false}
-                  stroke="hsl(var(--border))"
+                  stroke="var(--border)"
                   strokeDasharray="3 3"
                 />
                 <XAxis className="text-xs"

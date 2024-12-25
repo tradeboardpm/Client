@@ -189,7 +189,7 @@ export default function JournalTradePage() {
         <div className="primary_gradient rounded-xl p-2 sm:p-3 md:p-4 mb-6">
           <div className="flex flex-col sm:flex-row justify-between items-center relative">
             <div className="flex-1 w-full sm:w-auto order-2 sm:order-1"></div>
-            <div className="w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 bg-accent/40 text-center text-background px-2 py-1 rounded-lg mb-2 sm:mb-0 order-1 sm:order-2">
+            <div className="w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 bg-[#ffffff]/30 text-center text-background px-2 py-1 rounded-lg mb-2 sm:mb-0 order-1 sm:order-2">
               <p className="text-base px-3 py-1 ">
                 {formatDate(selectedDate)}
               </p>
@@ -225,7 +225,7 @@ export default function JournalTradePage() {
         <div
           className={`relative h-full transition-all duration-300 ease-in-out ${
             sidebarExpanded
-              ? "w-[20rem]  bg-card"
+              ? "w-[20.5rem]  bg-card"
               : "w-12 border-0 bg-background"
           }`}
         >

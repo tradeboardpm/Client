@@ -645,8 +645,8 @@ export function RulesSection({ selectedDate, onUpdate }) {
                 className="border-[#ffffff]"
               />
             </div>
-            <span className="font-semibold text-xs">My Rules</span>
-            <span className="font-semibold text-xs text-right">Action</span>
+            <span className="font-medium">My Rules</span>
+            <span className="font-medium text-right">Action</span>
           </div>
           <div className="max-h-[55vh] min-h-96 overflow-y-auto bg-[#FAF7FF] dark:bg-[#363637]">
             <div className="divide-y">
@@ -664,7 +664,9 @@ export function RulesSection({ selectedDate, onUpdate }) {
                       disabled={isLoadingAction.followRule}
                     />
                   </div>
-                  <span className=" text-xs">{rule.description}</span>
+                  <span className=" text-gray-700 text-[0.8rem]">
+                    {rule.description}
+                  </span>
                   <div className="flex items-center gap-2 p-0">
                     <button
                       variant="ghost"
@@ -699,7 +701,9 @@ export function RulesSection({ selectedDate, onUpdate }) {
         <DialogContent>
           <DialogHeader className={"border-b pb-2 mb-2"}>
             <DialogTitle className="text-xl mb-1">Edit Rule</DialogTitle>
-            <DialogDescription className="text-xs">Here you can edit your rules.</DialogDescription>
+            <DialogDescription className="text-xs">
+              Here you can edit your rules.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col space-y-1 mb-4 text-sm">
             <p>Rule:</p>

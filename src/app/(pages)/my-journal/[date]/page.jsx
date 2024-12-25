@@ -81,17 +81,17 @@ const changeDate = (days) => {
         <div className="flex flex-1 bg-accent/20 p-2 rounded-lg items-center justify-center gap-4">
           <button
             onClick={() => changeDate(-1)}
-            className="p-1 hover:bg-accent/50 rounded-full transition-colors"
+            className="p-1 hover:bg-[#ffffff]/50 text-background rounded-full transition-colors"
             aria-label="Previous Day"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-          <h2 className="text-xl font-medium bg-accent/50 px-4 py-2 rounded-lg">
+          <h2 className=" px-4 py-2 rounded-lg text-xl font-medium text-white g bg-[#ffffff]/30">
             {format(currentDate, "EEE, d MMM yyyy")}
           </h2>
           <button
             onClick={() => changeDate(1)}
-            className="p-1 hover:bg-accent/50 rounded-full transition-colors"
+            className="p-1 hover:bg-[#ffffff]/50 text-background rounded-full transition-colors"
             aria-label="Next Day"
           >
             <ChevronRight className="h-5 w-5" />

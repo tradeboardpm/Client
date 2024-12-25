@@ -231,11 +231,11 @@ export default function SignUp() {
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
-                <Label className="font-normal mb-4 text-xs" htmlFor="fullName">
+                <Label htmlFor="fullName">
                   Full Name
                 </Label>
                 <Input
-                  className="text-xs h-10"
+                 
                   id="fullName"
                   placeholder="Full name"
                   value={formData.fullName}
@@ -244,11 +244,11 @@ export default function SignUp() {
                 />
               </div>
               <div>
-                <Label className="font-normal mb-4 text-xs" htmlFor="email">
+                <Label htmlFor="email">
                   Email ID
                 </Label>
                 <Input
-                  className="text-xs h-10"
+                 
                   id="email"
                   type="email"
                   placeholder="Email ID"
@@ -287,12 +287,12 @@ export default function SignUp() {
               </div>
 
               <div>
-                <Label className="font-normal mb-4 text-xs" htmlFor="password">
+                <Label htmlFor="password">
                   Password
                 </Label>
                 <div className="relative">
                   <Input
-                    className="text-xs h-10"
+                   
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
@@ -322,14 +322,14 @@ export default function SignUp() {
               </div>
               <div>
                 <Label
-                  className="font-normal mb-4 text-xs"
+                 
                   htmlFor="confirmPassword"
                 >
                   Confirm Password
                 </Label>
                 <div className="relative">
                   <Input
-                    className="text-xs h-10"
+                   
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm Password"
