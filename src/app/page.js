@@ -655,7 +655,7 @@ export default function LandingPage() {
           </section>
         </AnimatedSection>
 
-        <div className="flex items-center justify-center bg-gradient-to-b from-background from-50% to-[#12141D] to-50%">
+        <div className="flex items-center justify-center bg-gradient-to-b from-card from-50% to-[#12141D] to-50%">
           <section className="py-12 bg-gradient-to-b from-[#A073F0] to-[#7886DD] w-full max-w-5xl rounded-3xl px-6 text-background my-8">
             <div className="container mx-auto px-4 text-center">
               <h2 className="font-bold text-3xl md:text-4xl  mb-4">
