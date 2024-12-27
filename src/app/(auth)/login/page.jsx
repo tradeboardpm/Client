@@ -8,7 +8,6 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
-import GoogleLoginButton from "@/components/buttons/google-button";
 import { Mail, Phone } from "lucide-react";
 import GoogleSignUpButton from "@/components/buttons/google-signup-button";
 
@@ -80,10 +79,10 @@ export default function LoginOptionsPage() {
 
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
-      <div className="w-fit max-w-lg  space-y-8">
+      <div className="w-full max-w-lg space-y-8">
         <div className="space-y-2 text-start">
           <h1 className="text-3xl font-semibold">Log in to your account</h1>
-          <p className="text-muted-foreground/65 text-sm ">
+          <p className="text-muted-foreground/65 text-sm">
             Please select any one of them
           </p>
         </div>
@@ -95,9 +94,9 @@ export default function LoginOptionsPage() {
             text="Log in with Google"
           />
 
-      <Button
-        variant="ghost"
-        className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
+          <Button
+            variant="ghost"
+            className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
             onClick={() => router.push("/login/email")}
             disabled={isLoading}
           >
@@ -105,9 +104,9 @@ export default function LoginOptionsPage() {
             Log in with Email
           </Button>
 
-      <Button
-        variant="ghost"
-        className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
+          <Button
+            variant="ghost"
+            className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
             onClick={() => router.push("/login/phone")}
             disabled={isLoading}
           >
