@@ -21,7 +21,7 @@ const GoogleSignUpButton = ({
       </button>
 
       {/* Invisible Google Login button that covers entire area */}
-      <div className="absolute inset-0 w-[436px] h-full opacity-10">
+      <div className="absolute inset-0 w-[436px] h-full opacity-100">
         <GoogleLogin
           onSuccess={onSuccess}
           onError={onError}
