@@ -38,12 +38,12 @@ export default function AuthLayout({ children }) {
     <div className="flex min-h-screen bg-background relative">
       <button
         onClick={handleHomeClick}
-        className="absolute top-4 left-4 z-10 bg-popover border-2 border-secondary p-0 rounded-full hover:bg-accent transition-colors overflow-hidden"
+        className="absolute top-4 left-4 z-10 bg-transparent border-2 border-secondary p-0 hover:bg-accent transition-colors overflow-hidden border-none rounded"
       >
         <img
-          src="/images/tb_logo.svg"
+          src="/images/Tradeboard_logo_RGB.png"
           alt="logo"
-          className="size-8 object-cover"
+          className="h-8 object-cover p-1"
         />
       </button>
       <div className="flex-1 flex items-center justify-center">

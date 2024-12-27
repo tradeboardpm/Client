@@ -247,12 +247,18 @@ const changeDate = (days) => {
                     <Table className="rounded-b-lg overflow-hidden bg-background">
                       <TableHeader className="bg-[#F4E4FF] dark:bg-[#49444c]">
                         <TableRow className="border-none">
-                          <TableHead className="text-nowrap text-[0.8rem] text-center">Time</TableHead>
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">
+                            Time
+                          </TableHead>
                           <TableHead className="text-nowrap text-[0.8rem] text-center">
                             Instrument
                           </TableHead>
-                          <TableHead className="text-nowrap text-[0.8rem] text-center">Type</TableHead>
-                          <TableHead className="text-nowrap text-[0.8rem] text-center">Action</TableHead>
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">
+                            Type
+                          </TableHead>
+                          <TableHead className="text-nowrap text-[0.8rem] text-center">
+                            Action
+                          </TableHead>
                           <TableHead className="text-nowrap text-[0.8rem] text-center">
                             Quantity
                           </TableHead>
@@ -331,7 +337,7 @@ const changeDate = (days) => {
                         Today's Profit:
                       </div>
                       <div
-                        className={`text-lg font-bold ${
+                        className={`text-lg font-medium ${
                           journalDetails.summary?.totalPnL >= 0
                             ? "text-green-900"
                             : "text-red-900"
@@ -341,11 +347,11 @@ const changeDate = (days) => {
                       </div>
                     </div>
 
-                    <div className="rounded-lg bg-primary/20 flex items-center gap-2 p-2 w-fit">
+                    <div className="rounded-lg bg-[#A073F0]/25 flex items-center gap-2 p-2 w-fit">
                       <div className="text-sm font-medium text-primary">
                         Today's Charges:
                       </div>
-                      <div className="text-lg font-bold text-primary">
+                      <div className="text-lg font-medium text-primary">
                         ₹{" "}
                         {(journalDetails.summary?.totalCharges ?? 0).toFixed(2)}
                       </div>
@@ -368,7 +374,7 @@ const changeDate = (days) => {
                         Net Realised P&L:
                       </div>
                       <div
-                        className={`text-lg font-bold ${
+                        className={`text-lg font-medium ${
                           journalDetails.summary?.netPnL >= 0
                             ? "text-green-900"
                             : "text-red-900"
@@ -384,7 +390,7 @@ const changeDate = (days) => {
           </section>
 
           <aside className="bg-card p-4">
-            <h2 className="text-xl font-bold mb-2">Performance</h2>
+            <h2 className="text-xl font-medium mb-2">Performance</h2>
             {/* <WeeklyCharts selectedDate={format(currentDate, "yyyy-MM-dd")} /> */}
             {/* <WeeklyCharts selectedDate={format(currentDate, "yyyy-MM-dd")} /> */}
             <WeeklyCharts

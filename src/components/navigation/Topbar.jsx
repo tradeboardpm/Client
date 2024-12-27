@@ -117,7 +117,11 @@ export default function Topbar({ toggleSidebar }) {
         >
           <Menu className="h-6 w-6" />
         </Button>
-        <h1 className="text-xl font-extrabold text-primary">Tradeboard</h1>
+        <img
+          src="/images/Tradeboard_logo_RGB.png"
+          alt="logo"
+          className="h-8 object-cover p-1"
+        />
       </div>
       <div className="flex items-center space-x-4">
         <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -126,7 +130,7 @@ export default function Topbar({ toggleSidebar }) {
               <Bell className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent>
+          <SheetContent className="w-[360px]" >
             <SheetHeader>
               <SheetTitle>Notifications</SheetTitle>
             </SheetHeader>

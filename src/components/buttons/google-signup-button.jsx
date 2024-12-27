@@ -14,15 +14,14 @@ const GoogleSignUpButton = ({
       <button
         type="button"
         disabled={disabled}
-        style={{ pointerEvents: "none" }}
-        className="w-full bg-[#F3F6F8] justify-center border border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-2.5 flex items-center rounded-md "
+        className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-2.5 flex items-center rounded-md"
       >
         <img src="/images/google.svg" alt="google img" className="h-5 mr-2" />
         {text}
       </button>
 
       {/* Invisible Google Login button that covers entire area */}
-      <div className="absolute top-0 left-0 w-full h-full opacity-0">
+      <div className="absolute inset-0 w-full h-full opacity-0">
         <GoogleLogin
           onSuccess={onSuccess}
           onError={onError}
@@ -31,13 +30,10 @@ const GoogleSignUpButton = ({
           type="standard"
           theme="outline"
           size="large"
+          width="100%"
           style={{
             width: "100%",
             height: "100%",
-            opacity: 0,
-            position: "absolute",
-            top: 0,
-            left: 0,
           }}
         />
       </div>

@@ -231,7 +231,7 @@ export function JournalSection({ selectedDate }) {
             value={localJournal.note}
             onChange={handleChange}
             onBlur={handleBlur}
-            className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0 text-[0.8rem]"
+            className="resize-none h-full flex-1 bg-background  shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0 text-[0.8rem]"
           />
         </div>
 
@@ -243,7 +243,7 @@ export function JournalSection({ selectedDate }) {
             value={localJournal.mistake}
             onChange={handleChange}
             onBlur={handleBlur}
-            className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0 text-[0.8rem]"
+            className="resize-none h-full flex-1 bg-background  shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0 text-[0.8rem]"
           />
         </div>
 
@@ -255,7 +255,7 @@ export function JournalSection({ selectedDate }) {
             value={localJournal.lesson}
             onChange={handleChange}
             onBlur={handleBlur}
-            className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0 text-[0.8rem]"
+            className="resize-none h-full flex-1 bg-background  shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0 text-[0.8rem]"
           />
         </div>
       </CardContent>
@@ -274,7 +274,7 @@ export function JournalSection({ selectedDate }) {
               <button
                 onClick={() => handleFileDelete(fileKey)}
                 disabled={isDeletingFile && deletingFileKey === fileKey}
-                className="absolute top-1 right-1 p-1 rounded-full bg-background/80 opacity-0 group-hover:opacity-100 transition-opacity shadow border"
+                className="absolute top-1 right-1 p-1 rounded-full bg-background opacity-0 group-hover:opacity-100 transition-opacity shadow border"
               >
                 {isDeletingFile && deletingFileKey === fileKey ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

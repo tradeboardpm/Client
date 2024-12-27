@@ -23,7 +23,7 @@ const GoogleLoginButton = ({
     <div className={`relative w-full ${className}`}>
       <Button
         variant="ghost"
-        className="w-full bg-[#F3F6F8] justify-center border border-[#E7E7EA]  font-medium text-xs shadow-[0px_6px_16px_rgba(0,0,0,0.04)]"
+        className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA]  font-medium text-xs shadow-[0px_6px_16px_rgba(0,0,0,0.04)]"
         onClick={handleClick}
         disabled={disabled}
       >

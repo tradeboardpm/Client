@@ -63,7 +63,7 @@ const DialogContent = React.forwardRef(
           }}
           className={cn(
             "fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg border bg-background p-6 shadow-2xl",
-            "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 bg-[#ffffff] rounded-3xl",
+            " bg-card rounded-3xl",
             className
           )}
           {...props}
@@ -73,7 +73,7 @@ const DialogContent = React.forwardRef(
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="absolute -top-3 -right-3 z-50 rounded-full bg-white p-1 shadow-md  transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none"
+              className="absolute -top-3 -right-3 z-50 rounded-full bg-card p-1 shadow-md  transition-opacity hover:opacity-100 focus:outline-none disabled:pointer-events-none"
             >
               <Cross2Icon className="h-5 w-5" />
               <span className="sr-only">Close</span>

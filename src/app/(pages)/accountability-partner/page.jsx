@@ -233,7 +233,7 @@ export default function AccountabilityPartner() {
                       setFormData({ ...formData, relation: value })
                     }
                   >
-                    <SelectTrigger id="relation">
+                    <SelectTrigger id="relation" className="bg-card">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
@@ -253,7 +253,7 @@ export default function AccountabilityPartner() {
                     onValuesChange={setSelectedDetails}
                     className="w-full -mt-2 h-fit"
                   >
-                    <MultiSelectorTrigger className="w-full rounded bg-card border border-input/25 shadow-sm p-2">
+                    <MultiSelectorTrigger className="w-full rounded-md bg-card border border-input/25 shadow-sm p-2">
                       <MultiSelectorInput
                         placeholder="Select details..."
                         className="bg-card text-sm"

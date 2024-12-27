@@ -52,7 +52,7 @@ const FilterPopover = ({
   onOpenChange,
 }) => (
   <Popover open={open} onOpenChange={onOpenChange}>
-    <PopoverTrigger asChild>
+    <PopoverTrigger asChild className="border-border bg-card">
       <Button
         variant="outline"
         className="w-fit flex items-center gap-2 justify-between text-foreground h-8"
@@ -426,7 +426,7 @@ export default function EnhancedMetricsDashboard() {
     <div className="bg-card">
       <div className="flex flex-col p-6 gap-6 bg-background rounded-t-xl">
         {/* Tradeboard Intelligence section (same as before) */}
-        <div className="bg-card/75 shadow-md border border-border/50 p-4 rounded-xl">
+        <div className="bg-card shadow-md border border-border p-4 rounded-xl">
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl font-semibold">Tradeboard Intelligence</h1>
 
@@ -538,7 +538,7 @@ export default function EnhancedMetricsDashboard() {
         </div>
 
         {/* Journal Analysis section with new filter clearing functionality */}
-        <div className="bg-card/75 shadow-md border border-border/50 p-4 rounded-xl min-h-[60vh]">
+        <div className="bg-card shadow-md border border-border p-4 rounded-xl min-h-[60vh]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Journal Analysis</h2>
 
@@ -546,7 +546,7 @@ export default function EnhancedMetricsDashboard() {
               <p className="font-semibold">Filter By: </p>
 
               <Popover>
-                <PopoverTrigger asChild>
+                <PopoverTrigger asChild className="border-border bg-card">
                   {renderDateRangeButton(journalsDateRange, "Date Range")}
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">

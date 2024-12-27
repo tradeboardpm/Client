@@ -664,7 +664,7 @@ export function RulesSection({ selectedDate, onUpdate }) {
                       disabled={isLoadingAction.followRule}
                     />
                   </div>
-                  <span className=" text-gray-700 text-[0.8rem]">
+                  <span className=" text-secondary-foreground text-[0.8rem]">
                     {rule.description}
                   </span>
                   <div className="flex items-center gap-2 p-0">

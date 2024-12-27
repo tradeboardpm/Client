@@ -735,7 +735,7 @@ export default function LandingPage() {
             </p>
 
             <p className="text-center md:text-right mt-4 md:mt-0">
-              Version: 0.65
+              Version: 0.66
             </p>
             <div className="flex items-center gap-3">
               <Button

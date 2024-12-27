@@ -173,7 +173,7 @@ export default function JournalTradePage() {
                   <Menu />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[320px] overflow-auto">
+              <SheetContent side="right" className="w-[360px] overflow-auto">
                 <div className="mt-4 ">
                   <TradingCalendar
                     selectedDate={selectedDate}

@@ -97,7 +97,7 @@ export default function LoginOptionsPage() {
 
       <Button
         variant="ghost"
-        className="w-full bg-[#F3F6F8] justify-center border border-[#E7E7EA]  font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
+        className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
             onClick={() => router.push("/login/email")}
             disabled={isLoading}
           >
@@ -107,7 +107,7 @@ export default function LoginOptionsPage() {
 
       <Button
         variant="ghost"
-        className="w-full bg-[#F3F6F8] justify-center border border-[#E7E7EA]  font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
+        className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
             onClick={() => router.push("/login/phone")}
             disabled={isLoading}
           >

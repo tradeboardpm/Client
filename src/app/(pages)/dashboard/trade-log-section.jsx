@@ -28,14 +28,17 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Plus, Import, Search, SquarePen, Trash2, Info } from 'lucide-react';
+import { Plus, Import, Search, SquarePen, Trash2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { ImportTradeDialog } from "./import-trade";
 import { calculateExchangeCharges } from "@/utils/calculateExchangeCharges";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 export function TradesSection({ selectedDate, brokerage }) {
   const [trades, setTrades] = useState([]);
@@ -159,7 +162,9 @@ export function TradesSection({ selectedDate, brokerage }) {
       const exchangeCharges = calculateExchangeCharges(
         selectedTrade.equityType,
         selectedTrade.action,
-        selectedTrade.action === "buy" ? selectedTrade.buyingPrice : selectedTrade.sellingPrice,
+        selectedTrade.action === "buy"
+          ? selectedTrade.buyingPrice
+          : selectedTrade.sellingPrice,
         selectedTrade.quantity
       );
       await axios.patch(
@@ -277,7 +282,11 @@ export function TradesSection({ selectedDate, brokerage }) {
           <Button onClick={() => setAddTradeOpen(true)} className="bg-primary">
             <Plus className="mr-2 h-4 w-4" /> Add Trade
           </Button>
-          <Button variant="outline" onClick={() => setImportDialogOpen(true)}>
+          <Button
+            variant="outline"
+            onClick={() => setImportDialogOpen(true)}
+            disabled
+          >
             <Import className="mr-2 h-4 w-4" /> Import Trade
           </Button>
           <ImportTradeDialog
@@ -440,7 +449,7 @@ export function TradesSection({ selectedDate, brokerage }) {
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-primary/20 flex items-center gap-2 p-1 w-fit px-4">
+                  <div className="rounded-lg bg-[#A073F0]/25 flex items-center gap-2 p-1 w-fit px-4">
                     <div className="text-sm font-medium text-primary">
                       <span className="flex gap-1 items-center">
                         Today's Charges
@@ -652,10 +661,10 @@ export function TradesSection({ selectedDate, brokerage }) {
                 />
               </div>
             </div>
-            <div className="bg-secondary/50 p-4 rounded-lg">
-              <div className="flex justify-between items-center">
+            <div className="bg-[#F4E4FF] dark:bg-[#312d33] p-4 rounded-lg">
+              <div className="flex justify-start gap-2 items-center">
                 <span className="font-medium">Total Order Amount:</span>
-                <span className="text-base font-medium">
+                <span className="text-base font-medium text-primary">
                   ₹ {calculateTotalOrder(newTrade)}
                 </span>
               </div>
@@ -834,10 +843,10 @@ export function TradesSection({ selectedDate, brokerage }) {
                   />
                 </div>
               </div>
-              <div className="bg-secondary/50 p-4 rounded-lg">
-                <div className="flex justify-between items-center">
+              <div className="bg-[#F4E4FF] dark:bg-[#312d33] p-4 rounded-lg">
+                <div className="flex justify-start gap-2 items-center">
                   <span className="font-medium">Total Order Amount:</span>
-                  <span className="text-base font-medium">
+                  <span className="text-base font-medium text-primary">
                     ₹ {calculateTotalOrder(selectedTrade)}
                   </span>
                 </div>
@@ -995,10 +1004,10 @@ export function TradesSection({ selectedDate, brokerage }) {
                   />
                 </div>
               </div>
-              <div className="bg-secondary/50 p-4 rounded-lg">
-                <div className="flex justify-between items-center">
+              <div className="bg-[#F4E4FF] dark:bg-[#312d33] p-4 rounded-lg">
+                <div className="flex justify-start gap-2 items-center">
                   <span className="font-medium">Total Order Amount:</span>
-                  <span className="text-base font-medium">
+                  <span className="text-base font-medium text-primary">
                     ₹ {calculateTotalOrder(selectedTrade)}
                   </span>
                 </div>
@@ -1045,4 +1054,3 @@ export function TradesSection({ selectedDate, brokerage }) {
     </Card>
   );
 }
-
