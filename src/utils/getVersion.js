@@ -3,17 +3,26 @@ import { execSync } from "child_process";
 
 export function getGitVersion() {
   try {
-    // Get just the latest tag
-    let tag = "";
-    try {
-      tag = execSync("git describe --tags --abbrev=0").toString().trim();
-      // Remove 'v' prefix if it exists
-      return tag.startsWith("v") ? tag.slice(1) : tag;
-    } catch (e) {
-      return "0.1.0"; // Default if no tags exist
+    // First check if there are any tags
+    const hasTag = execSync("git tag").toString().trim();
+
+    if (!hasTag) {
+      return "0.0.1"; // Return initial version if no tags exist
     }
+
+    // Get the latest tag using git describe
+    const tag = execSync(
+      "git describe --tags $(git rev-list --tags --max-count=1)"
+    )
+      .toString()
+      .trim();
+
+    // Remove 'v' prefix if it exists
+    return tag.startsWith("v") ? tag.slice(1) : tag;
   } catch (error) {
     console.error("Error getting git version:", error);
-    return "unknown";
+    // Log the full error for debugging
+    console.error("Full error:", error.message);
+    return "0.0.1";
   }
 }
