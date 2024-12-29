@@ -25,6 +25,21 @@ validate_semver() {
     fi
 }
 
+update_changelog() {
+    local version="$1"
+    local date=$(date '+%Y-%m-%d')
+
+    if [ ! -f "CHANGELOG.md" ]; then
+        print_color "$YELLOW" "CHANGELOG.md not found. Creating a new one..."
+        echo -e "# Changelog\n\nAll notable changes to this project will be documented in this file.\n\nThe format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).\n" > CHANGELOG.md
+    fi
+
+    # Update the changelog
+    sed -i "1s/^/# Changelog\n\n## [$version] - $date\n### Added\n- \n\n### Changed\n- \n\n### Fixed\n- \n\n/" CHANGELOG.md
+
+    print_color "$GREEN" "CHANGELOG.md updated with version $version."
+}
+
 # Check if git is installed
 if ! command -v git >/dev/null 2>&1; then
     print_color "$RED" "Error: Git is not installed or not in PATH"
@@ -110,6 +125,9 @@ while true; do
     print_color "$RED" "Commit message cannot be empty"
 done
 
+# Update CHANGELOG.md
+update_changelog "$new_version"
+
 # Create commit and tag
 print_color "$YELLOW" "\nCreating commit and tag..."
 git add . || {
@@ -127,10 +145,21 @@ git tag -a "$new_version" -m "Version $new_version" || {
     exit 1
 }
 
+# Prompt for branch name
+while true; do
+    read -rp $'\nEnter the branch name to push (default: main): ' branch_name
+    branch_name="${branch_name:-main}"  # Default to 'main' if no input
+    if git rev-parse --verify "$branch_name" >/dev/null 2>&1; then
+        break
+    else
+        print_color "$RED" "Branch '$branch_name' does not exist. Please enter a valid branch."
+    fi
+done
+
 # Push changes
-print_color "$YELLOW" "Pushing changes to remote..."
-git push origin main || {
-    print_color "$RED" "Error: Failed to push to main branch"
+print_color "$YELLOW" "Pushing changes to remote branch '$branch_name'..."
+git push origin "$branch_name" || {
+    print_color "$RED" "Error: Failed to push to branch '$branch_name'"
     exit 1
 }
 
@@ -139,4 +168,4 @@ git push origin --tags || {
     exit 1
 }
 
-print_color "$GREEN" "\nSuccessfully released version $new_version! 🎉"
+print_color "$GREEN" "\nSuccessfully released version $new_version on branch '$branch_name'! 🎉"
