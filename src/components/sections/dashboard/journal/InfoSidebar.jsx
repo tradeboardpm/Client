@@ -15,7 +15,7 @@ import {
   useMonthlyProfitLoss,
   ProfitLossType,
 } from "@/hooks/useMonthlyProfitLoss";
-import { WeeklyCharts } from "./Charts";
+import { WeeklyCharts } from "../../../charts/weekly-charts";
 import { cn } from "@/lib/utils";
 import Cookies from "js-cookie";
 

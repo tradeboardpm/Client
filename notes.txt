@@ -1,5 +1,0 @@
-Make a AP page but iscolate other pages,
-make token veryfying pgae,
-make data page for user's data visible to AP
-
-a password randomly generated will also be sent in mail that will alow AP to verify. AP should have only access to user who generated it, means if he chnages useid to other users he must not be able to access it

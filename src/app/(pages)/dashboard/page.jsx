@@ -14,10 +14,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import { JournalSection } from "./journal-section";
-import { RulesSection } from "./rule-section";
-import { TradesSection } from "./trade-log-section";
-import { TradingCalendar } from "./Calendar";
+import { JournalSection } from "../../../components/sections/dashboard/journal/journal-section";
+import { RulesSection } from "../../../components/sections/dashboard/rules/rule-section";
+import { TradesSection } from "../../../components/sections/dashboard/tradelog/trade-log-section";
+import { TradingCalendar } from "../../../components/sections/dashboard/journal/InfoSidebar";
 import { usePointsStore } from "@/stores/points-store";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -161,9 +161,7 @@ export default function JournalTradePage() {
       <main className="flex-1 overflow-y-auto p-6 w-full bg-background rounded-t-xl">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-2">
-            <h2 className="text-xl font-medium">
-              Welcome back, {userName}!
-            </h2>
+            <h2 className="text-xl font-medium">Welcome back, {userName}!</h2>
           </div>
           <p className="text-lg font-medium">{formatTime(currentTime)}</p>
           {isMobile && (
@@ -190,9 +188,7 @@ export default function JournalTradePage() {
           <div className="flex flex-col sm:flex-row justify-between items-center relative">
             <div className="flex-1 w-full sm:w-auto order-2 sm:order-1"></div>
             <div className="w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 bg-[#ffffff]/30 text-center text-background px-2 py-1 rounded-lg mb-2 sm:mb-0 order-1 sm:order-2">
-              <p className="text-base px-3 py-1 ">
-                {formatDate(selectedDate)}
-              </p>
+              <p className="text-base px-3 py-1 ">{formatDate(selectedDate)}</p>
             </div>
             <p className="text-background text-sm sm:text-base lg:text-xl order-3 px-4">
               Capital: ₹ {capital.toFixed(2)}
@@ -211,7 +207,7 @@ export default function JournalTradePage() {
           />
         </div>
 
-        <div >
+        <div>
           <TradesSection
             selectedDate={selectedDate}
             onUpdate={fetchJournalData}

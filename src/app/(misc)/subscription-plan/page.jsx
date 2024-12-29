@@ -1,4 +1,5 @@
-'use client'
+"use client";
+
 import { ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,22 +9,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useRouter } from "next/navigation"; // Import useRouter
+import { useRouter } from "next/navigation";
+import Image from "next/image";
 
-const features = [
-  "Dashboard",
-  "My Journal",
-  "Tarde Logs",
-  "Auto Import Logs",
-  "Performance Analytics",
-  "Accountability Partner",
-];
-
-const plans = [
+const pricingPlans = [
   {
     name: "7-day trial plan",
     price: "Free",
     period: "",
+    features: [
+      "Dashboard",
+      "My Journal",
+      "Trade Logs",
+      "Auto Import Logs",
+      "Performance Analytics",
+      "Accountability Partner",
+    ],
     buttonText: "Get Started Now",
     buttonVariant: "outline",
   },
@@ -31,6 +32,14 @@ const plans = [
     name: "6 month plan",
     price: "₹ 199",
     period: "per month",
+    features: [
+      "Dashboard",
+      "My Journal",
+      "Trade Logs",
+      "Auto Import Logs",
+      "Performance Analytics",
+      "Accountability Partner",
+    ],
     buttonText: "Get Started Now",
     buttonVariant: "outline",
   },
@@ -38,73 +47,110 @@ const plans = [
     name: "12 month plan",
     price: "₹ 149",
     period: "per month",
+    features: [
+      "Dashboard",
+      "My Journal",
+      "Trade Logs",
+      "Auto Import Logs",
+      "Performance Analytics",
+      "Accountability Partner",
+    ],
     buttonText: "Get Started Now",
     buttonVariant: "default",
     highlight: true,
+    discount: true,
   },
 ];
 
 export default function PricingPage() {
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
 
   const handleButtonClick = () => {
-    router.push("/dashboard"); // Redirect to the dashboard route
+    router.push("/dashboard");
   };
 
+
+
+
   return (
-    <div className="min-h-screen p-4 md:p-8">
-      <div className="mx-auto max-w-6xl">
-        <Button variant="outline" className="mb-8 rounded-full size-12 p-0">
-          <ArrowLeft className="h-6 w-6" />
+    <div className="flex items-center justify-center h-screen">
+      <div className="container mx-auto px-4 flex flex-col items-center justify-center relative">
+        <Button
+          variant="outline"
+          className=" rounded-ful border-black rounded-full size-10 p-0 bg-background text-foreground absolute top-0 left-40"
+          onClick={() => router.back()}
+        >
+          <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="mb-2 text-center text-xl">
+
+        <h2 className="text-[1.65rem] text-center mb-4">
           Simple Pricing, Great Value
-        </h1>
-        <p className="mb-14 text-center text-2xl font-extrabold">
-          Every plan offers complete features access
+        </h2>
+        <p className="text-3xl font-semibold text-center mb-14">
+          Every plan offers complete{" "}
+          <span className="text-foreground">features access</span>
         </p>
-        <div className="grid gap-8 md:grid-cols-3">
-          {plans.map((plan, index) => (
-            <Card
-              key={plan.name}
-              className={`relative overflow-hidden ${
-                plan.highlight ? "border-purple-400 shadow-lg" : ""
-              }`}
-            >
-              {plan.highlight && (
-                <div className="absolute right-0 top-0 bg-green-400 px-3 py-1 text-sm font-semibold text-white">
-                  SAVE UP TO 30%
-                </div>
-              )}
-              <CardHeader>
-                <CardTitle className="text-xl">{plan.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-6 text-3xl font-semibold">
-                  {plan.price}
-                  <span className="text-base font-normal text-gray-600">
-                    {plan.period}
+
+        <div className="flex flex-col md:flex-row gap-10 justify-center items-center container lg:px-48 relative">
+          {pricingPlans.map((plan, index) => (
+            <div key={index} className="relative">
+              {plan.discount && (
+                <div className="absolute -top-12 -right-1 flex items-center">
+                  <Image
+                    src="/images/arrow_black.svg"
+                    alt="Discount"
+                    width={80}
+                    height={80}
+                    className="mr- "
+                  />
+                  <span className="text-[0.75rem] mb-4 mr-4 font-medium text-green-400 ">
+                    SAVE UP TO 30%
                   </span>
                 </div>
-                <ul className="space-y-2">
-                  {features.map((feature) => (
-                    <li key={feature} className="flex items-center">
-                      <Check className="mr-2 h-5 w-5 text-green-500" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  className="w-full"
-                  variant={plan.buttonVariant}
-                  onClick={handleButtonClick}
-                >
-                  {plan.buttonText}
-                </Button>
-              </CardFooter>
-            </Card>
+              )}
+              <Card
+                className={`${
+                  plan.highlight ? "border-primary" : ""
+                } bg-card text-foreground w-[20rem] rounded-3xl p-2 ${
+                  plan.discount
+                    ? "border-2 shadow-[0_8px_24px_rgba(119,_50,_187,_0.18)]"
+                    : "shadow-[0_8px_24px_rgba(0,_0,_0,_0.08)]"
+                }`}
+              >
+                <CardHeader>
+                  <CardTitle className="text-xl mb-2 font-medium">
+                    {plan.name}
+                  </CardTitle>
+                  <div className="text-2xl font-semibold">
+                    {plan.price}
+                    {plan.period && (
+                      <span className="text-sm font-normal">
+                        /{plan.period}
+                      </span>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-3 mb-6">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-center">
+                        <Check className="mr-2 h-3 w-3 outline-double outline-[#0ED991] text-background rounded bg-[#0ED991]" />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    className="w-full h-10"
+                    variant={plan.buttonVariant}
+                    onClick={handleButtonClick}
+                  >
+                    {plan.buttonText}
+                  </Button>
+                </CardFooter>
+              </Card>
+            </div>
           ))}
         </div>
       </div>

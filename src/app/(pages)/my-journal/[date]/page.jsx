@@ -21,7 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WeeklyCharts } from "../../dashboard/Charts";
+import { WeeklyCharts } from "../../../../components/charts/weekly-charts";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -61,12 +61,12 @@ const JournalDetailsPage = () => {
     fetchJournalDetails();
   }, [currentDate, params.date]);
 
-const changeDate = (days) => {
-  const newDate = addDays(currentDate, days);
-  const formattedDate = format(newDate, "yyyy-MM-dd");
-  router.push(`/my-journal/${formattedDate}`);
-  setCurrentDate(newDate);
-};
+  const changeDate = (days) => {
+    const newDate = addDays(currentDate, days);
+    const formattedDate = format(newDate, "yyyy-MM-dd");
+    router.push(`/my-journal/${formattedDate}`);
+    setCurrentDate(newDate);
+  };
 
   const renderDateNavigation = () => (
     <nav aria-label="Journal Date Navigation">
