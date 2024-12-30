@@ -13,7 +13,9 @@ import { AddTradeDialog } from "@/components/dialogs/trades/AddTradeDialog";
 import { EditOpenTradeDialog } from "@/components/dialogs/trades/EditOpenTradeDialog";
 import { EditCompleteTradeDialog } from "@/components/dialogs/trades/EditCompleteTradeDialog";
 import { DeleteTradeDialog } from "@/components/dialogs/trades/DeleteTradeDialog";
+import { CompleteTradeDialog } from "@/components/dialogs/trades/CompleteTradeDialog.jsx";
 
+// Continuing TradesSection.jsx
 export function TradesSection({ selectedDate, brokerage }) {
   const [trades, setTrades] = useState([]);
   const [tradeSummary, setTradeSummary] = useState({
@@ -26,6 +28,7 @@ export function TradesSection({ selectedDate, brokerage }) {
   const [addTradeOpen, setAddTradeOpen] = useState(false);
   const [editOpenTradeOpen, setEditOpenTradeOpen] = useState(false);
   const [editCompleteTradeOpen, setEditCompleteTradeOpen] = useState(false);
+  const [completeTradeOpen, setCompleteTradeOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -73,6 +76,9 @@ export function TradesSection({ selectedDate, brokerage }) {
         break;
       case "editComplete":
         setEditCompleteTradeOpen(true);
+        break;
+      case "complete":
+        setCompleteTradeOpen(true);
         break;
       case "delete":
         setDeleteDialogOpen(true);
@@ -130,6 +136,7 @@ export function TradesSection({ selectedDate, brokerage }) {
                 handleTradeAction("editComplete", trade)
               }
               onDelete={(trade) => handleTradeAction("delete", trade)}
+              onCompleteTrade={(trade) => handleTradeAction("complete", trade)}
             />
             <TradeSummary summary={tradeSummary} />
           </>
@@ -168,6 +175,15 @@ export function TradesSection({ selectedDate, brokerage }) {
         onOpenChange={setEditCompleteTradeOpen}
         trade={selectedTrade}
         onSubmit={fetchTradesData}
+      />
+
+      <CompleteTradeDialog
+        open={completeTradeOpen}
+        onOpenChange={setCompleteTradeOpen}
+        trade={selectedTrade}
+        onSubmit={fetchTradesData}
+        selectedDate={selectedDate}
+        brokerage={brokerage}
       />
 
       <DeleteTradeDialog

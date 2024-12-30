@@ -24,13 +24,55 @@ import { cn } from "@/lib/utils";
 
 export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
   const [editedTrade, setEditedTrade] = React.useState(trade);
+  const [error, setError] = React.useState("");
 
   React.useEffect(() => {
     setEditedTrade(trade);
+    setError(""); // Clear error when trade changes
   }, [trade]);
+
+  const validateTrade = () => {
+    if (!editedTrade.quantity || editedTrade.quantity <= 0) {
+      setError("Quantity must be greater than zero");
+      return false;
+    }
+    
+    if (editedTrade.action === "buy" && !editedTrade.buyingPrice) {
+      setError("Please enter a buying price");
+      return false;
+    }
+    if (editedTrade.action === "sell" && !editedTrade.sellingPrice) {
+      setError("Please enter a selling price");
+      return false;
+    }
+    setError("");
+    return true;
+  };
+
+  const handleTradeTypeChange = (value) => {
+    setEditedTrade(prev => ({
+      ...prev,
+      action: value,
+      buyingPrice: null,
+      sellingPrice: null
+    }));
+    setError("");
+  };
+
+  const handleQuantityChange = (e) => {
+    const value = Number(e.target.value);
+    if (value < 0) return; // Prevent negative values
+    setError(""); // Clear error when user starts typing
+    setEditedTrade({
+      ...editedTrade,
+      quantity: value,
+    });
+  };
 
   const handleOpenTradeEdit = async () => {
     if (!editedTrade) return;
+    if (!validateTrade()) return;
+
     try {
       const token = Cookies.get("token");
       const exchangeCharges = calculateExchangeCharges(
@@ -54,6 +96,7 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
       );
       onSubmit();
       onOpenChange(false);
+      setError(""); // Clear error on successful submission
     } catch (error) {
       console.error("Error editing open trade:", error);
     }
@@ -90,14 +133,13 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
                 <Label>Quantity</Label>
                 <Input
                   type="number"
+                  min="1"
                   value={editedTrade.quantity}
-                  onChange={(e) =>
-                    setEditedTrade({
-                      ...editedTrade,
-                      quantity: Number(e.target.value),
-                    })
-                  }
+                  onChange={handleQuantityChange}
                 />
+                {error && error.includes("Quantity") && (
+                  <p className="text-sm text-red-500 mt-1">{error}</p>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -106,9 +148,7 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
                 <RadioGroup
                   className="flex space-x-4"
                   value={editedTrade.action}
-                  onValueChange={(value) =>
-                    setEditedTrade({ ...editedTrade, action: value })
-                  }
+                  onValueChange={handleTradeTypeChange}
                 >
                   <div
                     className={cn(
@@ -151,6 +191,7 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
                   }
                   onChange={(e) => {
                     const price = Number(e.target.value);
+                    setError(""); // Clear error when user starts typing
                     setEditedTrade({
                       ...editedTrade,
                       [editedTrade.action === "buy"
@@ -159,6 +200,9 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
                     });
                   }}
                 />
+                {error && !error.includes("Quantity") && (
+                  <p className="text-sm text-red-500 mt-1">{error}</p>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">

@@ -1,3 +1,4 @@
+// CompleteTradeDialog.jsx
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -10,104 +11,93 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { format } from "date-fns";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { calculateExchangeCharges } from "@/utils/calculateExchangeCharges";
 import { cn } from "@/lib/utils";
 
-export function AddTradeDialog({
+export function CompleteTradeDialog({
   open,
   onOpenChange,
   onSubmit,
+  trade,
   brokerage,
   selectedDate,
 }) {
-  const [newTrade, setNewTrade] = useState({
+  const [completeTrade, setCompleteTrade] = useState({
     instrumentName: "",
     quantity: null,
-    action: "buy",
+    action: "sell",
     buyingPrice: null,
     sellingPrice: null,
     brokerage: brokerage,
     exchangeRate: 0,
     time: format(selectedDate, "HH:mm"),
-    equityType: "INTRADAY",
+    equityType: "",
   });
 
   const [error, setError] = useState("");
 
   useEffect(() => {
+    if (trade) {
+      setCompleteTrade({
+        instrumentName: trade.instrumentName,
+        quantity: trade.quantity,
+        action: trade.action === "buy" ? "sell" : "buy",
+        buyingPrice: null,
+        sellingPrice: null,
+        brokerage: brokerage,
+        exchangeRate: 0,
+        time: format(selectedDate, "HH:mm"),
+        equityType: trade.equityType,
+      });
+    }
+  }, [trade, selectedDate, brokerage]);
+
+  useEffect(() => {
     if (
-      newTrade.quantity &&
-      newTrade.action &&
-      newTrade.equityType &&
-      (newTrade.buyingPrice || newTrade.sellingPrice)
+      completeTrade.quantity &&
+      completeTrade.action &&
+      completeTrade.equityType &&
+      (completeTrade.buyingPrice || completeTrade.sellingPrice)
     ) {
       const price =
-        newTrade.action === "buy"
-          ? newTrade.buyingPrice
-          : newTrade.sellingPrice;
+        completeTrade.action === "buy"
+          ? completeTrade.buyingPrice
+          : completeTrade.sellingPrice;
       const exchangeCharges = calculateExchangeCharges(
-        newTrade.equityType,
-        newTrade.action,
+        completeTrade.equityType,
+        completeTrade.action,
         price,
-        newTrade.quantity
+        completeTrade.quantity
       );
-      setNewTrade((prev) => ({ ...prev, exchangeRate: exchangeCharges }));
+      setCompleteTrade((prev) => ({ ...prev, exchangeRate: exchangeCharges }));
     }
   }, [
-    newTrade.buyingPrice,
-    newTrade.sellingPrice,
-    newTrade.quantity,
-    newTrade.action,
-    newTrade.equityType,
+    completeTrade.buyingPrice,
+    completeTrade.sellingPrice,
+    completeTrade.quantity,
+    completeTrade.action,
+    completeTrade.equityType,
   ]);
 
-  const handleTradeTypeChange = (value) => {
-    setNewTrade((prev) => ({
-      ...prev,
-      action: value,
-      buyingPrice: null,
-      sellingPrice: null,
-    }));
-    setError("");
-  };
-
-
   const validateTrade = () => {
-    if (!newTrade.quantity || newTrade.quantity <= 0) {
+    if (!completeTrade.quantity || completeTrade.quantity <= 0) {
       setError("Quantity must be greater than zero");
       return false;
     }
 
-    if (newTrade.action === "buy" && !newTrade.buyingPrice) {
+    if (completeTrade.action === "buy" && !completeTrade.buyingPrice) {
       setError("Please enter a buying price");
       return false;
     }
-    if (newTrade.action === "sell" && !newTrade.sellingPrice) {
+    if (completeTrade.action === "sell" && !completeTrade.sellingPrice) {
       setError("Please enter a selling price");
       return false;
     }
     setError("");
     return true;
-  };
-
-  const handleQuantityChange = (e) => {
-    const value = Number(e.target.value);
-    if (value < 0) return; // Prevent negative values
-    setError(""); // Clear error when user starts typing
-    setNewTrade({
-      ...newTrade,
-      quantity: value,
-    });
   };
 
   const handleTradeSubmit = async (e) => {
@@ -126,11 +116,19 @@ export function AddTradeDialog({
           selectedDate.getDate()
         )
       );
+
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/trades`,
         {
-          ...newTrade,
-          instrumentName: newTrade.instrumentName.toUpperCase(),
+          instrumentName: completeTrade.instrumentName.toUpperCase(),
+          quantity: completeTrade.quantity,
+          action: completeTrade.action,
+          buyingPrice: completeTrade.buyingPrice,
+          sellingPrice: completeTrade.sellingPrice,
+          brokerage: completeTrade.brokerage,
+          exchangeRate: completeTrade.exchangeRate,
+          time: completeTrade.time,
+          equityType: completeTrade.equityType,
           date: utcDate.toISOString(),
         },
         {
@@ -139,25 +137,9 @@ export function AddTradeDialog({
       );
       onSubmit();
       onOpenChange(false);
-      resetNewTrade();
     } catch (error) {
-      console.error("Error submitting trade:", error);
+      console.error("Error completing trade:", error);
     }
-  };
-
-  const resetNewTrade = () => {
-    setNewTrade({
-      instrumentName: "",
-      quantity: null,
-      action: "buy",
-      buyingPrice: null,
-      sellingPrice: null,
-      brokerage: brokerage,
-      exchangeRate: 0,
-      time: format(selectedDate, "HH:mm"),
-      equityType: "INTRADAY",
-    });
-    setError("");
   };
 
   const calculateTotalOrder = (trade) => {
@@ -170,29 +152,25 @@ export function AddTradeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="md:max-w-[50vw]">
         <DialogHeader className="border-b pb-4">
-          <DialogTitle>Add Trade</DialogTitle>
+          <DialogTitle>Complete Trade</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <div className="col-span-2">
               <Label>Instrument Name</Label>
-              <Input
-                value={newTrade.instrumentName}
-                onChange={(e) =>
-                  setNewTrade({
-                    ...newTrade,
-                    instrumentName: e.target.value.toUpperCase(),
-                  })
-                }
-              />
+              <Input value={completeTrade.instrumentName} disabled />
             </div>
             <div className="col-span-2">
               <Label>Quantity</Label>
               <Input
                 type="number"
-                min="1"
-                value={newTrade.quantity ?? ""}
-                onChange={handleQuantityChange}
+                value={completeTrade.quantity ?? ""}
+                onChange={(e) =>
+                  setCompleteTrade({
+                    ...completeTrade,
+                    quantity: Number(e.target.value),
+                  })
+                }
               />
               {error && error.includes("Quantity") && (
                 <p className="text-sm text-red-500 mt-1">{error}</p>
@@ -204,28 +182,32 @@ export function AddTradeDialog({
               <Label>Trade Type</Label>
               <RadioGroup
                 className="flex space-x-4"
-                value={newTrade.action}
-                onValueChange={handleTradeTypeChange}
+                value={completeTrade.action}
+                disabled
               >
                 <div
                   className={cn(
                     "flex items-center space-x-2 border border-border/25 shadow rounded-lg w-36 p-2",
-                    newTrade.action === "buy" ? "bg-[#A073F01A]" : "bg-card"
+                    completeTrade.action === "buy"
+                      ? "bg-[#A073F01A]"
+                      : "bg-card"
                   )}
                 >
-                  <RadioGroupItem value="buy" id="buy" />
-                  <Label htmlFor="buy" className="w-full">
+                  <RadioGroupItem value="buy" id="complete-buy" disabled />
+                  <Label htmlFor="complete-buy" className="w-full">
                     Buy
                   </Label>
                 </div>
                 <div
                   className={cn(
                     "flex items-center space-x-2 border border-border/25 shadow rounded-lg w-36 p-2",
-                    newTrade.action === "sell" ? "bg-[#A073F01A]" : "bg-card"
+                    completeTrade.action === "sell"
+                      ? "bg-[#A073F01A]"
+                      : "bg-card"
                   )}
                 >
-                  <RadioGroupItem value="sell" id="sell" />
-                  <Label htmlFor="sell" className="w-full">
+                  <RadioGroupItem value="sell" id="complete-sell" disabled />
+                  <Label htmlFor="complete-sell" className="w-full">
                     Sell
                   </Label>
                 </div>
@@ -233,21 +215,21 @@ export function AddTradeDialog({
             </div>
             <div className="col-span-2">
               <Label>
-                {newTrade.action === "buy" ? "Buying" : "Selling"} Price
+                {completeTrade.action === "buy" ? "Buying" : "Selling"} Price
               </Label>
               <Input
                 type="number"
                 value={
-                  newTrade.action === "buy"
-                    ? newTrade.buyingPrice ?? ""
-                    : newTrade.sellingPrice ?? ""
+                  completeTrade.action === "buy"
+                    ? completeTrade.buyingPrice ?? ""
+                    : completeTrade.sellingPrice ?? ""
                 }
                 onChange={(e) => {
                   const price = Number(e.target.value);
                   setError("");
-                  setNewTrade({
-                    ...newTrade,
-                    [newTrade.action === "buy"
+                  setCompleteTrade({
+                    ...completeTrade,
+                    [completeTrade.action === "buy"
                       ? "buyingPrice"
                       : "sellingPrice"]: price,
                   });
@@ -259,31 +241,15 @@ export function AddTradeDialog({
           <div className="grid grid-cols-4 items-center gap-4">
             <div className="col-span-2">
               <Label>Equity Type</Label>
-              <Select
-                value={newTrade.equityType}
-                onValueChange={(value) =>
-                  setNewTrade({ ...newTrade, equityType: value })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="F&O-OPTIONS">F&O-OPTIONS</SelectItem>
-                  <SelectItem value="F&O-FUTURES">F&O-FUTURES</SelectItem>
-                  <SelectItem value="INTRADAY">INTRADAY</SelectItem>
-                  <SelectItem value="DELIVERY">DELIVERY</SelectItem>
-                  <SelectItem value="OTHERS">OTHERS</SelectItem>
-                </SelectContent>
-              </Select>
+              <Input value={completeTrade.equityType} disabled />
             </div>
             <div className="col-span-2">
               <Label>Time</Label>
               <Input
                 type="time"
-                value={newTrade.time}
+                value={completeTrade.time}
                 onChange={(e) =>
-                  setNewTrade({ ...newTrade, time: e.target.value })
+                  setCompleteTrade({ ...completeTrade, time: e.target.value })
                 }
               />
             </div>
@@ -291,16 +257,20 @@ export function AddTradeDialog({
           <div className="grid grid-cols-4 items-center gap-4">
             <div className="col-span-2">
               <Label>Exchange Charges (₹)</Label>
-              <Input type="number" value={newTrade.exchangeRate} readOnly />
+              <Input
+                type="number"
+                value={completeTrade.exchangeRate}
+                readOnly
+              />
             </div>
             <div className="col-span-2">
               <Label>Brokerage (₹)</Label>
               <Input
                 type="number"
-                value={newTrade.brokerage}
+                value={completeTrade.brokerage}
                 onChange={(e) =>
-                  setNewTrade({
-                    ...newTrade,
+                  setCompleteTrade({
+                    ...completeTrade,
                     brokerage: Number(e.target.value),
                   })
                 }
@@ -311,7 +281,7 @@ export function AddTradeDialog({
             <div className="flex justify-start gap-2 items-center">
               <span className="font-medium">Total Order Amount:</span>
               <span className="text-base font-medium text-primary">
-                ₹ {calculateTotalOrder(newTrade)}
+                ₹ {calculateTotalOrder(completeTrade)}
               </span>
             </div>
           </div>
@@ -321,7 +291,7 @@ export function AddTradeDialog({
             Cancel
           </Button>
           <Button onClick={handleTradeSubmit} className="bg-primary">
-            Add Trade
+            Complete Trade
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,3 +1,4 @@
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,24 @@ export default function Sidebar({ isOpen }) {
   const pathname = usePathname();
   const { points, currentLevel, nextLevel, pointsToNextLevel } =
     usePointsStore();
+  const sidebarRef = useRef(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (sidebarRef.current) {
+        const hasVerticalOverflow =
+          sidebarRef.current.scrollHeight > sidebarRef.current.clientHeight;
+        setHasOverflow(hasVerticalOverflow);
+      }
+    };
+
+    // Check on mount and whenever the window is resized
+    checkOverflow();
+    window.addEventListener("resize", checkOverflow);
+
+    return () => window.removeEventListener("resize", checkOverflow);
+  }, []);
 
   const navItems = [
     { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -39,9 +58,12 @@ export default function Sidebar({ isOpen }) {
 
   return (
     <div
+      ref={sidebarRef}
       className={`bg-card p-3 w-full lg:mt-0 mt-14 lg:w-[14.5rem] md:w-[14.5rem] md:mt-0 absolute inset-y-0 left-0 transform ${
         isOpen ? "translate-x-0" : "-translate-x-full"
-      } md:relative md:translate-x-0 transition duration-200 ease-in-out z-30 md:z-0 flex flex-col max-h-screen overflow-hidden hover:overflow-y-auto`}
+      } md:relative md:translate-x-0 transition duration-200 ease-in-out z-30 md:z-0 flex flex-col max-h-screen overflow-hidden hover:overflow-y-auto ${
+        hasOverflow ? "hover:lg:w-[15rem] hover:md:w-[15rem] hover:-mr-2" : ""
+      }`}
     >
       <div className="flex flex-col space-y-4">
         <nav className="flex flex-col gap-2">
