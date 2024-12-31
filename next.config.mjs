@@ -17,7 +17,7 @@ const nextConfig = {
         return tag.startsWith("v") ? tag.slice(1) : tag;
       } catch (error) {
         // Check if version is provided via environment
-        return process.env.NEXT_PUBLIC_APP_VERSION || "0.0.1";
+        return process.env.NEXT_PUBLIC_APP_VERSION || "0.0.7";
       }
     })(),
   },
