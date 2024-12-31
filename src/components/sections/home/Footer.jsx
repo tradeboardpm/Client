@@ -74,7 +74,7 @@ const Footer = () => {
           </p>
 
           <p className="text-center md:text-right mt-4 md:mt-0">
-            v{process.env.NEXT_PUBLIC_APP_VERSION || "0.0.1"}
+            v{process.env.NEXT_PUBLIC_APP_VERSION}
           </p>
           <div className="flex items-center gap-3">
             <Button

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { GoogleOAuthProvider } from "@react-oauth/google";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
@@ -88,16 +88,17 @@ export default function LoginOptionsPage() {
           </p>
         </div>
         <div className="space-y-4">
-          <GoogleSignUpButton
+          <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={handleGoogleError}
+            useOneTap
             disabled={isLoading}
             text="Log in with Google"
           />
 
-      <Button
-        variant="ghost"
-        className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
+          <Button
+            variant="ghost"
+            className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
             onClick={() => router.push("/login/email")}
             disabled={isLoading}
           >
@@ -105,9 +106,9 @@ export default function LoginOptionsPage() {
             Log in with Email
           </Button>
 
-      <Button
-        variant="ghost"
-        className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
+          <Button
+            variant="ghost"
+            className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
             onClick={() => router.push("/login/phone")}
             disabled={isLoading}
           >

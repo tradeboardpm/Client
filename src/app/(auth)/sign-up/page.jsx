@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
-import { GoogleOAuthProvider } from "@react-oauth/google";
+import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import Cookies from "js-cookie";
@@ -217,12 +217,12 @@ export default function SignUp() {
             <p className="text-[#A6A8B1] mb-6">Please create an account</p>
 
             <div className="w-full mb-4">
-              <GoogleSignUpButton
+
+              <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 useOneTap
                 disabled={isLoading}
-                text="Sign up with Google"
               />
             </div>
 
