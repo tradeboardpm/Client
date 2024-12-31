@@ -80,10 +80,11 @@ export default function SignUp() {
   };
 
   const isFormValid = () => {
+    const isPhoneValid = formData.mobile.length >= 10;
     return (
       formData.fullName &&
       formData.email &&
-      formData.mobile &&
+      isPhoneValid &&
       formData.password &&
       formData.confirmPassword &&
       Object.values(errors).every((error) => error.length === 0) &&
@@ -231,11 +232,8 @@ export default function SignUp() {
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div>
-                <Label htmlFor="fullName">
-                  Full Name
-                </Label>
+                <Label htmlFor="fullName">Full Name</Label>
                 <Input
-                 
                   id="fullName"
                   placeholder="Full name"
                   value={formData.fullName}
@@ -244,11 +242,8 @@ export default function SignUp() {
                 />
               </div>
               <div>
-                <Label htmlFor="email">
-                  Email ID
-                </Label>
+                <Label htmlFor="email">Email ID</Label>
                 <Input
-                 
                   id="email"
                   type="email"
                   placeholder="Email ID"
@@ -264,11 +259,8 @@ export default function SignUp() {
                   value={`+${formData.countryCode}${formData.mobile}`}
                   onChange={(value) => {
                     if (value) {
-                      const countryCode = value.slice(
-                        1,
-                        value.length - formData.mobile.length
-                      );
-                      const mobile = value.slice(countryCode.length + 1);
+                      const countryCode = value.slice(1, 3);
+                      const mobile = value.slice(3);
                       setFormData((prev) => ({
                         ...prev,
                         countryCode,
@@ -287,12 +279,9 @@ export default function SignUp() {
               </div>
 
               <div>
-                <Label htmlFor="password">
-                  Password
-                </Label>
+                <Label htmlFor="password">Password</Label>
                 <div className="relative">
                   <Input
-                   
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
@@ -321,15 +310,9 @@ export default function SignUp() {
                 )}
               </div>
               <div>
-                <Label
-                 
-                  htmlFor="confirmPassword"
-                >
-                  Confirm Password
-                </Label>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
                   <Input
-                   
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm Password"
@@ -357,7 +340,7 @@ export default function SignUp() {
                   </p>
                 )}
               </div>
-              <div className="flex items-center  space-x-2">
+              <div className="flex items-center space-x-2">
                 <Checkbox
                   id="terms"
                   checked={termsAccepted}
