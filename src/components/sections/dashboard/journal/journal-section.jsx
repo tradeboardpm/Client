@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { X, ImagePlus, Info, Loader2 } from 'lucide-react';
+import { X, ImagePlus, Info, Loader2, ChevronDown, Trash2 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -15,6 +15,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
 
 
 
@@ -33,6 +34,8 @@ export function JournalSection({ selectedDate }) {
   });
   const [files, setFiles] = useState([]);
   const [deletingFileKey, setDeletingFileKey] = useState(null);
+    const [imagePosition, setImagePosition] = useState(null);
+  
 
   // Utility function to get UTC date
   const getUTCDate = (date) => {
@@ -213,13 +216,33 @@ export function JournalSection({ selectedDate }) {
     };
   }, [debouncedSaveJournal]);
 
-  const handleImageClick = (fileKey) => {
+
+
+  const handleImageClick = (fileKey, event) => {
+    const element = event.currentTarget;
+    const rect = element.getBoundingClientRect();
+    setImagePosition({
+      top: rect.top,
+      left: rect.left,
+      width: rect.width,
+      height: rect.height,
+    });
     setSelectedImage(fileKey);
   };
+
+  const handleExpandedDelete = async () => {
+    if (selectedImage) {
+      await handleFileDelete(selectedImage);
+      setSelectedImage(null);
+    }
+  };
+
 
   const handleCloseDialog = () => {
     setSelectedImage(null);
   };
+
+  
 
   if (isLoading) {
     return <div>Loading journal...</div>;
@@ -278,31 +301,51 @@ export function JournalSection({ selectedDate }) {
         <CardFooter className="h-fit p-0 px-6 flex items-center justify-between">
           <div className="flex flex-wrap gap-2">
             {files.map((fileKey, index) => (
-              <div
-                key={index}
-                className="relative group rounded-lg overflow-hidden w-20 h-8 shadow border cursor-pointer"
-                onClick={() => handleImageClick(fileKey)}
-              >
-                <img
-                  src={fileKey}
-                  alt={`Uploaded file ${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleFileDelete(fileKey);
-                  }}
-                  disabled={isDeletingFile && deletingFileKey === fileKey}
-                  className="absolute top-1 right-1 p-1 rounded-full bg-background opacity-0 group-hover:opacity-100 transition-opacity shadow border"
-                >
-                  {isDeletingFile && deletingFileKey === fileKey ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <X className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
+              <AnimatePresence>
+                {selectedImage !== fileKey && (
+                  <motion.div
+                    key={index}
+                    layoutId={`card-container-${fileKey}`}
+                    className="relative group rounded-lg overflow-hidden w-20 h-8 shadow border cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={(e) => handleImageClick(fileKey, e)}
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
+                    <motion.img
+                      layoutId={`card-image-${fileKey}`}
+                      src={fileKey}
+                      alt={`Uploaded file ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <motion.div
+                      layoutId={`card-overlay-${fileKey}`}
+                      className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors"
+                    >
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="absolute bottom-0 left-0 right-0 h-6 flex items-center justify-center"
+                      >
+                        <ChevronDown className="h-4 w-4 text-white drop-shadow" />
+                      </motion.div>
+                    </motion.div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFileDelete(fileKey);
+                      }}
+                      disabled={isDeletingFile && deletingFileKey === fileKey}
+                      className="absolute top-1 right-1 p-1 rounded-full bg-background opacity-0 group-hover:opacity-100 transition-opacity shadow border"
+                    >
+                      {isDeletingFile && deletingFileKey === fileKey ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <X className="h-4 w-4" />
+                      )}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             ))}
           </div>
 
@@ -322,9 +365,8 @@ export function JournalSection({ selectedDate }) {
               <HoverCardContent className="w-80">
                 <div className="flex flex-col gap-2">
                   <p className="text-sm text-muted-foreground">
-                    You can add maximum 3 documents
-                    Formats: JPEG, JPG, PDF, PNG, HEIF
-                    File Size: Maximum 5MB
+                    You can add maximum 3 documents Formats: JPEG, JPG, PDF,
+                    PNG, HEIF File Size: Maximum 5MB
                   </p>
                 </div>
               </HoverCardContent>
@@ -351,15 +393,78 @@ export function JournalSection({ selectedDate }) {
         </CardFooter>
       </Card>
 
-      <Dialog open={!!selectedImage} onOpenChange={handleCloseDialog}>
-        <DialogContent className="max-w-3xl p-0">
-          <img
-            src={selectedImage || undefined}
-            alt="Selected image"
-            className="w-full h-full object-contain max-h-[80vh]"
-          />
-        </DialogContent>
-      </Dialog>
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            onClick={() => setSelectedImage(null)}
+          >
+            <motion.div
+              layoutId={`card-container-${selectedImage}`}
+              className="bg-card shadow-inner rounded-lg  h-4/5 overflow-auto w-full max-w-3xl mx-4"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <motion.div className="relative p-2">
+                <motion.img
+                  layoutId={`card-image-${selectedImage}`}
+                  src={selectedImage}
+                  alt="Selected image"
+                  className="w-full h-auto rounded-lg shadow-xl"
+                />
+                <motion.div
+                  layoutId={`card-overlay-${selectedImage}`}
+                  className="absolute inset-0"
+                />
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <motion.button
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0 }}
+                    className="p-2 rounded-full bg-white/90 shadow-lg hover:bg-white transition-colors"
+                    onClick={() => setSelectedImage(null)}
+                  >
+                    <X className="h-5 w-5" />
+                  </motion.button>
+                </div>
+              </motion.div>
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="p-4 bg-popover flex justify-between items-center border-t-2"
+              >
+                <p className="text-sm text-gray-600">
+                  Added on {new Date().toLocaleDateString()}
+                </p>
+                <div className=" items-center flex justify-end gap-2">
+                  <Button
+                    size="sm"
+                    className=" bg-red-500/90 text-white shadow-lg hover:bg-red-500 transition-colors"
+                    onClick={handleExpandedDelete}
+                    disabled={isDeletingFile}
+                  >
+                    {isDeletingFile ? (
+                      <span>Deleteing ...</span>
+                    ) : (
+                      <span>Delete</span>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedImage(null)}
+                  >
+                    Close
+                  </Button>
+                </div>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

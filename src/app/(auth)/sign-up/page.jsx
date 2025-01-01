@@ -6,13 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import Link from "next/link";
 import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
@@ -216,13 +209,15 @@ export default function SignUp() {
             <h1 className="text-3xl font-semibold mb-3">Sign up</h1>
             <p className="text-[#A6A8B1] mb-6">Please create an account</p>
 
-            <div className="w-full mb-4">
+            <div className="w-full flex items-center justify-center mb-4">
 
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
-                useOneTap
+                useOneTap={false}
                 disabled={isLoading}
+                className="w-full"
+                width={"550px"}
               />
             </div>
 
