@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronRight, ChevronLeft, Menu } from "lucide-react";
+import {
+  ChevronRight,
+  ChevronLeft,
+  Menu,
+  CalendarIcon,
+  BarChart,
+} from "lucide-react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
@@ -19,6 +25,7 @@ import { RulesSection } from "../../../components/sections/dashboard/rules/rule-
 import { TradesSection } from "../../../components/sections/dashboard/tradelog/trade-log-section";
 import { TradingCalendar } from "../../../components/sections/dashboard/journal/InfoSidebar";
 import { usePointsStore } from "@/stores/points-store";
+import { WeeklyCharts } from "@/components/charts/weekly-charts";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -60,7 +67,14 @@ export default function JournalTradePage() {
   const [brokerage, setBrokerage] = useState(0);
   const [tradesPerDay, setTradesPerDay] = useState(4);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    // Initialize from localStorage if available, default to true if not found
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("sidebarExpanded");
+      return saved !== null ? JSON.parse(saved) : true;
+    }
+    return true;
+  });
   const [isMobile, setIsMobile] = useState(false);
   const [weeklyMetrics, setWeeklyMetrics] = useState({});
   const [isSideSheetOpen, setIsSideSheetOpen] = useState(false);
@@ -85,6 +99,11 @@ export default function JournalTradePage() {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Persist sidebar state
+  useEffect(() => {
+    localStorage.setItem("sidebarExpanded", JSON.stringify(sidebarExpanded));
+  }, [sidebarExpanded]);
 
   // Fetch data on date change
   useEffect(() => {
@@ -133,8 +152,15 @@ export default function JournalTradePage() {
     }
   };
 
+  const [selectedSection, setSelectedSection] = useState("calendar");
+
   const toggleSidebar = () => {
     setSidebarExpanded(!sidebarExpanded);
+  };
+
+  const handleSectionClick = (section) => {
+    setSelectedSection(section);
+    setSidebarExpanded(true);
   };
 
   const handleDateChange = (date) => {
@@ -176,8 +202,17 @@ export default function JournalTradePage() {
                   <TradingCalendar
                     selectedDate={selectedDate}
                     onSelect={handleDateChange}
-                    tradesPerDay={tradesPerDay}
                   />
+
+                  <div>
+                    <h2 className="text-xl font-medium mb-2 mt-4">
+                      Performance
+                    </h2>
+                    <WeeklyCharts
+                      selectedDate={selectedDate}
+                      tradesPerDay={tradesPerDay}
+                    />
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -217,38 +252,62 @@ export default function JournalTradePage() {
         </div>
       </main>
 
-      {!isMobile && (
-        <div
-          className={`relative h-full transition-all duration-300 ease-in-out ${
-            sidebarExpanded
-              ? "w-[20.5rem]  bg-card"
-              : "w-12 border-0 bg-background"
-          }`}
-        >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-1/2 -left-3 z-10 rounded-full p-1 h-fit w-fit bg-card shadow-sm text-xs"
-            onClick={toggleSidebar}
+      <div className="relative flex">
+        {!isMobile && (
+          <div
+            className={`relative h-full transition-all duration-300 ease-in-out  bg-card ${
+              sidebarExpanded ? "w-[20.5rem]" : "w-16 "
+            }`}
           >
             {sidebarExpanded ? (
-              <ChevronRight className="size-5" />
-            ) : (
-              <ChevronLeft className="size-5" />
-            )}
-          </Button>
+              <div className="p-4 space-y-6">
+                <TradingCalendar
+                  selectedDate={selectedDate}
+                  onSelect={handleDateChange}
+                />
 
-          {sidebarExpanded ? (
-            <div className="p-4 space-y-6">
-              <TradingCalendar
-                selectedDate={selectedDate}
-                onSelect={handleDateChange}
-                tradesPerDay={tradesPerDay}
-              />
-            </div>
-          ) : null}
-        </div>
-      )}
+                <div>
+                  <h2 className="text-xl font-medium mb-2 mt-4">Performance</h2>
+                  <WeeklyCharts
+                    selectedDate={selectedDate}
+                    tradesPerDay={tradesPerDay}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-4 pt-6 bg-card">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="bg-transparent"
+                  onClick={() => handleSectionClick("calendar")}
+                >
+                  <CalendarIcon className="size-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="bg-transparent"
+                  onClick={() => handleSectionClick("charts")}
+                >
+                  <BarChart className="size-5" />
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          onClick={toggleSidebar}
+          className="absolute top-1/2 p-0 -left-5 z-10 h-8 w-8 rounded-full bg-card shadow-md border-none flex items-center justify-center transform -translate-y-1/2 border border-border"
+        >
+          {!sidebarExpanded ? (
+            <ChevronLeft className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

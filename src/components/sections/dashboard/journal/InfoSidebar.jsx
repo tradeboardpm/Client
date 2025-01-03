@@ -2,22 +2,17 @@ import * as React from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  addMonths,
   isFuture,
   isToday,
   startOfMonth,
-  isSameMonth,
-  endOfMonth,
   parseISO,
   format,
 } from "date-fns";
 import {
   useMonthlyProfitLoss,
-  ProfitLossType,
 } from "@/hooks/useMonthlyProfitLoss";
 import { WeeklyCharts } from "../../../charts/weekly-charts";
 import { cn } from "@/lib/utils";
-import Cookies from "js-cookie";
 
 export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
   const [month, setMonth] = React.useState(startOfMonth(selectedDate));
@@ -89,7 +84,7 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
 
   return (
     <div className="flex flex-col gap-4 ">
-      <Card className="w-full border border-primary/15 bg-background dark:bg-[#363637]  shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
+      <Card className="w-full border border-primary/15 bg-background  shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
         <CardContent className="p-0">
           <Calendar
             mode="single"
@@ -152,12 +147,6 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
           </div>
         </CardContent>
       </Card>
-
-      <div>
-        <h2 className="text-xl font-medium mb-2 mt-4">Performance</h2>
-
-        <WeeklyCharts selectedDate={selectedDate} tradesPerDay={tradesPerDay} />
-      </div>
     </div>
   );
 }

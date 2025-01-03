@@ -80,7 +80,7 @@ return (
       </div>
       <div className="gap-4">
         {Object.keys(journalData).length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {Object.keys(journalData).map((date) => (
               <JournalCard
                 key={date}

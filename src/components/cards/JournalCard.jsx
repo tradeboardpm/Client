@@ -24,16 +24,21 @@ const JournalCard = ({
 
   const getProfitColor = () => {
     if (profit > 100) return "bg-[#5BFBC2]/35 border  border-[#5BFBC2]";
-    return "bg-[#F44C60]/25 border  border-[#F44C60]";
+    return "bg-[#FFE0DE]/50 dark:bg-[#552c29] border  border-[#F44C60]";
   };
 
   const getProfitBorderColor = () => {
-    if (profit > 100) return "border-[#5BFBC2]/75 transition-all duration-300";
-    return "border-[#F44C60]/25 transition-all duration-300";
+    if (profit > 100) return "border-[#0ED991] transition-all duration-300";
+    return "border-[#F44C60] transition-all duration-300";
   };
 
+    const getInnerProfitBorderColor = () => {
+      if (profit > 100) return "border-[#0ED991]/50 transition-all duration-300";
+      return "border-[#F44C60]/50 transition-all duration-300";
+    };
+
   const getArrowColor = () => {
-    if (profit > 100) return "text-[#0ED991] group-hover:text-[#5BFBC2]";
+    if (profit > 100) return "text-[#0ED991] group-hover:text-[#0ED99180]";
     return "text-[#F44C60] group-hover:text-[#F44C60]";
   };
 
@@ -53,9 +58,10 @@ const JournalCard = ({
   return (
     <Card
       onClick={handleCardClick}
-      className={`transition-all duration-300 group hover:shadow-xl hover:scale-[1.02] cursor-pointer ${getProfitColor()}`}
+      className={`transition-all duration-300 group shadow-[0px_5px_10px_2px_rgba(0,0,0,0.04)] hover:shadow-xl hover:scale-[1.02] w-[22.5rem] cursor-pointer border-[1rem] ${getProfitColor()}`}
     >
-      <CardHeader className={`pb-2 border-b ${getProfitBorderColor()}`}>
+      {/* box-shadow: 0px 5px 10px 2px rgba(0, 0, 0, 0.04) */}
+      <CardHeader className={`pb-2 ${getProfitBorderColor()}`}>
         <CardTitle className="text-base flex justify-between font-semibold">
           {formattedDate}
           <span
@@ -67,6 +73,7 @@ const JournalCard = ({
             <ArrowUpRight size={16} />
           </span>
         </CardTitle>
+        <hr className={`${getInnerProfitBorderColor()}`} />
       </CardHeader>
       <CardContent className="space-y-6 py-4">
         <div className="flex items-center">
@@ -76,25 +83,20 @@ const JournalCard = ({
           </span>
         </div>
         <div className="flex items-center">
-          <span className="font-medium text-sm mr-1">
-            Mistake:
-          </span>
+          <span className="font-medium text-sm mr-1">Mistake:</span>
           <span className="whitespace-nowrap overflow-hidden text-ellipsis text-sm text-foreground/50">
             {truncateText(mistake)}
           </span>
         </div>
         <div className="flex items-center">
-          <span className="font-medium text-sm mr-1">
-            Lesson:
-          </span>
+          <span className="font-medium text-sm mr-1">Lesson:</span>
           <span className="whitespace-nowrap overflow-hidden text-ellipsis text-sm text-foreground/50">
             {truncateText(lesson)}
           </span>
         </div>
+        <hr className={`${getInnerProfitBorderColor()}`} />
       </CardContent>
-      <CardFooter
-        className={`flex justify-between items-center  p-0 border-t ${getProfitBorderColor()}`}
-      >
+      <CardFooter className={`flex justify-between items-center  p-0 }`}>
         <div className="flex justify-between space-x-4 w-full p-2">
           <div className="flex flex-col items-center space-x-1 w-full">
             <p className="text-xs">Rules</p>
@@ -103,7 +105,7 @@ const JournalCard = ({
             </span>
           </div>
           <div
-            className={`flex flex-col items-center space-x-1 w-full border-x ${getProfitBorderColor()}`}
+            className={`flex flex-col items-center space-x-1 w-full border-x ${getInnerProfitBorderColor()}`}
           >
             <p className="text-xs">Win Rate</p>
             <span className={`font-semibold`}>
