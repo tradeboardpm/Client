@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -11,82 +10,108 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { X, AlertTriangle, Info, Clock, Megaphone } from "lucide-react";
+import {
+  X,
+  AlertTriangle,
+  Bell,
+  Clock,
+  Wrench,
+  Sparkles,
+  FileText,
+} from "lucide-react";
 
-// Announcement type configuration
+// Updated announcement type configuration
 const ANNOUNCEMENT_TYPES = {
-  banner: {
-    icon: Megaphone,
-    color: "bg-blue-500",
-    textColor: "text-white",
-  },
-  alert: {
+  downtime: {
     icon: AlertTriangle,
     color: "bg-red-500",
     textColor: "text-white",
+    label: "System Downtime",
   },
-  downtime: {
+  notification: {
+    icon: Bell,
+    color: "bg-blue-500",
+    textColor: "text-white",
+    label: "Notification",
+  },
+  upcoming: {
     icon: Clock,
-    color: "bg-orange-500",
-    textColor: "text-white",
+    color: "bg-yellow-500",
+    textColor: "text-black",
+    label: "Coming Soon",
   },
-  announcement: {
-    icon: Info,
-    color: "bg-green-500",
-    textColor: "text-white",
-  },
-  promotional: {
-    icon: Megaphone,
+  changelog: {
+    icon: FileText,
     color: "bg-purple-500",
     textColor: "text-white",
+    label: "Changelog",
   },
-  feature_update: {
-    icon: Info,
-    color: "bg-teal-500",
+  feature: {
+    icon: Sparkles,
+    color: "bg-green-500",
     textColor: "text-white",
+    label: "New Feature",
+  },
+  maintenance: {
+    icon: Wrench,
+    color: "bg-orange-500",
+    textColor: "text-white",
+    label: "Maintenance",
   },
 };
 
-const AnnouncementManager = ({ announcements, onClose }) => {
+const AnnouncementManager = ({ announcements, onClose, onAddNotification }) => {
   const [currentAnnouncement, setCurrentAnnouncement] = useState(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [closedAnnouncements, setClosedAnnouncements] = useState([]);
+  const [viewedAnnouncements, setViewedAnnouncements] = useState(new Set());
 
-  // Sort and filter announcements, excluding closed ones
   const sortedAnnouncements = useMemo(() => {
     return announcements
-      .filter(
-        (announcement) =>
-          new Date(announcement.expirationTime) > new Date() &&
-          announcement.isActive &&
-          !closedAnnouncements.includes(announcement._id)
-      )
-      .sort(
-        (a, b) =>
-          b.priority - a.priority ||
-          new Date(a.expirationTime) - new Date(b.expirationTime)
-      );
-  }, [announcements, closedAnnouncements]);
+      .filter((announcement) => {
+        const now = new Date();
+        const validFrom = new Date(announcement.validFrom);
+        const validUntil = new Date(announcement.validUntil);
+        const isTimeValid = now >= validFrom && now <= validUntil;
+        const shouldShow =
+          announcement.visibility !== "once" ||
+          (announcement.visibility === "once" &&
+            !viewedAnnouncements.has(announcement._id));
+
+        return isTimeValid && announcement.isActive && shouldShow;
+      })
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }, [announcements, viewedAnnouncements]);
 
   useEffect(() => {
-    // Select the highest priority active announcement
     if (sortedAnnouncements.length > 0) {
-      setCurrentAnnouncement(sortedAnnouncements[0]);
+      const announcement = sortedAnnouncements[0];
+      setCurrentAnnouncement(announcement);
+
+      // Add to notifications if type is notification
+      if (announcement.type === "notification") {
+        onAddNotification({
+          title: announcement.title,
+          description: announcement.content,
+          time: new Date(announcement.createdAt).toLocaleString(),
+          type: "system",
+        });
+      }
     } else {
       setCurrentAnnouncement(null);
     }
-  }, [sortedAnnouncements]);
+  }, [sortedAnnouncements, onAddNotification]);
 
   useEffect(() => {
     if (!currentAnnouncement) return;
 
     const timer = setInterval(() => {
-      const remaining =
-        new Date(currentAnnouncement.expirationTime) - new Date();
+      const remaining = new Date(currentAnnouncement.validUntil) - new Date();
 
       if (remaining <= 0) {
         clearInterval(timer);
-        handleCloseAnnouncement(currentAnnouncement);
+        if (currentAnnouncement.type !== "maintenance") {
+          handleCloseAnnouncement(currentAnnouncement);
+        }
         return;
       }
 
@@ -97,76 +122,44 @@ const AnnouncementManager = ({ announcements, onClose }) => {
   }, [currentAnnouncement]);
 
   const handleCloseAnnouncement = (announcement) => {
-    // Add the announcement ID to closed list
-    setClosedAnnouncements((prev) => [...prev, announcement._id]);
+    if (announcement.type === "maintenance") return; // Prevent closing maintenance announcements
 
-    // Call the parent's onClose method
-    onClose(announcement);
+    if (announcement.visibility === "once") {
+      setViewedAnnouncements((prev) => new Set([...prev, announcement._id]));
+    }
+    onClose?.(announcement);
   };
 
-  const renderBanner = (announcement) => {
-    const {
-      icon: Icon,
-      color,
-      textColor,
-    } = ANNOUNCEMENT_TYPES[announcement.type] || {};
-    const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-    const hours = Math.floor(
-      (timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-    );
-    const minutes = Math.floor(
-      (timeRemaining % (1000 * 60 * 60)) / (1000 * 60)
-    );
-    const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+  const formatTimeRemaining = (ms) => {
+    const days = Math.floor(ms / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
 
+    if (days > 0) return `${days}d ${hours}h remaining`;
+    if (hours > 0) return `${hours}h ${minutes}m remaining`;
+    return `${minutes}m remaining`;
+  };
+
+  const renderMaintenanceOverlay = (announcement) => {
     return (
-      <div
-        className={`fixed top-0 left-0 right-0 z-50 ${color} ${textColor} p-3 flex items-center justify-between`}
-      >
-        <div className="flex items-center space-x-3">
-          {Icon && <Icon className="w-6 h-6" />}
-          <span className="font-semibold">{announcement.title}</span>
-          <span>{announcement.content}</span>
+      <>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998]" />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-6">
+          <div className="bg-orange-500 text-white p-8 rounded-lg max-w-lg text-center">
+            <Wrench className="w-16 h-16 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-4">{announcement.title}</h2>
+            <p className="text-lg mb-6">{announcement.content}</p>
+            <Badge variant="secondary" className="mx-auto">
+              {formatTimeRemaining(timeRemaining)}
+            </Badge>
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <span>Expires in: </span>
-          <Badge variant="secondary">
-            {days}d {hours}h {minutes}m {seconds}s
-          </Badge>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => handleCloseAnnouncement(announcement)}
-            className="hover:bg-opacity-20"
-          >
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
-      </div>
+      </>
     );
   };
 
-  const renderDowntimeOverlay = (announcement) => {
-    return (
-      <div className="fixed inset-0 z-[9999] bg-red-500/90 flex flex-col items-center justify-center text-white p-6">
-        <AlertTriangle className="w-24 h-24 mb-6" />
-        <h2 className="text-3xl font-bold mb-4">{announcement.title}</h2>
-        <p className="text-xl text-center mb-6">{announcement.content}</p>
-        <Badge variant="destructive" className="mb-4">
-          System Downtime in Progress
-        </Badge>
-        <Button
-          onClick={() => handleCloseAnnouncement(announcement)}
-          variant="outline"
-        >
-          Close
-        </Button>
-      </div>
-    );
-  };
-
-  const renderAnnouncementDialog = (announcement) => {
-    const { icon: Icon } = ANNOUNCEMENT_TYPES[announcement.type] || {};
+  const renderSimpleDialog = (announcement) => {
+    const { icon: Icon, label } = ANNOUNCEMENT_TYPES[announcement.type];
 
     return (
       <AlertDialog
@@ -175,11 +168,10 @@ const AnnouncementManager = ({ announcements, onClose }) => {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            {Icon && (
-              <div className="flex justify-center mb-4">
-                <Icon className="w-12 h-12 text-primary" />
-              </div>
-            )}
+            <div className="flex items-center justify-center mb-4">
+              {Icon && <Icon className="w-12 h-12 text-primary" />}
+            </div>
+            <Badge className="mb-2 mx-auto">{label}</Badge>
             <AlertDialogTitle>{announcement.title}</AlertDialogTitle>
             <AlertDialogDescription>
               {announcement.content}
@@ -189,7 +181,7 @@ const AnnouncementManager = ({ announcements, onClose }) => {
             <AlertDialogAction
               onClick={() => handleCloseAnnouncement(announcement)}
             >
-              Close
+              Got it
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -199,15 +191,12 @@ const AnnouncementManager = ({ announcements, onClose }) => {
 
   const renderAnnouncement = (announcement) => {
     switch (announcement.type) {
-      case "banner":
-        return renderBanner(announcement);
-      case "downtime":
-        return renderDowntimeOverlay(announcement);
-      case "alert":
-      case "announcement":
-      case "promotional":
-      case "feature_update":
-        return renderAnnouncementDialog(announcement);
+      case "maintenance":
+        return renderMaintenanceOverlay(announcement);
+      case "changelog":
+      case "feature":
+      case "upcoming":
+        return renderSimpleDialog(announcement);
       default:
         return null;
     }

@@ -1,4 +1,3 @@
-// CompleteTradeDialog.jsx
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -14,8 +13,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { calculateExchangeCharges } from "@/utils/calculateExchangeCharges";
 import { cn } from "@/lib/utils";
+import {
+  calculateCharges,
+  EQUITY_TYPES,
+  TRANSACTION_TYPES,
+} from "@/utils/calculateExchangeCharges";
 
 export function CompleteTradeDialog({
   open,
@@ -28,7 +31,7 @@ export function CompleteTradeDialog({
   const [completeTrade, setCompleteTrade] = useState({
     instrumentName: "",
     quantity: null,
-    action: "sell",
+    action: TRANSACTION_TYPES.SELL,
     buyingPrice: null,
     sellingPrice: null,
     brokerage: brokerage,
@@ -38,13 +41,17 @@ export function CompleteTradeDialog({
   });
 
   const [error, setError] = useState("");
+  const [charges, setCharges] = useState(null);
 
   useEffect(() => {
     if (trade) {
       setCompleteTrade({
         instrumentName: trade.instrumentName,
         quantity: trade.quantity,
-        action: trade.action === "buy" ? "sell" : "buy",
+        action:
+          trade.action === TRANSACTION_TYPES.BUY
+            ? TRANSACTION_TYPES.SELL
+            : TRANSACTION_TYPES.BUY,
         buyingPrice: null,
         sellingPrice: null,
         brokerage: brokerage,
@@ -63,16 +70,21 @@ export function CompleteTradeDialog({
       (completeTrade.buyingPrice || completeTrade.sellingPrice)
     ) {
       const price =
-        completeTrade.action === "buy"
+        completeTrade.action === TRANSACTION_TYPES.BUY
           ? completeTrade.buyingPrice
           : completeTrade.sellingPrice;
-      const exchangeCharges = calculateExchangeCharges(
-        completeTrade.equityType,
-        completeTrade.action,
+      const calculatedCharges = calculateCharges({
+        equityType: completeTrade.equityType,
+        action: completeTrade.action,
         price,
-        completeTrade.quantity
-      );
-      setCompleteTrade((prev) => ({ ...prev, exchangeRate: exchangeCharges }));
+        quantity: completeTrade.quantity,
+        brokerage: completeTrade.brokerage,
+      });
+      setCharges(calculatedCharges);
+      setCompleteTrade((prev) => ({
+        ...prev,
+        exchangeRate: calculatedCharges.exchangeCharges,
+      }));
     }
   }, [
     completeTrade.buyingPrice,
@@ -80,6 +92,7 @@ export function CompleteTradeDialog({
     completeTrade.quantity,
     completeTrade.action,
     completeTrade.equityType,
+    completeTrade.brokerage,
   ]);
 
   const validateTrade = () => {
@@ -88,11 +101,17 @@ export function CompleteTradeDialog({
       return false;
     }
 
-    if (completeTrade.action === "buy" && !completeTrade.buyingPrice) {
+    if (
+      completeTrade.action === TRANSACTION_TYPES.BUY &&
+      !completeTrade.buyingPrice
+    ) {
       setError("Please enter a buying price");
       return false;
     }
-    if (completeTrade.action === "sell" && !completeTrade.sellingPrice) {
+    if (
+      completeTrade.action === TRANSACTION_TYPES.SELL &&
+      !completeTrade.sellingPrice
+    ) {
       setError("Please enter a selling price");
       return false;
     }
@@ -140,12 +159,6 @@ export function CompleteTradeDialog({
     } catch (error) {
       console.error("Error completing trade:", error);
     }
-  };
-
-  const calculateTotalOrder = (trade) => {
-    const price =
-      trade.action === "buy" ? trade.buyingPrice : trade.sellingPrice;
-    return trade.quantity * price + trade.exchangeRate + trade.brokerage;
   };
 
   return (
@@ -259,7 +272,7 @@ export function CompleteTradeDialog({
               <Label>Exchange Charges (₹)</Label>
               <Input
                 type="number"
-                value={completeTrade.exchangeRate}
+                value={charges ? charges.exchangeCharges.toFixed(2) : "0.00"}
                 readOnly
               />
             </div>
@@ -277,14 +290,22 @@ export function CompleteTradeDialog({
               />
             </div>
           </div>
-          <div className="bg-[#F4E4FF] dark:bg-[#312d33] p-4 rounded-lg">
-            <div className="flex justify-start gap-2 items-center">
-              <span className="font-medium">Total Order Amount:</span>
-              <span className="text-base font-medium text-primary">
-                ₹ {calculateTotalOrder(completeTrade)}
-              </span>
+          {charges && (
+            <div className="bg-[#F4E4FF] dark:bg-[#312d33] p-4 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="font-medium">Total Charges:</span>
+                <span className="text-base font-medium text-primary">
+                  ₹ {charges.totalCharges.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between items-center mt-2">
+                <span className="font-medium">Break-even Point:</span>
+                <span className="text-base font-medium text-primary">
+                  ₹ {charges.breakEvenPoints.toFixed(2)}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>

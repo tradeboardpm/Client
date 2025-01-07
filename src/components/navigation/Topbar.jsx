@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Bell, Menu, Sun, Moon, Laptop, X, LogOut } from "lucide-react";
+import { Bell, Menu, Sun, Moon, Laptop, LogOut } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,31 +21,34 @@ import {
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
-const NotificationItem = ({ title, description, time, onDelete }) => (
-  <div className="mb-4 p-3 bg-card rounded-lg relative">
-    <button className="absolute top-2 right-2" onClick={onDelete}>
-      <X className="h-4 w-4" />
-    </button>
-    <h3 className="font-semibold">{title}</h3>
-    <p className="text-sm">{description}</p>
-    <p className="text-xs mt-1">{time}</p>
-  </div>
-);
+const NotificationItem = ({ title, content, validUntil, type }) => {
+  // Format the date to be more readable
+  const formattedDate = new Date(validUntil).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 
-export default function Topbar({ toggleSidebar }) {
+  return (
+    <div className="mb-4 p-3 rounded-lg border bg-card">
+      <h3 className="font-semibold text-foreground">{title}</h3>
+      <p className="text-sm text-muted-foreground">{content}</p>
+      <p className="text-xs mt-1 text-muted-foreground">
+        Valid until: {formattedDate}
+      </p>
+    </div>
+  );
+};
+
+export default function Topbar({
+  toggleSidebar,
+  onLogout,
+  notifications = [],
+}) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [username, setUsername] = useState("");
   const [theme, setTheme] = useState("system");
-  const [notifications, setNotifications] = useState([
-    {
-      title: "New trade opportunity",
-      description: "A new trading signal has been detected for AAPL.",
-      time: "5 minutes ago",
-      type: "trade",
-    },
-    // Additional notification objects...
-  ]);
-
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -59,10 +62,18 @@ export default function Topbar({ toggleSidebar }) {
     applyTheme(savedTheme);
   }, []);
 
-  const deleteNotification = (index) => {
-    setNotifications((prevNotifications) =>
-      prevNotifications.filter((_, i) => i !== index)
-    );
+  // Update hasNewNotifications when notifications change
+  useEffect(() => {
+    if (notifications.length > 0) {
+      setHasNewNotifications(true);
+    }
+  }, [notifications]);
+
+  const handleSheetOpen = (open) => {
+    setIsSheetOpen(open);
+    if (open) {
+      setHasNewNotifications(false);
+    }
   };
 
   const applyTheme = (newTheme) => {
@@ -97,17 +108,8 @@ export default function Topbar({ toggleSidebar }) {
     }
   };
 
-  const handleLogout = () => {
-    Cookies.remove("userName");
-    Cookies.remove("token");
-    Cookies.remove("expiry");
-    Cookies.remove("userEmail");
-    Cookies.remove("userId");
-    router.push("/login");
-  };
-
   return (
-    <div className="bg-card px-4 py-2 flex justify-between items-center  z-10">
+    <div className="bg-card px-4 py-2 flex justify-between items-center z-10">
       <div className="flex items-center">
         <Button
           variant="ghost"
@@ -124,24 +126,35 @@ export default function Topbar({ toggleSidebar }) {
         />
       </div>
       <div className="flex items-center space-x-4">
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <Sheet open={isSheetOpen} onOpenChange={handleSheetOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-6 w-6" />
+              {hasNewNotifications && (
+                <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
+              )}
             </Button>
           </SheetTrigger>
-          <SheetContent className="w-[360px]" >
+          <SheetContent className="w-[360px]">
             <SheetHeader>
               <SheetTitle>Notifications</SheetTitle>
             </SheetHeader>
             <ScrollArea className="h-[calc(100vh-100px)] mt-4 pr-4">
-              {notifications.map((notification, index) => (
-                <NotificationItem
-                  key={index}
-                  {...notification}
-                  onDelete={() => deleteNotification(index)}
-                />
-              ))}
+              {notifications.length > 0 ? (
+                notifications.map((notification) => (
+                  <NotificationItem
+                    key={notification._id}
+                    title={notification.title}
+                    content={notification.content}
+                    validUntil={notification.validUntil}
+                    type={notification.type}
+                  />
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground">
+                  No notifications
+                </p>
+              )}
             </ScrollArea>
           </SheetContent>
         </Sheet>
@@ -185,7 +198,7 @@ export default function Topbar({ toggleSidebar }) {
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Action</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={onLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               <span className="text-red-500">Logout</span>
             </DropdownMenuItem>

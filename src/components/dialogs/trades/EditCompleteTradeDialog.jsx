@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,11 @@ import {
 } from "@/components/ui/select";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { calculateExchangeCharges } from "@/utils/calculateExchangeCharges";
+import {
+  calculateCharges,
+  EQUITY_TYPES,
+  TRANSACTION_TYPES,
+} from "@/utils/calculateExchangeCharges";
 
 export function EditCompleteTradeDialog({
   open,
@@ -26,13 +30,44 @@ export function EditCompleteTradeDialog({
   trade,
   onSubmit,
 }) {
-  const [editedTrade, setEditedTrade] = React.useState(trade);
-  const [error, setError] = React.useState("");
+  const [editedTrade, setEditedTrade] = useState(trade);
+  const [error, setError] = useState("");
+  const [charges, setCharges] = useState(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setEditedTrade(trade);
     setError(""); // Clear error when trade changes
   }, [trade]);
+
+  useEffect(() => {
+    if (editedTrade) {
+      const buyCharges = calculateCharges({
+        equityType: editedTrade.equityType,
+        action: TRANSACTION_TYPES.BUY,
+        price: editedTrade.buyingPrice,
+        quantity: editedTrade.quantity,
+        brokerage: editedTrade.brokerage,
+      });
+      const sellCharges = calculateCharges({
+        equityType: editedTrade.equityType,
+        action: TRANSACTION_TYPES.SELL,
+        price: editedTrade.sellingPrice,
+        quantity: editedTrade.quantity,
+        brokerage: editedTrade.brokerage,
+      });
+      const totalCharges = {
+        ...buyCharges,
+        totalCharges: buyCharges.totalCharges + sellCharges.totalCharges,
+        exchangeCharges:
+          buyCharges.exchangeCharges + sellCharges.exchangeCharges,
+      };
+      setCharges(totalCharges);
+      setEditedTrade((prev) => ({
+        ...prev,
+        exchangeRate: totalCharges.exchangeCharges,
+      }));
+    }
+  }, [editedTrade]);
 
   const validateTrade = () => {
     if (!editedTrade.quantity || editedTrade.quantity <= 0) {
@@ -70,25 +105,12 @@ export function EditCompleteTradeDialog({
 
     try {
       const token = Cookies.get("token");
-      const buyExchangeCharges = calculateExchangeCharges(
-        editedTrade.equityType,
-        "buy",
-        editedTrade.buyingPrice,
-        editedTrade.quantity
-      );
-      const sellExchangeCharges = calculateExchangeCharges(
-        editedTrade.equityType,
-        "sell",
-        editedTrade.sellingPrice,
-        editedTrade.quantity
-      );
-      const totalExchangeCharges = buyExchangeCharges + sellExchangeCharges;
       await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/trades/complete/${editedTrade._id}`,
         {
           ...editedTrade,
           instrumentName: editedTrade.instrumentName.toUpperCase(),
-          exchangeRate: totalExchangeCharges,
+          exchangeRate: charges.exchangeCharges,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -100,14 +122,6 @@ export function EditCompleteTradeDialog({
     } catch (error) {
       console.error("Error editing complete trade:", error);
     }
-  };
-
-  const calculateTotalOrder = (trade) => {
-    return (
-      trade.quantity * (trade.buyingPrice + trade.sellingPrice) +
-      trade.exchangeRate +
-      trade.brokerage
-    );
   };
 
   return (
@@ -220,20 +234,7 @@ export function EditCompleteTradeDialog({
                 <Label>Exchange Charges (₹)</Label>
                 <Input
                   type="number"
-                  value={
-                    calculateExchangeCharges(
-                      editedTrade.equityType,
-                      "buy",
-                      editedTrade.buyingPrice,
-                      editedTrade.quantity
-                    ) +
-                    calculateExchangeCharges(
-                      editedTrade.equityType,
-                      "sell",
-                      editedTrade.sellingPrice,
-                      editedTrade.quantity
-                    )
-                  }
+                  value={charges ? charges.exchangeCharges.toFixed(2) : "0.00"}
                   readOnly
                 />
               </div>
@@ -251,14 +252,22 @@ export function EditCompleteTradeDialog({
                 />
               </div>
             </div>
-            <div className="bg-[#F4E4FF] dark:bg-[#312d33] p-4 rounded-lg">
-              <div className="flex justify-start gap-2 items-center">
-                <span className="font-medium">Total Order Amount:</span>
-                <span className="text-base font-medium text-primary">
-                  ₹ {calculateTotalOrder(editedTrade)}
-                </span>
+            {charges && (
+              <div className="bg-[#F4E4FF] dark:bg-[#312d33] p-4 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span className="font-medium">Total Charges:</span>
+                  <span className="text-base font-medium text-primary">
+                    ₹ {charges.totalCharges.toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="font-medium">Break-even Point:</span>
+                  <span className="text-base font-medium text-primary">
+                    ₹ {charges.breakEvenPoints.toFixed(2)}
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
         <DialogFooter>

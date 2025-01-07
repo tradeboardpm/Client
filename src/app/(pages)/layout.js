@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Topbar from "@/components/navigation/Topbar";
 import Sidebar from "@/components/navigation/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
@@ -14,18 +14,19 @@ import { toast } from "sonner";
 export default function MainLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const router = useRouter();
 
-  const clearCookiesAndRedirect = () => {
+  const clearCookiesAndRedirect = useCallback(() => {
     Cookies.remove("userName");
     Cookies.remove("token");
     Cookies.remove("expiry");
     Cookies.remove("userEmail");
     Cookies.remove("userId");
     router.push("/");
-  };
+  }, [router]);
 
-  const validateToken = async () => {
+  const validateToken = useCallback(async () => {
     try {
       const token = Cookies.get("token");
       if (!token) {
@@ -55,25 +56,20 @@ export default function MainLayout({ children }) {
       toast.error("An error occurred. Please try logging in again.");
       clearCookiesAndRedirect();
     }
-  };
+  }, [clearCookiesAndRedirect]);
 
   useEffect(() => {
-    // Initial token validation
     validateToken();
-
-    // Set up interval to validate token every minute
     const intervalId = setInterval(validateToken, 60000);
-
-    // Cleanup interval on component unmount
     return () => clearInterval(intervalId);
-  }, []);
+  }, [validateToken]);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
       try {
         const token = Cookies.get("token");
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/user/announcements`,
+          `${process.env.NEXT_PUBLIC_API_URL}/announcement`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -82,7 +78,17 @@ export default function MainLayout({ children }) {
         );
         if (response.ok) {
           const data = await response.json();
-          setAnnouncements(data);
+
+          // Separate notifications and announcements
+          const notificationItems = data.filter(
+            (item) => item.type === "notification"
+          );
+          const announcementItems = data.filter(
+            (item) => item.type !== "notification"
+          );
+
+          setNotifications(notificationItems);
+          setAnnouncements(announcementItems);
         }
       } catch (error) {
         console.error("Error fetching announcements:", error);
@@ -90,22 +96,20 @@ export default function MainLayout({ children }) {
     };
 
     fetchAnnouncements();
+    // Poll for new announcements every minute
+    const intervalId = setInterval(fetchAnnouncements, 60000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleLogout = async () => {
     try {
       const token = Cookies.get("token");
-
-      // Call logout API
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/logout`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       clearCookiesAndRedirect();
       toast.success("Logged out successfully");
@@ -115,20 +119,26 @@ export default function MainLayout({ children }) {
     }
   };
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+
+  const handleRemoveAnnouncement = useCallback((announcement) => {
+    setAnnouncements((prevAnnouncements) =>
+      prevAnnouncements.filter((a) => a._id !== announcement._id)
+    );
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-background">
       <AnnouncementManager
         announcements={announcements}
-        onClose={(announcement) => {
-          setAnnouncements((prevAnnouncements) =>
-            prevAnnouncements.filter((a) => a._id !== announcement._id)
-          );
-        }}
+        onClose={handleRemoveAnnouncement}
       />
 
-      <Topbar toggleSidebar={toggleSidebar} onLogout={handleLogout} />
+      <Topbar
+        toggleSidebar={toggleSidebar}
+        onLogout={handleLogout}
+        notifications={notifications}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         <Sidebar isOpen={sidebarOpen} />
