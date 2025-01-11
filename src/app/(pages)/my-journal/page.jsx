@@ -1,4 +1,3 @@
-// app/my-journal/page.jsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -6,9 +5,6 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { ArrowUpRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import JournalCard from "@/components/cards/JournalCard";
-
-
-
 
 const JournalPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -51,74 +47,76 @@ const JournalPage = () => {
     });
   };
 
-return (
-  <div className="bg-card">
-    <div className="py-8 px-4 sm:px-6 lg:px-8 bg-background rounded-t-xl">
-      <div className="flex justify-between items-center mb-6 primary_gradient p-3 rounded-2xl">
-        <div className="flex flex-1 items-center justify-center ">
-          <button
-            onClick={() => changeMonth(-1)}
-            className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
-            disabled={isLoading}
-          >
-            <ChevronsLeft className="h-5 w-5" />
-          </button>
-          <h2 className="text-xl font-medium text-white px-4 py-2 rounded-lg bg-[#ffffff]/30">
-            {currentDate.toLocaleString("default", {
-              month: "long",
-              year: "numeric",
-            })}
-          </h2>
-          <button
-            onClick={() => changeMonth(1)}
-            className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
-            disabled={isLoading}
-          >
-            <ChevronsRight className="h-5 w-5" />
-          </button>
+  return (
+    <div className="bg-card">
+      <div className="py-8 px-4 sm:px-6 lg:px-8 bg-background rounded-t-xl">
+        <div className="flex justify-between items-center mb-6 primary_gradient p-3 rounded-2xl">
+          <div className="flex flex-1 items-center justify-center">
+            {/* Added a container with fixed width for the navigation section */}
+            <div className="flex items-center justify-between w-80">
+              <button
+                onClick={() => changeMonth(-1)}
+                className="text-white hover:bg-white/20 p-2 rounded-full transition-colors flex-shrink-0"
+                disabled={isLoading}
+              >
+                <ChevronsLeft className="h-5 w-5" />
+              </button>
+              {/* Added min-width and center alignment to month display */}
+              <h2 className="text-xl font-medium text-white px-4 py-2 rounded-lg bg-[#ffffff]/30 w-48 text-center">
+                {currentDate.toLocaleString("default", {
+                  month: "long",
+                  year: "numeric",
+                })}
+              </h2>
+              <button
+                onClick={() => changeMonth(1)}
+                className="text-white hover:bg-white/20 p-2 rounded-full transition-colors flex-shrink-0"
+                disabled={isLoading}
+              >
+                <ChevronsRight className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="gap-4">
+          {Object.keys(journalData).length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {Object.keys(journalData).map((date) => (
+                <JournalCard
+                  key={date}
+                  date={date}
+                  note={journalData[date].note}
+                  mistake={journalData[date].mistake}
+                  lesson={journalData[date].lesson}
+                  rulesFollowedPercentage={
+                    journalData[date].rulesFollowedPercentage
+                  }
+                  winRate={journalData[date].winRate}
+                  profit={journalData[date].profit}
+                  tradesTaken={journalData[date].tradesTaken}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center w-full h-[55vh]">
+              <img
+                src="/images/no_box.png"
+                alt="No Data"
+                className="w-36 h-36 mb-4"
+              />
+              <p className="text-foreground/40 text-lg text-center">
+                <span className="font-extrabold text-xl text-foreground">
+                  No Data
+                </span>
+                <br />
+                Please start journaling daily to see your monthly journals here.
+              </p>
+            </div>
+          )}
         </div>
       </div>
-      <div className="gap-4">
-        {Object.keys(journalData).length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {Object.keys(journalData).map((date) => (
-              <JournalCard
-                key={date}
-                date={date}
-                note={journalData[date].note}
-                mistake={journalData[date].mistake}
-                lesson={journalData[date].lesson}
-                rulesFollowedPercentage={
-                  journalData[date].rulesFollowedPercentage
-                }
-                winRate={journalData[date].winRate}
-                profit={journalData[date].profit}
-                tradesTaken={journalData[date].tradesTaken}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center w-full h-[55vh]">
-            <img
-              src="/images/no_box.png"
-              alt="No Data"
-              className="w-36 h-36 mb-4"
-            />
-            <p className="text-foreground/40 text-lg text-center">
-              <span className="font-extrabold text-xl text-foreground">
-                No Data
-              </span>
-              <br />
-              Please start journaling daily to see your monthly journals here.
-            </p>
-          </div>
-        )}
-      </div>
     </div>
-  </div>
-);
-
-
+  );
 };
 
 export default JournalPage;

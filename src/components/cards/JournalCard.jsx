@@ -58,7 +58,7 @@ const JournalCard = ({
   return (
     <Card
       onClick={handleCardClick}
-      className={`transition-all duration-300 group shadow-[0px_5px_10px_2px_rgba(0,0,0,0.04)] hover:shadow-xl hover:scale-[1.02] w-[22.5rem] cursor-pointer border-[1rem] ${getProfitColor()}`}
+      className={`transition-all duration-300 group shadow-[0px_5px_10px_2px_rgba(0,0,0,0.04)] hover:shadow-xl hover:scale-[1.02] max-w-[22.5rem] cursor-pointer border-[1rem] ${getProfitColor()}`}
     >
       {/* box-shadow: 0px 5px 10px 2px rgba(0, 0, 0, 0.04) */}
       <CardHeader className={`pb-2 ${getProfitBorderColor()}`}>

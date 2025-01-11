@@ -320,12 +320,12 @@ export function RulesSection({ selectedDate, onUpdate }) {
 
           <div className="flex space-x-2 items-center">
             <div className="relative flex grow max-w-[10.25rem] mr-2 text-xs">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-2.5 top-2.5 h-3 w-3 text-gray-400" />
               <Input
                 placeholder="Search rules"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="p-2 pl-8 text-xs text-gray-400 h-fit"
+                className="p-2 pl-8 text-xs  h-fit"
               />
             </div>
 
@@ -365,13 +365,13 @@ export function RulesSection({ selectedDate, onUpdate }) {
                   handleFollowUnfollowAll(!!checked)
                 }
                 disabled={isLoadingAction.followAllRules}
-                className="border-background"
+                className="border-background border-2"
               />
             </div>
-            <span className="font-medium">My Rules</span>
+            <span className="font-medium">Select Followed Rules</span>
             <span className="font-medium text-right">Action</span>
           </div>
-          <div className="max-h-[55vh] min-h-96 overflow-y-auto bg-background ">
+          <div className="max-h-[55vh] min-h-96 overflow-y-auto  ">
             <div className="divide-y">
               {filteredRules.map((rule) => (
                 <div
@@ -385,6 +385,7 @@ export function RulesSection({ selectedDate, onUpdate }) {
                         handleToggleRuleFollow(rule._id, rule.isFollowed)
                       }
                       disabled={isLoadingAction.followRule}
+                      className="border-border border-2 bg-card"
                     />
                   </div>
                   <span className="text-secondary-foreground text-[0.8rem]">

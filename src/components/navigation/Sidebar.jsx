@@ -38,39 +38,48 @@ export default function Sidebar({ isOpen }) {
       }.svg`,
       label: "Dashboard",
       href: "/dashboard",
+      pattern: /^\/dashboard/,
     },
     {
       icon: `/images/journal${
-        pathname === "/my-journal" ? "_bold" : "_icon"
+        pathname.startsWith("/my-journal") ? "_bold" : "_icon"
       }.svg`,
       label: "My Journal",
       href: "/my-journal",
+      pattern: /^\/my-journal/,
     },
     {
       icon: `/images/performance${
-        pathname === "/performance-analytics" ? "_bold" : "_icon"
+        pathname.startsWith("/performance-analytics") ? "_bold" : "_icon"
       }.svg`,
-      label: "Performance Analytics",
+      label: "Performance",
       href: "/performance-analytics",
+      pattern: /^\/performance-analytics/,
     },
     {
       icon: `/images/accountability${
-        pathname === "/accountability-partner" ? "_bold" : "_icon"
+        pathname.startsWith("/accountability-partner") ? "_bold" : "_icon"
       }.svg`,
-      label: "Accountability Partner",
+      label: "Accountability",
       href: "/accountability-partner",
+      pattern: /^\/accountability-partner/,
     },
     {
       icon: `/images/account${
-        pathname === "/my-account" ? "_bold" : "_icon"
+        pathname.startsWith("/my-account") ? "_bold" : "_icon"
       }.svg`,
       label: "My Account",
       href: "/my-account",
+      pattern: /^\/my-account/,
     },
   ];
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed);
+  };
+
+  const isRouteActive = (pattern) => {
+    return pattern.test(pathname);
   };
 
   return (
@@ -94,7 +103,7 @@ export default function Sidebar({ isOpen }) {
                 <Button
                   variant="ghost"
                   className={`w-full py-6 rounded-xl ${
-                    pathname === item.href
+                    isRouteActive(item.pattern)
                       ? "bg-primary text-background hover:text-background font-bold hover:bg-primary"
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                   } ${
@@ -112,7 +121,7 @@ export default function Sidebar({ isOpen }) {
                       height={16}
                       alt={item.label}
                       className={
-                        pathname === item.href
+                        isRouteActive(item.pattern)
                           ? "text-background"
                           : "text-muted-foreground"
                       }
@@ -157,7 +166,7 @@ export default function Sidebar({ isOpen }) {
                       alt="Level"
                     />
                     <p className="mt-2 font-semibold text-base text-white">
-                      <span className="font-thin">Upcoming Level: </span>{" "}
+                      <span className="font-normal">Upcoming Level: </span>{" "}
                       {nextLevel}
                     </p>
                     <p className="text-xs text-white">Points: {points}</p>

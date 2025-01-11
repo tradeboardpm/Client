@@ -38,7 +38,7 @@ export default function AuthLayout({ children }) {
     <div className="flex min-h-screen bg-background relative">
       <button
         onClick={handleHomeClick}
-        className="absolute top-4 left-4 z-10 bg-transparent border-2 border-secondary p-0 hover:bg-accent transition-colors overflow-hidden border-none rounded"
+        className="absolute top-4 left-4 z-10 bg-transparent border-2 border-secondary p-0  transition-colors overflow-hidden border-none rounded"
       >
         <img
           src="/images/Tradeboard_logo_RGB.png"

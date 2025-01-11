@@ -26,7 +26,7 @@ const pricingPlans = [
       "Accountability Partner",
     ],
     buttonText: "Get Started Now",
-    buttonVariant: "outline",
+    buttonVariant: "",
   },
   {
     name: "6 month plan",
@@ -41,7 +41,7 @@ const pricingPlans = [
       "Accountability Partner",
     ],
     buttonText: "Get Started Now",
-    buttonVariant: "outline",
+    buttonVariant: "",
   },
   {
     name: "12 month plan",

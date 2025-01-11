@@ -8,7 +8,7 @@ export const EQUITY_TYPES = {
 export const RATES = {
   STT: {
     DELIVERY: 0.001,
-    INTRADAY: 0.00023863,
+    INTRADAY: 0.000297,
     "F&O-FUTURES": 0.0001,
     "F&O-OPTIONS": 0.0005,
   },

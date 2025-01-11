@@ -20,12 +20,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-import { JournalSection } from "../../../components/sections/dashboard/journal/journal-section";
-import { RulesSection } from "../../../components/sections/dashboard/rules/rule-section";
-import { TradesSection } from "../../../components/sections/dashboard/tradelog/trade-log-section";
-import { TradingCalendar } from "../../../components/sections/dashboard/journal/InfoSidebar";
+import { JournalSection } from "@/components/sections/dashboard/journal/journal-section";
+import { RulesSection } from "@/components/sections/dashboard/rules/rule-section";
+import { TradesSection } from "@/components/sections/dashboard/tradelog/trade-log-section";
+import { TradingCalendar } from "@/components/sections/dashboard/journal/InfoSidebar";
 import { usePointsStore } from "@/stores/points-store";
 import { WeeklyCharts } from "@/components/charts/weekly-charts";
+import WelcomeMessage from "@/components/sections/dashboard/welcome-message";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -78,6 +79,8 @@ export default function JournalTradePage() {
   const [isMobile, setIsMobile] = useState(false);
   const [weeklyMetrics, setWeeklyMetrics] = useState({});
   const [isSideSheetOpen, setIsSideSheetOpen] = useState(false);
+  const [forceChartUpdate, setForceChartUpdate] = useState(0);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   const { setPoints } = usePointsStore();
 
@@ -111,6 +114,14 @@ export default function JournalTradePage() {
     fetchCapital();
     fetchWeeklyMetrics();
   }, [selectedDate]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowWelcome(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const fetchCapital = async () => {
     try {
@@ -174,6 +185,17 @@ export default function JournalTradePage() {
     }
   };
 
+  const handleTradeUpdate = async () => {
+    await Promise.all([fetchCapital(), fetchWeeklyMetrics()]);
+    setForceChartUpdate((prev) => prev + 1); // Increment to force chart update
+  };
+
+  const formattedCapital = new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+  }).format(capital);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -186,10 +208,13 @@ export default function JournalTradePage() {
     <div className="flex flex-col md:flex-row min-h-screen bg-card">
       <main className="flex-1 overflow-y-auto p-6 w-full bg-background rounded-t-xl">
         <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center space-x-2">
-            <h2 className="text-xl font-medium">Welcome back, {userName}!</h2>
+          <div className="flex w-full items-center space-x-2">
+            <WelcomeMessage
+              userName={userName}
+              currentTime={currentTime}
+              visible={showWelcome}
+            />
           </div>
-          <p className="text-lg font-medium">{formatTime(currentTime)}</p>
           {isMobile && (
             <Sheet open={isSideSheetOpen} onOpenChange={setIsSideSheetOpen}>
               <SheetTrigger asChild>
@@ -211,6 +236,7 @@ export default function JournalTradePage() {
                     <WeeklyCharts
                       selectedDate={selectedDate}
                       tradesPerDay={tradesPerDay}
+                      forceUpdate={forceChartUpdate} // Add this prop
                     />
                   </div>
                 </div>
@@ -226,7 +252,8 @@ export default function JournalTradePage() {
               <p className="text-base px-3 py-1 ">{formatDate(selectedDate)}</p>
             </div>
             <p className="text-background text-sm sm:text-base lg:text-xl order-3 px-4">
-              Capital: ₹ {capital.toFixed(2)}
+              {/* Capital: ₹ {capital.toFixed(2)}  */}
+             Capital: {formattedCapital}
             </p>
           </div>
         </div>
@@ -248,6 +275,7 @@ export default function JournalTradePage() {
             onUpdate={fetchJournalData}
             brokerage={brokerage}
             trades={journalData?.trades || []}
+            onTradeChange={handleTradeUpdate} // Add this new prop
           />
         </div>
       </main>
@@ -271,6 +299,7 @@ export default function JournalTradePage() {
                   <WeeklyCharts
                     selectedDate={selectedDate}
                     tradesPerDay={tradesPerDay}
+                    forceUpdate={forceChartUpdate} // Add this prop
                   />
                 </div>
               </div>

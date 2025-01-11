@@ -7,8 +7,7 @@ const navItems = [
   { name: "Home", href: "home" },
   { name: "Why Tradeboard", href: "why_tradeboard" },
   { name: "Pricing", href: "pricing" },
-  { name: "Tutorials", href: "tutorials" },
-  { name: "Blog", href: "blog" },
+  { name: "Tutorials", href: "https://www.youtube.com/@tradeboard_in" },
   { name: "FAQs", href: "faqs" },
 ];
 
@@ -33,17 +32,31 @@ const HeroSection = ({ heroSectionRef }) => {
             />
           </div>
           <div className="hidden md:flex space-x-7 text-sm">
-            {navItems.map((item, index) => (
-              <button
-                key={item.name}
-                onClick={() => handleScroll(item.href)}
-                className={`hover:text-foreground transition-all duration-300 ease-in-out ${
-                  index === 0 ? "text-black" : ""
-                }`}
-              >
-                {item.name}
-              </button>
-            ))}
+            {navItems.map((item, index) => {
+              return item.href.startsWith("http") ? (
+                // External link
+                <a
+                  key={item.name}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-all duration-300 ease-in-out"
+                >
+                  {item.name}
+                </a>
+              ) : (
+                // Internal link
+                <button
+                  key={item.name}
+                  onClick={() => handleScroll(item.href)}
+                  className={`hover:text-foreground transition-all duration-300 ease-in-out ${
+                    index === 0 ? "text-black" : ""
+                  }`}
+                >
+                  {item.name}
+                </button>
+              );
+            })}
           </div>
           <div className="flex items-center space-x-6 text-lg">
             <Link href="/login">

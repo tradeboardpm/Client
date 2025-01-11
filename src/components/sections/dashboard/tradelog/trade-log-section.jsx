@@ -16,7 +16,12 @@ import { DeleteTradeDialog } from "@/components/dialogs/trades/DeleteTradeDialog
 import { CompleteTradeDialog } from "@/components/dialogs/trades/CompleteTradeDialog.jsx";
 
 // Continuing TradesSection.jsx
-export function TradesSection({ selectedDate, brokerage }) {
+export function TradesSection({
+  selectedDate,
+  brokerage,
+  onTradeChange, // Add this new prop
+  onUpdate,
+}) {
   const [trades, setTrades] = useState([]);
   const [tradeSummary, setTradeSummary] = useState({
     totalPnL: 0,
@@ -42,6 +47,11 @@ export function TradesSection({ selectedDate, brokerage }) {
       Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
     );
   };
+
+    const handleTradeUpdate = async () => {
+      await fetchTradesData();
+      onTradeChange?.(); // Call the parent's callback if provided
+    };
 
   const fetchTradesData = async () => {
     setIsLoading(true);
@@ -103,13 +113,13 @@ export function TradesSection({ selectedDate, brokerage }) {
           >
             <Plus className="mr-2 h-4 w-4" /> Add Trade
           </Button>
-          <Button
+          {/* <Button
             variant="outline"
             onClick={() => setImportDialogOpen(true)}
             disabled
           >
             <Import className="mr-2 h-4 w-4" /> Import Trade
-          </Button>
+          </Button> */}
         </div>
       </CardHeader>
       <CardContent className="p-0 mt-3">
@@ -158,7 +168,7 @@ export function TradesSection({ selectedDate, brokerage }) {
       <AddTradeDialog
         open={addTradeOpen}
         onOpenChange={setAddTradeOpen}
-        onSubmit={fetchTradesData}
+        onSubmit={handleTradeUpdate} // Update this
         selectedDate={selectedDate}
         brokerage={brokerage}
       />
@@ -167,21 +177,21 @@ export function TradesSection({ selectedDate, brokerage }) {
         open={editOpenTradeOpen}
         onOpenChange={setEditOpenTradeOpen}
         trade={selectedTrade}
-        onSubmit={fetchTradesData}
+        onSubmit={handleTradeUpdate} // Update this
       />
 
       <EditCompleteTradeDialog
         open={editCompleteTradeOpen}
         onOpenChange={setEditCompleteTradeOpen}
         trade={selectedTrade}
-        onSubmit={fetchTradesData}
+        onSubmit={handleTradeUpdate} // Update this
       />
 
       <CompleteTradeDialog
         open={completeTradeOpen}
         onOpenChange={setCompleteTradeOpen}
         trade={selectedTrade}
-        onSubmit={fetchTradesData}
+        onSubmit={handleTradeUpdate} // Update this
         selectedDate={selectedDate}
         brokerage={brokerage}
       />
@@ -190,13 +200,13 @@ export function TradesSection({ selectedDate, brokerage }) {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         trade={selectedTrade}
-        onDelete={fetchTradesData}
+        onDelete={handleTradeUpdate} // Update this
       />
 
       <ImportTradeDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        onImportComplete={fetchTradesData}
+        onImportComplete={handleTradeUpdate} // Update this
         defaultBrokerage={brokerage}
       />
     </Card>

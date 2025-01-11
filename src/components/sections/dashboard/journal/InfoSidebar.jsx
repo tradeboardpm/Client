@@ -105,10 +105,10 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
               ),
               day: cn(
                 "h-8 w-8 p-0 font-normal text-[0.74rem] rounded-[4px]",
-                "hover:bg-transparent focus:bg-transparent"
+                "hover:bg-secondary focus:bg-transparent"
               ),
               day_selected:
-                "bg-primary/15 text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground z-10",
+                "bg-card shadow  hover:text-primary-foreground z-10",
             }}
           />
           {/* Legend */}

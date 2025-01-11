@@ -108,6 +108,10 @@ export default function Topbar({
     }
   };
 
+  const handleAccountClick = () => {
+    router.push("/my-account");
+  };
+
   return (
     <div className="bg-card px-4 py-2 flex justify-between items-center z-10">
       <div className="flex items-center">
@@ -181,29 +185,20 @@ export default function Topbar({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <div className="flex items-center cursor-pointer">
-              <Avatar>
-                <AvatarImage src="/placeholder-avatar.jpg" />
-                <AvatarFallback>
-                  {username ? username.charAt(0).toUpperCase() : "U"}
-                </AvatarFallback>
-              </Avatar>
-              <span className="font-semibold hidden sm:inline ml-2">
-                {username || "User"}
-              </span>
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Action</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={onLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              <span className="text-red-500">Logout</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div
+          className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={handleAccountClick}
+        >
+          <Avatar>
+            <AvatarImage src="/placeholder-avatar.jpg" />
+            <AvatarFallback>
+              {username ? username.charAt(0).toUpperCase() : "U"}
+            </AvatarFallback>
+          </Avatar>
+          <span className="font-semibold hidden sm:inline ml-2">
+            {username || "User"}
+          </span>
+        </div>
       </div>
     </div>
   );

@@ -55,6 +55,7 @@ export function WeeklyCharts({
   tradesPerDay = 10,
   weeklyDataOverride = null,
   noDataComponent: NoDataComponent = DefaultNoDataComponent,
+  forceUpdate,
 }) {
   const [weeklyData, setWeeklyData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -81,10 +82,10 @@ export function WeeklyCharts({
   };
 
   const chartConfig = {
-    containerHeight: "h-32", // Tailwind height class
+    containerHeight: "h-32",
     margin: { top: 5, right: 15, bottom: 5, left: 0 },
     className:
-      "border  bg-background shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]",
+      "border bg-background shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]",
   };
 
   const fetchWeeklyData = async (date) => {
@@ -133,7 +134,7 @@ export function WeeklyCharts({
 
   useEffect(() => {
     fetchWeeklyData(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, forceUpdate]);
 
   const hasNoData =
     weeklyData &&
@@ -156,15 +157,14 @@ export function WeeklyCharts({
     const dayData = weeklyData?.[date] || {};
     return {
       day,
-      tradesTaken: dayData.tradesTaken || 0,
-      winTrade: dayData.winTrades || 0,
-      lossTrade: dayData.lossTrades || 0,
+      trades: dayData.tradesTaken || 0,
+      win: dayData.winTrades || 0,
+      loss: dayData.lossTrades || 0,
       profitLoss: dayData.totalProfitLoss || 0,
-      rulesFollowed: dayData.rulesFollowed || 0,
-      rulesBroken: dayData.rulesUnfollowed || 0,
+      followed: dayData.rulesFollowed || 0,
+      broken: dayData.rulesUnfollowed || 0,
     };
   });
-
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-4xl">
@@ -179,7 +179,7 @@ export function WeeklyCharts({
         </CardHeader>
         <CardContent className={`p-0 ${chartConfig.containerHeight}`}>
           <ChartContainer
-          className="h-32 w-full"
+            className="h-32 w-full"
             config={{
               trades: { label: "Trades", color: "var(--primary)" },
             }}
@@ -191,17 +191,23 @@ export function WeeklyCharts({
                   stroke="var(--border)"
                   strokeDasharray="3 3"
                 />
-                <XAxis className="text-xs"
+                <XAxis
+                  className="text-xs"
                   dataKey="day"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
                 />
-                <YAxis className="text-xs" tickLine={false} axisLine={false} tickMargin={8} />
+                <YAxis
+                  className="text-xs"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Line
                   type="linear"
-                  dataKey="tradesTaken"
+                  dataKey="trades"
                   stroke="var(--primary)"
                   strokeWidth={2}
                   dot={{ fill: "var(--primary)", r: 2 }}
@@ -225,7 +231,7 @@ export function WeeklyCharts({
         </CardHeader>
         <CardContent className={`p-0 ${chartConfig.containerHeight}`}>
           <ChartContainer
-          className="h-32 w-full"
+            className="h-32 w-full"
             config={{
               win: { label: "Win", color: "#0ED991" },
               loss: { label: "Loss", color: "#F44C60" },
@@ -238,23 +244,29 @@ export function WeeklyCharts({
                   stroke="var(--border)"
                   strokeDasharray="3 3"
                 />
-                <XAxis className="text-xs"
+                <XAxis
+                  className="text-xs"
                   dataKey="day"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
                 />
-                <YAxis className="text-xs" tickLine={false} axisLine={false} tickMargin={8} />
+                <YAxis
+                  className="text-xs"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
-                  dataKey="winTrade"
+                  dataKey="win"
                   stackId="winLoss"
                   fill="#0ED991"
                   barSize={16}
                   radius={[2, 2, 0, 0]}
                 />
                 <Bar
-                  dataKey="lossTrade"
+                  dataKey="loss"
                   stackId="winLoss"
                   fill="#F44C60"
                   barSize={16}
@@ -272,7 +284,7 @@ export function WeeklyCharts({
         </CardHeader>
         <CardContent className={`p-0 ${chartConfig.containerHeight}`}>
           <ChartContainer
-          className="h-32 w-full"
+            className="h-32 w-full"
             config={{
               amount: { label: "Amount", color: "var(--primary)" },
             }}
@@ -284,13 +296,15 @@ export function WeeklyCharts({
                   stroke="var(--border)"
                   strokeDasharray="3 3"
                 />
-                <XAxis className="text-xs"
+                <XAxis
+                  className="text-xs"
                   dataKey="day"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
                 />
-                <YAxis className="text-xs"
+                <YAxis
+                  className="text-xs"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
@@ -337,7 +351,7 @@ export function WeeklyCharts({
         </CardHeader>
         <CardContent className={`p-0 ${chartConfig.containerHeight}`}>
           <ChartContainer
-          className="h-32 w-full"
+            className="h-32 w-full"
             config={{
               followed: { label: "Followed", color: "#0ED991" },
               broken: { label: "Broken", color: "#F44C60" },
@@ -350,23 +364,29 @@ export function WeeklyCharts({
                   stroke="var(--border)"
                   strokeDasharray="3 3"
                 />
-                <XAxis className="text-xs"
+                <XAxis
+                  className="text-xs"
                   dataKey="day"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
                 />
-                <YAxis className="text-xs" tickLine={false} axisLine={false} tickMargin={8} />
+                <YAxis
+                  className="text-xs"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Bar
-                  dataKey="rulesFollowed"
+                  dataKey="followed"
                   stackId="ruleStatus"
                   fill="#0ED991"
                   barSize={16}
                   radius={[2, 2, 0, 0]}
                 />
                 <Bar
-                  dataKey="rulesBroken"
+                  dataKey="broken"
                   stackId="ruleStatus"
                   fill="#F44C60"
                   barSize={16}

@@ -8,8 +8,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SquarePen, Trash2, CheckSquare } from "lucide-react";
+import { SquarePen, Trash2, CheckSquare, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export function TradesTable({
   trades,
@@ -17,6 +18,7 @@ export function TradesTable({
   onEditComplete,
   onDelete,
   onCompleteTrade,
+  isDeleting,
 }) {
   return (
     <div className="rounded-lg overflow-hidden border">
@@ -60,9 +62,9 @@ export function TradesTable({
               </TableCell>
               <TableCell
                 className={cn(
-                  !trade.buyingPrice || !trade.sellingPrice
+                  trade.action === "both"
                     ? "text-foreground font-semibold text-center"
-                    : trade.buyingPrice < trade.sellingPrice
+                    : trade.action === "buy"
                     ? "text-[#0ED991] font-semibold text-center"
                     : "text-[#F44C60] font-semibold text-center"
                 )}
@@ -87,37 +89,58 @@ export function TradesTable({
               <TableCell className="text-nowrap text-center">
                 ₹ {trade.brokerage}
               </TableCell>
-              <TableCell className="text-nowrap text-">
+              <TableCell className="text-nowrap">
                 <div className="flex items-center justify-center gap-2">
                   {trade.isOpen && (
-                    <button
-                      className="text-green-500"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onCompleteTrade(trade)}
-                    >
-                      <CheckSquare className="h-4 w-4" />
-                    </button>
+                    <div className="group relative">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => onCompleteTrade(trade)}
+                        className="p-0 w-fit text-gray-500/35 hover:text-green-500"
+                      >
+                        <CheckSquare className="h-4 w-4" />
+                      </Button>
+                      <span className="absolute -top-4 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-2 rounded border bg-popover  text-xs font-medium shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
+                        Square Off Trade
+                      </span>
+                    </div>
                   )}
-                  <button
-                    className="text-gray-500/35"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() =>
-                      trade.isOpen ? onEditOpen(trade) : onEditComplete(trade)
-                    }
-                  >
-                    <SquarePen className="h-4 w-4" />
-                  </button>
 
-                  <button
-                    className="text-gray-500/35"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(trade)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="group relative">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() =>
+                        trade.isOpen ? onEditOpen(trade) : onEditComplete(trade)
+                      }
+                      className="p-0 w-fit text-gray-500/35 hover:text-purple-500"
+                    >
+                      <SquarePen className="h-4 w-4" />
+                    </Button>
+                    <span className="absolute -top-4 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-2 rounded border bg-popover  text-xs font-medium shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
+                      Edit Trade
+                    </span>
+                  </div>
+
+                  <div className="group relative">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => onDelete(trade)}
+                      disabled={isDeleting}
+                      className="p-0 w-fit text-gray-500/35 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isDeleting ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <span className="absolute -top-4 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-2 rounded border bg-popover  text-xs font-medium shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </span>
+                  </div>
                 </div>
               </TableCell>
             </TableRow>
@@ -127,3 +150,5 @@ export function TradesTable({
     </div>
   );
 }
+
+export default TradesTable;

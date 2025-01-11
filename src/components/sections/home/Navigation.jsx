@@ -9,8 +9,8 @@ const navItems = [
   { name: "Home", href: "#home" },
   { name: "Why Tradeboard", href: "#why_tradeboard" },
   { name: "Pricing", href: "#pricing" },
-  { name: "Tutorials", href: "#" },
-  { name: "Blog", href: "#" },
+  { name: "Tutorials", href: "https://www.youtube.com/@tradeboard_in" },
+  // { name: "Blog", href: "#" },
   { name: "FAQs", href: "#faqs" },
 ];
 
@@ -72,7 +72,7 @@ const Navigation = ({ isSticky, showNav }) => {
     <div
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         showNav ? "translate-y-0" : "-translate-y-full"
-      } ${isSticky ? "bg-primary shadow-md" : "bg-transparent"}`}
+      } ${isSticky ? "bg-primary shadow-md" : "bg-primary"}`}
     >
       <nav className="flex items-center justify-between p-4 text-background mx-auto container max-w-[84rem]">
         <div className="flex items-center space-x-2">
@@ -85,10 +85,13 @@ const Navigation = ({ isSticky, showNav }) => {
         </div>
         <div className="hidden md:flex space-x-7 text-sm">
           {navItems.map((item) => {
-            const sectionId = item.href.replace("#", "");
+            const sectionId = item.href.startsWith("#")
+              ? item.href.replace("#", "")
+              : null;
             const isActive = sectionId === activeSection;
 
-            return (
+            return item.href.startsWith("#") ? (
+              // Internal links
               <a
                 key={item.name}
                 href={item.href}
@@ -98,6 +101,17 @@ const Navigation = ({ isSticky, showNav }) => {
                     ? "text-foreground font-medium"
                     : "hover:text-foreground"
                 }`}
+              >
+                {item.name}
+              </a>
+            ) : (
+              // External links
+              <a
+                key={item.name}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-all duration-300 ease-in-out cursor-pointer hover:text-foreground"
               >
                 {item.name}
               </a>

@@ -35,7 +35,7 @@ const TradingPsychologySection = () => {
                 src="/images/rules.png"
                 alt="Journal and Rules Interface"
                 layout="responsive"
-                className="rounded-lg max-w-[38rem]"
+                className="rounded-lg w-full sm:max-w-[28rem] md:max-w-[32rem] lg:max-w-[38rem]"
               />
             </div>
           </div>
@@ -55,7 +55,7 @@ const TradingPsychologySection = () => {
                 src="/images/trades.png"
                 alt="Trade Log Interface"
                 layout="responsive"
-                className="rounded-lg max-w-[38rem]"
+                className="rounded-lg w-full sm:max-w-[28rem] md:max-w-[32rem] lg:max-w-[38rem]"
               />
             </div>
           </div>
@@ -65,4 +65,4 @@ const TradingPsychologySection = () => {
   );
 };
 
-export default TradingPsychologySection
+export default TradingPsychologySection;

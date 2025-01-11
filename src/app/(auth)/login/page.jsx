@@ -8,9 +8,8 @@ import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
-import GoogleLoginButton from "@/components/buttons/google-button";
 import { Mail, Phone } from "lucide-react";
-import GoogleSignUpButton from "@/components/buttons/google-signup-button";
+import Image from "next/image";
 
 export default function LoginOptionsPage() {
   const router = useRouter();
@@ -35,7 +34,7 @@ export default function LoginOptionsPage() {
 
       // Store token and user info
       Cookies.set("token", token, {
-        expires: expiresIn / 86400, // Convert seconds to days
+        expires: expiresIn / 86400,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
       });
@@ -78,27 +77,54 @@ export default function LoginOptionsPage() {
     toast.error("Google login failed");
   };
 
+  // Custom Google button component to match styling
+  const CustomGoogleButton = ({ onClick }) => (
+    <Button
+      type="button"
+      variant="ghost"
+      className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px] hover:bg-[#E9EEF0] dark:hover:bg-[#4d4e4f]"
+      onClick={onClick}
+      disabled={isLoading}
+    >
+      <Image
+        src="/images/google.svg"
+        alt="Google"
+        width={20}
+        height={20}
+        className="mr-2"
+      />
+      Log in with Google
+    </Button>
+  );
+
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
-      <div className="w-fit max-w-lg  space-y-8">
+      <div className="w-fit max-w-lg space-y-8">
         <div className="space-y-2 text-start">
           <h1 className="text-3xl font-semibold">Log in to your account</h1>
-          <p className="text-muted-foreground/65 text-sm ">
+          <p className="text-muted-foreground/65 text-sm">
             Please select any one of them
           </p>
         </div>
         <div className="space-y-4">
-          <GoogleLogin
-            onSuccess={handleGoogleSuccess}
-            onError={handleGoogleError}
-            useOneTap
-            disabled={isLoading}
-            text="Log in with Google"
-          />
+          <div className="w-full [&>div]:w-full [&>div>div]:w-full [&>div>div>div]:w-full [&>div>div>div>iframe]:hidden [&>div>div>div>div]:!w-full">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={handleGoogleError}
+              useOneTap
+              disabled={isLoading}
+              type="standard"
+              theme="outline"
+              size="large"
+              text="signin_with"
+              shape="rectangular"
+              render={({ onClick }) => <CustomGoogleButton onClick={onClick} />}
+            />
+          </div>
 
           <Button
             variant="ghost"
-            className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
+            className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px] hover:bg-[#E9EEF0] dark:hover:bg-[#4d4e4f]"
             onClick={() => router.push("/login/email")}
             disabled={isLoading}
           >
@@ -108,7 +134,7 @@ export default function LoginOptionsPage() {
 
           <Button
             variant="ghost"
-            className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px]"
+            className="w-full bg-[#F3F6F8] dark:bg-[#434445] justify-center border dark:border-[#303031] border-[#E7E7EA] font-medium text-[0.875rem] shadow-[0px_6px_16px_rgba(0,0,0,0.04)] py-[20px] hover:bg-[#E9EEF0] dark:hover:bg-[#4d4e4f]"
             onClick={() => router.push("/login/phone")}
             disabled={isLoading}
           >
