@@ -1,4 +1,3 @@
-// CompleteTradeDialog.jsx
 import React, { useState, useEffect } from "react";
 import {
   Dialog,
@@ -14,7 +13,11 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { calculateExchangeCharges } from "@/utils/calculateExchangeCharges";
+import {
+  calculateCharges,
+  EQUITY_TYPES,
+  TRANSACTION_TYPES,
+} from "@/utils/tradeCalculations";
 import { cn } from "@/lib/utils";
 
 export function CompleteTradeDialog({
@@ -22,38 +25,43 @@ export function CompleteTradeDialog({
   onOpenChange,
   onSubmit,
   trade,
-  brokerage,
+  brokerage: initialBrokerage,
   selectedDate,
 }) {
   const [completeTrade, setCompleteTrade] = useState({
     instrumentName: "",
     quantity: null,
-    action: "sell",
+    action: TRANSACTION_TYPES.SELL,
     buyingPrice: null,
     sellingPrice: null,
-    brokerage: brokerage,
+    brokerage: initialBrokerage,
     exchangeRate: 0,
     time: format(selectedDate, "HH:mm"),
     equityType: "",
   });
 
   const [error, setError] = useState("");
+  const [calculatedExchangeRate, setCalculatedExchangeRate] = useState(0);
+  const [exchangeRateEdited, setExchangeRateEdited] = useState(false);
 
   useEffect(() => {
     if (trade) {
       setCompleteTrade({
         instrumentName: trade.instrumentName,
         quantity: trade.quantity,
-        action: trade.action === "buy" ? "sell" : "buy",
+        action:
+          trade.action === TRANSACTION_TYPES.BUY
+            ? TRANSACTION_TYPES.SELL
+            : TRANSACTION_TYPES.BUY,
         buyingPrice: null,
         sellingPrice: null,
-        brokerage: brokerage,
+        brokerage: initialBrokerage,
         exchangeRate: 0,
         time: format(selectedDate, "HH:mm"),
         equityType: trade.equityType,
       });
     }
-  }, [trade, selectedDate, brokerage]);
+  }, [trade, selectedDate, initialBrokerage]);
 
   useEffect(() => {
     if (
@@ -63,16 +71,21 @@ export function CompleteTradeDialog({
       (completeTrade.buyingPrice || completeTrade.sellingPrice)
     ) {
       const price =
-        completeTrade.action === "buy"
+        completeTrade.action === TRANSACTION_TYPES.BUY
           ? completeTrade.buyingPrice
           : completeTrade.sellingPrice;
-      const exchangeCharges = calculateExchangeCharges(
-        completeTrade.equityType,
-        completeTrade.action,
+      const charges = calculateCharges({
+        equityType: completeTrade.equityType,
+        action: completeTrade.action,
         price,
-        completeTrade.quantity
-      );
-      setCompleteTrade((prev) => ({ ...prev, exchangeRate: exchangeCharges }));
+        quantity: completeTrade.quantity,
+        brokerage: completeTrade.brokerage,
+      });
+      setCalculatedExchangeRate(charges.totalCharges - charges.brokerage);
+      setCompleteTrade((prev) => ({
+        ...prev,
+        exchangeRate: charges.totalCharges - charges.brokerage,
+      }));
     }
   }, [
     completeTrade.buyingPrice,
@@ -80,6 +93,7 @@ export function CompleteTradeDialog({
     completeTrade.quantity,
     completeTrade.action,
     completeTrade.equityType,
+    completeTrade.brokerage,
   ]);
 
   const validateTrade = () => {
@@ -88,11 +102,17 @@ export function CompleteTradeDialog({
       return false;
     }
 
-    if (completeTrade.action === "buy" && !completeTrade.buyingPrice) {
+    if (
+      completeTrade.action === TRANSACTION_TYPES.BUY &&
+      !completeTrade.buyingPrice
+    ) {
       setError("Please enter a buying price");
       return false;
     }
-    if (completeTrade.action === "sell" && !completeTrade.sellingPrice) {
+    if (
+      completeTrade.action === TRANSACTION_TYPES.SELL &&
+      !completeTrade.sellingPrice
+    ) {
       setError("Please enter a selling price");
       return false;
     }
@@ -144,8 +164,25 @@ export function CompleteTradeDialog({
 
   const calculateTotalOrder = (trade) => {
     const price =
-      trade.action === "buy" ? trade.buyingPrice : trade.sellingPrice;
-    return trade.quantity * price + trade.exchangeRate + trade.brokerage;
+      trade.action === TRANSACTION_TYPES.BUY
+        ? trade.buyingPrice
+        : trade.sellingPrice;
+    const charges = calculateCharges({
+      equityType: trade.equityType,
+      action: trade.action,
+      price,
+      quantity: trade.quantity,
+      brokerage: trade.brokerage,
+    });
+    return charges.turnover + charges.totalCharges;
+  };
+
+  const resetExchangeRate = () => {
+    setCompleteTrade((prev) => ({
+      ...prev,
+      exchangeRate: calculatedExchangeRate,
+    }));
+    setExchangeRateEdited(false);
   };
 
   return (
@@ -188,12 +225,16 @@ export function CompleteTradeDialog({
                 <div
                   className={cn(
                     "flex items-center space-x-2 border border-border/25 shadow rounded-lg w-36 p-2",
-                    completeTrade.action === "buy"
+                    completeTrade.action === TRANSACTION_TYPES.BUY
                       ? "bg-[#A073F01A]"
                       : "bg-card"
                   )}
                 >
-                  <RadioGroupItem value="buy" id="complete-buy" disabled />
+                  <RadioGroupItem
+                    value={TRANSACTION_TYPES.BUY}
+                    id="complete-buy"
+                    disabled
+                  />
                   <Label htmlFor="complete-buy" className="w-full">
                     Buy
                   </Label>
@@ -201,12 +242,16 @@ export function CompleteTradeDialog({
                 <div
                   className={cn(
                     "flex items-center space-x-2 border border-border/25 shadow rounded-lg w-36 p-2",
-                    completeTrade.action === "sell"
+                    completeTrade.action === TRANSACTION_TYPES.SELL
                       ? "bg-[#A073F01A]"
                       : "bg-card"
                   )}
                 >
-                  <RadioGroupItem value="sell" id="complete-sell" disabled />
+                  <RadioGroupItem
+                    value={TRANSACTION_TYPES.SELL}
+                    id="complete-sell"
+                    disabled
+                  />
                   <Label htmlFor="complete-sell" className="w-full">
                     Sell
                   </Label>
@@ -215,12 +260,15 @@ export function CompleteTradeDialog({
             </div>
             <div className="col-span-2">
               <Label>
-                {completeTrade.action === "buy" ? "Buying" : "Selling"} Price
+                {completeTrade.action === TRANSACTION_TYPES.BUY
+                  ? "Buying"
+                  : "Selling"}{" "}
+                Price
               </Label>
               <Input
                 type="number"
                 value={
-                  completeTrade.action === "buy"
+                  completeTrade.action === TRANSACTION_TYPES.BUY
                     ? completeTrade.buyingPrice ?? ""
                     : completeTrade.sellingPrice ?? ""
                 }
@@ -229,7 +277,7 @@ export function CompleteTradeDialog({
                   setError("");
                   setCompleteTrade({
                     ...completeTrade,
-                    [completeTrade.action === "buy"
+                    [completeTrade.action === TRANSACTION_TYPES.BUY
                       ? "buyingPrice"
                       : "sellingPrice"]: price,
                   });
@@ -257,11 +305,29 @@ export function CompleteTradeDialog({
           <div className="grid grid-cols-4 items-center gap-4">
             <div className="col-span-2">
               <Label>Exchange Charges (₹)</Label>
-              <Input
-                type="number"
-                value={completeTrade.exchangeRate}
-                readOnly
-              />
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="number"
+                  value={completeTrade.exchangeRate}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setCompleteTrade({
+                      ...completeTrade,
+                      exchangeRate: value,
+                    });
+                    setExchangeRateEdited(true);
+                  }}
+                />
+                {exchangeRateEdited && (
+                  <Button
+                    onClick={resetExchangeRate}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Reset
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="col-span-2">
               <Label>Brokerage (₹)</Label>

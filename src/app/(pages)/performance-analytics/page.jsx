@@ -230,7 +230,7 @@ const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
   );
 };
 
-export default function EnhancedMetricsDashboard() {
+export default function PerformaceAnalytics() {
   const [period, setPeriod] = useState("thisWeek");
   const [metricsDateRange, setMetricsDateRange] = useState({
     from: null,
@@ -674,4 +674,4 @@ export default function EnhancedMetricsDashboard() {
   );
 }
 
-// export default EnhancedMetricsDashboard;
+// export default PerformaceAnalytics;

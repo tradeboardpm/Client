@@ -5,6 +5,59 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import { ArrowUpRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import JournalCard from "@/components/cards/JournalCard";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+
+const JournalCardSkeleton = () => {
+  return (
+    <Card className="transition-all duration-300 group shadow-[0px_5px_10px_2px_rgba(0,0,0,0.04)] max-w-[22.5rem] border-[1rem] bg-card/50">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-center">
+          <div className="h-5 w-24 bg-muted animate-pulse rounded" />
+          <div className="h-6 w-6 bg-muted animate-pulse rounded-full" />
+        </div>
+        <div className="h-[1px] w-full bg-muted mt-2" />
+      </CardHeader>
+      <CardContent className="space-y-6 py-4">
+        <div className="space-y-2">
+          <div className="flex items-center">
+            <div className="h-4 w-10 bg-muted animate-pulse rounded mr-2" />
+            <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+          </div>
+          <div className="flex items-center">
+            <div className="h-4 w-14 bg-muted animate-pulse rounded mr-2" />
+            <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+          </div>
+          <div className="flex items-center">
+            <div className="h-4 w-12 bg-muted animate-pulse rounded mr-2" />
+            <div className="h-4 w-3/4 bg-muted animate-pulse rounded" />
+          </div>
+        </div>
+        <div className="h-[1px] w-full bg-muted" />
+      </CardContent>
+      <CardFooter className="p-0">
+        <div className="flex justify-between space-x-4 w-full p-2">
+          <div className="flex flex-col items-center w-full space-y-1">
+            <div className="h-3 w-8 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-12 bg-muted animate-pulse rounded" />
+          </div>
+          <div className="flex flex-col items-center w-full space-y-1 border-x border-muted px-2">
+            <div className="h-3 w-12 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-12 bg-muted animate-pulse rounded" />
+          </div>
+          <div className="flex flex-col items-center w-full space-y-1">
+            <div className="h-3 w-10 bg-muted animate-pulse rounded" />
+            <div className="h-4 w-12 bg-muted animate-pulse rounded" />
+          </div>
+        </div>
+      </CardFooter>
+    </Card>
+  );
+};
 
 const JournalPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -47,12 +100,17 @@ const JournalPage = () => {
     });
   };
 
+  const renderSkeletons = () => {
+    return Array(8)
+      .fill(null)
+      .map((_, index) => <JournalCardSkeleton key={`skeleton-${index}`} />);
+  };
+
   return (
     <div className="bg-card">
       <div className="py-8 px-4 sm:px-6 lg:px-8 bg-background rounded-t-xl">
         <div className="flex justify-between items-center mb-6 primary_gradient p-3 rounded-2xl">
           <div className="flex flex-1 items-center justify-center">
-            {/* Added a container with fixed width for the navigation section */}
             <div className="flex items-center justify-between w-80">
               <button
                 onClick={() => changeMonth(-1)}
@@ -61,7 +119,6 @@ const JournalPage = () => {
               >
                 <ChevronsLeft className="h-5 w-5" />
               </button>
-              {/* Added min-width and center alignment to month display */}
               <h2 className="text-xl font-medium text-white px-4 py-2 rounded-lg bg-[#ffffff]/30 w-48 text-center">
                 {currentDate.toLocaleString("default", {
                   month: "long",
@@ -79,7 +136,11 @@ const JournalPage = () => {
           </div>
         </div>
         <div className="gap-4">
-          {Object.keys(journalData).length > 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {renderSkeletons()}
+            </div>
+          ) : Object.keys(journalData).length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {Object.keys(journalData).map((date) => (
                 <JournalCard

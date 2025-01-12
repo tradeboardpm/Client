@@ -20,29 +20,35 @@ import {
 import { format } from "date-fns";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { calculateExchangeCharges } from "@/utils/calculateExchangeCharges";
+import {
+  calculateCharges,
+  EQUITY_TYPES,
+  TRANSACTION_TYPES,
+} from "@/utils/tradeCalculations";
 import { cn } from "@/lib/utils";
 
 export function AddTradeDialog({
   open,
   onOpenChange,
   onSubmit,
-  brokerage,
+  brokerage: initialBrokerage,
   selectedDate,
 }) {
   const [newTrade, setNewTrade] = useState({
     instrumentName: "",
     quantity: null,
-    action: "buy",
+    action: TRANSACTION_TYPES.BUY,
     buyingPrice: null,
     sellingPrice: null,
-    brokerage: brokerage,
+    brokerage: initialBrokerage,
     exchangeRate: 0,
     time: format(selectedDate, "HH:mm"),
-    equityType: "INTRADAY",
+    equityType: EQUITY_TYPES.INTRADAY,
   });
 
   const [error, setError] = useState("");
+  const [calculatedExchangeRate, setCalculatedExchangeRate] = useState(0);
+  const [exchangeRateEdited, setExchangeRateEdited] = useState(false);
 
   useEffect(() => {
     if (
@@ -52,16 +58,21 @@ export function AddTradeDialog({
       (newTrade.buyingPrice || newTrade.sellingPrice)
     ) {
       const price =
-        newTrade.action === "buy"
+        newTrade.action === TRANSACTION_TYPES.BUY
           ? newTrade.buyingPrice
           : newTrade.sellingPrice;
-      const exchangeCharges = calculateExchangeCharges(
-        newTrade.equityType,
-        newTrade.action,
+      const charges = calculateCharges({
+        equityType: newTrade.equityType,
+        action: newTrade.action,
         price,
-        newTrade.quantity
-      );
-      setNewTrade((prev) => ({ ...prev, exchangeRate: exchangeCharges }));
+        quantity: newTrade.quantity,
+        brokerage: newTrade.brokerage,
+      });
+      setCalculatedExchangeRate(charges.totalCharges - charges.brokerage);
+      setNewTrade((prev) => ({
+        ...prev,
+        exchangeRate: charges.totalCharges - charges.brokerage,
+      }));
     }
   }, [
     newTrade.buyingPrice,
@@ -69,6 +80,7 @@ export function AddTradeDialog({
     newTrade.quantity,
     newTrade.action,
     newTrade.equityType,
+    newTrade.brokerage,
   ]);
 
   const handleTradeTypeChange = (value) => {
@@ -87,11 +99,11 @@ export function AddTradeDialog({
       return false;
     }
 
-    if (newTrade.action === "buy" && !newTrade.buyingPrice) {
+    if (newTrade.action === TRANSACTION_TYPES.BUY && !newTrade.buyingPrice) {
       setError("Please enter a buying price");
       return false;
     }
-    if (newTrade.action === "sell" && !newTrade.sellingPrice) {
+    if (newTrade.action === TRANSACTION_TYPES.SELL && !newTrade.sellingPrice) {
       setError("Please enter a selling price");
       return false;
     }
@@ -101,8 +113,8 @@ export function AddTradeDialog({
 
   const handleQuantityChange = (e) => {
     const value = Number(e.target.value);
-    if (value < 0) return; // Prevent negative values
-    setError(""); // Clear error when user starts typing
+    if (value < 0) return;
+    setError("");
     setNewTrade({
       ...newTrade,
       quantity: value,
@@ -148,21 +160,35 @@ export function AddTradeDialog({
     setNewTrade({
       instrumentName: "",
       quantity: null,
-      action: "buy",
+      action: TRANSACTION_TYPES.BUY,
       buyingPrice: null,
       sellingPrice: null,
-      brokerage: brokerage,
+      brokerage: initialBrokerage,
       exchangeRate: 0,
       time: format(selectedDate, "HH:mm"),
-      equityType: "INTRADAY",
+      equityType: EQUITY_TYPES.INTRADAY,
     });
     setError("");
   };
 
   const calculateTotalOrder = (trade) => {
     const price =
-      trade.action === "buy" ? trade.buyingPrice : trade.sellingPrice;
-    return trade.quantity * price + trade.exchangeRate + trade.brokerage;
+      trade.action === TRANSACTION_TYPES.BUY
+        ? trade.buyingPrice
+        : trade.sellingPrice;
+    const charges = calculateCharges({
+      equityType: trade.equityType,
+      action: trade.action,
+      price,
+      quantity: trade.quantity,
+      brokerage: trade.brokerage,
+    });
+    return charges.turnover + charges.totalCharges;
+  };
+
+  const resetExchangeRate = () => {
+    setNewTrade((prev) => ({ ...prev, exchangeRate: calculatedExchangeRate }));
+    setExchangeRateEdited(false);
   };
 
   return (
@@ -209,10 +235,12 @@ export function AddTradeDialog({
                 <div
                   className={cn(
                     "flex items-center space-x-2 border border-border/25 shadow rounded-lg w-36 p-2",
-                    newTrade.action === "buy" ? "bg-[#A073F01A]" : "bg-card"
+                    newTrade.action === TRANSACTION_TYPES.BUY
+                      ? "bg-[#A073F01A]"
+                      : "bg-card"
                   )}
                 >
-                  <RadioGroupItem value="buy" id="buy" />
+                  <RadioGroupItem value={TRANSACTION_TYPES.BUY} id="buy" />
                   <Label htmlFor="buy" className="w-full">
                     Buy
                   </Label>
@@ -220,10 +248,12 @@ export function AddTradeDialog({
                 <div
                   className={cn(
                     "flex items-center space-x-2 border border-border/25 shadow rounded-lg w-36 p-2",
-                    newTrade.action === "sell" ? "bg-[#A073F01A]" : "bg-card"
+                    newTrade.action === TRANSACTION_TYPES.SELL
+                      ? "bg-[#A073F01A]"
+                      : "bg-card"
                   )}
                 >
-                  <RadioGroupItem value="sell" id="sell" />
+                  <RadioGroupItem value={TRANSACTION_TYPES.SELL} id="sell" />
                   <Label htmlFor="sell" className="w-full">
                     Sell
                   </Label>
@@ -232,12 +262,15 @@ export function AddTradeDialog({
             </div>
             <div className="col-span-2">
               <Label>
-                {newTrade.action === "buy" ? "Buying" : "Selling"} Price
+                {newTrade.action === TRANSACTION_TYPES.BUY
+                  ? "Buying"
+                  : "Selling"}{" "}
+                Price
               </Label>
               <Input
                 type="number"
                 value={
-                  newTrade.action === "buy"
+                  newTrade.action === TRANSACTION_TYPES.BUY
                     ? newTrade.buyingPrice ?? ""
                     : newTrade.sellingPrice ?? ""
                 }
@@ -246,7 +279,7 @@ export function AddTradeDialog({
                   setError("");
                   setNewTrade({
                     ...newTrade,
-                    [newTrade.action === "buy"
+                    [newTrade.action === TRANSACTION_TYPES.BUY
                       ? "buyingPrice"
                       : "sellingPrice"]: price,
                   });
@@ -268,11 +301,18 @@ export function AddTradeDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="F&O-OPTIONS">F&O-OPTIONS</SelectItem>
-                  <SelectItem value="F&O-FUTURES">F&O-FUTURES</SelectItem>
-                  <SelectItem value="INTRADAY">INTRADAY</SelectItem>
-                  <SelectItem value="DELIVERY">DELIVERY</SelectItem>
-                  <SelectItem value="OTHERS">OTHERS</SelectItem>
+                  <SelectItem value={EQUITY_TYPES.FNO_OPTIONS}>
+                    F&O-OPTIONS
+                  </SelectItem>
+                  <SelectItem value={EQUITY_TYPES.FNO_FUTURES}>
+                    F&O-FUTURES
+                  </SelectItem>
+                  <SelectItem value={EQUITY_TYPES.INTRADAY}>
+                    INTRADAY
+                  </SelectItem>
+                  <SelectItem value={EQUITY_TYPES.DELIVERY}>
+                    DELIVERY
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -290,7 +330,29 @@ export function AddTradeDialog({
           <div className="grid grid-cols-4 items-center gap-4">
             <div className="col-span-2">
               <Label>Exchange Charges (₹)</Label>
-              <Input type="number" value={newTrade.exchangeRate} readOnly />
+              <div className="flex items-center space-x-2">
+                <Input
+                  type="number"
+                  value={newTrade.exchangeRate}
+                  onChange={(e) => {
+                    const value = Number(e.target.value);
+                    setNewTrade({
+                      ...newTrade,
+                      exchangeRate: value,
+                    });
+                    setExchangeRateEdited(true);
+                  }}
+                />
+                {exchangeRateEdited && (
+                  <Button
+                    onClick={resetExchangeRate}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Reset
+                  </Button>
+                )}
+              </div>
             </div>
             <div className="col-span-2">
               <Label>Brokerage (₹)</Label>

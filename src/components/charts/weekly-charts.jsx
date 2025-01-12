@@ -50,6 +50,30 @@ const DefaultNoDataComponent = () => (
   </div>
 );
 
+const ChartSkeleton = () => (
+  <div className="animate-pulse">
+    <div className="h-6 flex items-center px-4">
+      <div className="h-4 bg-muted rounded w-24"></div>
+    </div>
+    <div className="h-32 p-4">
+      <div className="w-full h-full bg-muted rounded"></div>
+    </div>
+  </div>
+);
+
+const LoadingState = () => (
+  <div className="flex flex-col gap-4 w-full max-w-4xl">
+    {[...Array(4)].map((_, index) => (
+      <Card
+        key={index}
+        className="border bg-background shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]"
+      >
+        <ChartSkeleton />
+      </Card>
+    ))}
+  </div>
+);
+
 export function WeeklyCharts({
   selectedDate = new Date(),
   tradesPerDay = 10,
@@ -148,7 +172,7 @@ export function WeeklyCharts({
         dayData.lossTrades === 0
     );
 
-  if (isLoading) return <div>Loading weekly performance...</div>;
+  if (isLoading) return <LoadingState />;
   if (error) return <div>Error loading weekly data: {error}</div>;
   if (!weeklyData || hasNoData) return <NoDataComponent />;
 
