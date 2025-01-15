@@ -340,6 +340,7 @@ export default function SignUp() {
                   id="terms"
                   checked={termsAccepted}
                   onCheckedChange={(checked) => setTermsAccepted(checked)}
+                  className="peer h-4 w-4 border-2 border-gray-400 rounded"
                 />
                 <label
                   htmlFor="terms"

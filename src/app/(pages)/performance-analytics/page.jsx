@@ -40,6 +40,15 @@ import { CalendarIcon, ArrowUpRight, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import JournalCard from "@/components/cards/JournalCard";
 import * as SliderPrimitive from "@radix-ui/react-slider";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 // Reusable components (FilterPopover, StatCard, RuleCard remain the same as in the previous code)
 const FilterPopover = ({
@@ -231,6 +240,12 @@ const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
 };
 
 export default function PerformaceAnalytics() {
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    limit: 12,
+  });
   const [period, setPeriod] = useState("thisWeek");
   const [metricsDateRange, setMetricsDateRange] = useState({
     from: null,
@@ -313,6 +328,8 @@ export default function PerformaceAnalytics() {
             endDate:
               journalsDateRange.to?.toISOString() ||
               endOfMonth(new Date()).toISOString(),
+            page: pagination.currentPage,
+            limit: pagination.limit,
             ...filters,
           },
           headers: { Authorization: `Bearer ${token}` },
@@ -324,17 +341,38 @@ export default function PerformaceAnalytics() {
           ? null
           : metricsResponse.data
       );
+
+      // Update state with new paginated response format
       setMonthlyJournals(
-        Object.keys(journalsResponse.data).length === 0
+        Object.keys(journalsResponse.data.data).length === 0
           ? null
-          : journalsResponse.data
+          : journalsResponse.data.data
       );
+      setPagination(journalsResponse.data.pagination);
     } catch (err) {
       setError(err.response?.data?.error || "An error occurred");
     } finally {
       setLoading(false);
     }
   };
+
+  // Add page change handler
+  const handlePageChange = (newPage) => {
+    setPagination((prev) => ({
+      ...prev,
+      currentPage: newPage,
+    }));
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [
+    period,
+    metricsDateRange,
+    journalsDateRange,
+    filters,
+    pagination.currentPage,
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -537,7 +575,7 @@ export default function PerformaceAnalytics() {
           )}
         </div>
 
-        {/* Journal Analysis section with new filter clearing functionality */}
+        {/* Journal Analysis section */}
         <div className="bg-card shadow-md border border-border p-4 rounded-xl min-h-[60vh]">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Journal Analysis</h2>
@@ -626,21 +664,117 @@ export default function PerformaceAnalytics() {
           {monthlyJournals ? (
             <div className="mt-4">
               {Object.keys(monthlyJournals).length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {Object.entries(monthlyJournals).map(([date, journal]) => (
-                    <JournalCard
-                      key={date}
-                      date={date}
-                      note={journal.note}
-                      mistake={journal.mistake}
-                      lesson={journal.lesson}
-                      rulesFollowedPercentage={journal.rulesFollowedPercentage}
-                      winRate={journal.winRate}
-                      profit={journal.profit}
-                      tradesTaken={journal.tradesTaken}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {Object.entries(monthlyJournals).map(([date, journal]) => (
+                      <JournalCard
+                        key={date}
+                        date={date}
+                        note={journal.note}
+                        mistake={journal.mistake}
+                        lesson={journal.lesson}
+                        rulesFollowedPercentage={
+                          journal.rulesFollowedPercentage
+                        }
+                        winRate={journal.winRate}
+                        profit={journal.profit}
+                        tradesTaken={journal.tradesTaken}
+                      />
+                    ))}
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {pagination.totalPages > 1 && (
+                    <div className="mt-6 flex justify-center">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              onClick={() =>
+                                handlePageChange(pagination.currentPage - 1)
+                              }
+                              disabled={pagination.currentPage === 1}
+                            />
+                          </PaginationItem>
+
+                          {/* First Page */}
+                          {pagination.currentPage > 2 && (
+                            <PaginationItem>
+                              <PaginationLink
+                                onClick={() => handlePageChange(1)}
+                              >
+                                1
+                              </PaginationLink>
+                            </PaginationItem>
+                          )}
+
+                          {/* Ellipsis if needed */}
+                          {pagination.currentPage > 3 && (
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          )}
+
+                          {/* Current Page and Adjacent Pages */}
+                          {Array.from({ length: 3 }, (_, i) => {
+                            const pageNumber = pagination.currentPage + i - 1;
+                            if (
+                              pageNumber > 0 &&
+                              pageNumber <= pagination.totalPages
+                            ) {
+                              return (
+                                <PaginationItem key={pageNumber}>
+                                  <PaginationLink
+                                    onClick={() => handlePageChange(pageNumber)}
+                                    isActive={
+                                      pageNumber === pagination.currentPage
+                                    }
+                                  >
+                                    {pageNumber}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+                            return null;
+                          })}
+
+                          {/* Ellipsis if needed */}
+                          {pagination.currentPage <
+                            pagination.totalPages - 2 && (
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          )}
+
+                          {/* Last Page */}
+                          {pagination.currentPage <
+                            pagination.totalPages - 1 && (
+                            <PaginationItem>
+                              <PaginationLink
+                                onClick={() =>
+                                  handlePageChange(pagination.totalPages)
+                                }
+                              >
+                                {pagination.totalPages}
+                              </PaginationLink>
+                            </PaginationItem>
+                          )}
+
+                          <PaginationItem>
+                            <PaginationNext
+                              onClick={() =>
+                                handlePageChange(pagination.currentPage + 1)
+                              }
+                              disabled={
+                                pagination.currentPage === pagination.totalPages
+                              }
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="flex flex-col items-center justify-center p-8">
                   <Image
