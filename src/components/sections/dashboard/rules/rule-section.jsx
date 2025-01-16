@@ -6,7 +6,6 @@ import Cookies from "js-cookie";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -20,15 +19,13 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { Info, SquarePen, Trash2, Plus, Search, Loader2 } from 'lucide-react';
+import { Info, SquarePen, Trash2, Plus, Search, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { AddRulesDialog } from "@/components/dialogs/rules/AddRulesDialog";
 import { EmptyState } from "./EmptyState";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const MAX_RULE_LENGTH = 150;
-
-
 
 export function RulesSection({ selectedDate, onUpdate }) {
   const [rules, setRules] = useState([]);
@@ -325,7 +322,7 @@ export function RulesSection({ selectedDate, onUpdate }) {
                 placeholder="Search rules"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="p-2 pl-8 text-xs  h-fit"
+                className="p-2 pl-8 text-xs h-fit"
               />
             </div>
 
@@ -356,22 +353,21 @@ export function RulesSection({ selectedDate, onUpdate }) {
         <div className="rounded-lg overflow-hidden border">
           <div className="sticky top-0 z-10 grid grid-cols-[auto,1fr,auto] gap-4 p-2 px-4 bg-[#F4E4FF] dark:bg-[#49444c] border-b">
             <div className="flex items-center">
-              <Checkbox
+              <input
+                type="checkbox"
                 checked={
                   filteredRules.length > 0 &&
                   filteredRules.every((rule) => rule.isFollowed)
                 }
-                onCheckedChange={(checked) =>
-                  handleFollowUnfollowAll(!!checked)
-                }
+                onChange={(e) => handleFollowUnfollowAll(e.target.checked)}
                 disabled={isLoadingAction.followAllRules}
-                className="border-background border-2"
+                className="w-3.5 h-3.5 cursor-pointer accent-purple-600"
               />
             </div>
             <span className="font-medium">Select Followed Rules</span>
             <span className="font-medium text-right">Action</span>
           </div>
-          <div className="max-h-[55vh] min-h-96 overflow-y-auto  ">
+          <div className="max-h-[55vh] min-h-96 overflow-y-auto">
             <div className="divide-y">
               {filteredRules.map((rule) => (
                 <div
@@ -379,14 +375,16 @@ export function RulesSection({ selectedDate, onUpdate }) {
                   className="grid grid-cols-[auto,1fr,auto] gap-4 px-4 py-2 items-center hover:bg-secondary/50"
                 >
                   <div>
-                    <Checkbox
+                    <input
+                      type="checkbox"
                       checked={rule.isFollowed}
-                      onCheckedChange={() =>
+                      onChange={() =>
                         handleToggleRuleFollow(rule._id, rule.isFollowed)
                       }
                       disabled={isLoadingAction.followRule}
-                      className="border-border border-2 bg-card"
+                      className="w-3.5 h-3.5 cursor-pointer accent-primary hover:border-ring"
                     />
+                    
                   </div>
                   <span className="text-secondary-foreground text-[0.8rem]">
                     {rule.description}

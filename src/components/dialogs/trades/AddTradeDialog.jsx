@@ -49,6 +49,7 @@ export function AddTradeDialog({
   const [error, setError] = useState("");
   const [calculatedExchangeRate, setCalculatedExchangeRate] = useState(0);
   const [exchangeRateEdited, setExchangeRateEdited] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (
@@ -112,8 +113,7 @@ export function AddTradeDialog({
   };
 
   const handleQuantityChange = (e) => {
-    const value = Number(e.target.value);
-    if (value < 0) return;
+    const value = Math.max(0, Number(parseFloat(e.target.value).toFixed(2)));
     setError("");
     setNewTrade({
       ...newTrade,
@@ -127,6 +127,8 @@ export function AddTradeDialog({
     if (!validateTrade()) {
       return;
     }
+
+    setIsLoading(true);
 
     try {
       const token = Cookies.get("token");
@@ -153,6 +155,8 @@ export function AddTradeDialog({
       resetNewTrade();
     } catch (error) {
       console.error("Error submitting trade:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -275,7 +279,10 @@ export function AddTradeDialog({
                     : newTrade.sellingPrice ?? ""
                 }
                 onChange={(e) => {
-                  const price = Number(e.target.value);
+                  const price = Math.max(
+                    0,
+                    Number(parseFloat(e.target.value).toFixed(2))
+                  );
                   setError("");
                   setNewTrade({
                     ...newTrade,
@@ -333,9 +340,12 @@ export function AddTradeDialog({
               <div className="flex items-center space-x-2">
                 <Input
                   type="number"
-                  value={newTrade.exchangeRate}
+                  value={newTrade.exchangeRate.toFixed(2)}
                   onChange={(e) => {
-                    const value = Number(e.target.value);
+                    const value = Math.max(
+                      0,
+                      Number(parseFloat(e.target.value).toFixed(2))
+                    );
                     setNewTrade({
                       ...newTrade,
                       exchangeRate: value,
@@ -362,7 +372,10 @@ export function AddTradeDialog({
                 onChange={(e) =>
                   setNewTrade({
                     ...newTrade,
-                    brokerage: Number(e.target.value),
+                    brokerage: Math.max(
+                      0,
+                      Number(parseFloat(e.target.value).toFixed(2))
+                    ),
                   })
                 }
               />
@@ -381,8 +394,12 @@ export function AddTradeDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleTradeSubmit} className="bg-primary">
-            Add Trade
+          <Button
+            onClick={handleTradeSubmit}
+            className="bg-primary"
+            disabled={isLoading}
+          >
+            {isLoading ? "Adding..." : "Add Trade"}
           </Button>
         </DialogFooter>
       </DialogContent>

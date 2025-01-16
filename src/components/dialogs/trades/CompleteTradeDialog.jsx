@@ -43,6 +43,7 @@ export function CompleteTradeDialog({
   const [error, setError] = useState("");
   const [calculatedExchangeRate, setCalculatedExchangeRate] = useState(0);
   const [exchangeRateEdited, setExchangeRateEdited] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (trade) {
@@ -127,6 +128,7 @@ export function CompleteTradeDialog({
       return;
     }
 
+    setIsLoading(true);
     try {
       const token = Cookies.get("token");
       const utcDate = new Date(
@@ -159,6 +161,8 @@ export function CompleteTradeDialog({
       onOpenChange(false);
     } catch (error) {
       console.error("Error completing trade:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -202,12 +206,17 @@ export function CompleteTradeDialog({
               <Input
                 type="number"
                 value={completeTrade.quantity ?? ""}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const value = Math.max(
+                    0,
+                    Number(parseFloat(e.target.value).toFixed(2))
+                  );
+                  setError("");
                   setCompleteTrade({
                     ...completeTrade,
-                    quantity: Number(e.target.value),
-                  })
-                }
+                    quantity: value,
+                  });
+                }}
               />
               {error && error.includes("Quantity") && (
                 <p className="text-sm text-red-500 mt-1">{error}</p>
@@ -273,7 +282,10 @@ export function CompleteTradeDialog({
                     : completeTrade.sellingPrice ?? ""
                 }
                 onChange={(e) => {
-                  const price = Number(e.target.value);
+                  const price = Math.max(
+                    0,
+                    Number(parseFloat(e.target.value).toFixed(2))
+                  );
                   setError("");
                   setCompleteTrade({
                     ...completeTrade,
@@ -308,9 +320,12 @@ export function CompleteTradeDialog({
               <div className="flex items-center space-x-2">
                 <Input
                   type="number"
-                  value={completeTrade.exchangeRate}
+                  value={completeTrade.exchangeRate.toFixed(2)}
                   onChange={(e) => {
-                    const value = Number(e.target.value);
+                    const value = Math.max(
+                      0,
+                      Number(parseFloat(e.target.value).toFixed(2))
+                    );
                     setCompleteTrade({
                       ...completeTrade,
                       exchangeRate: value,
@@ -337,7 +352,10 @@ export function CompleteTradeDialog({
                 onChange={(e) =>
                   setCompleteTrade({
                     ...completeTrade,
-                    brokerage: Number(e.target.value),
+                    brokerage: Math.max(
+                      0,
+                      Number(parseFloat(e.target.value).toFixed(2))
+                    ),
                   })
                 }
               />
@@ -356,8 +374,12 @@ export function CompleteTradeDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleTradeSubmit} className="bg-primary">
-            Complete Trade
+          <Button
+            onClick={handleTradeSubmit}
+            className="bg-primary"
+            disabled={isLoading}
+          >
+            {isLoading ? "Completing..." : "Complete Trade"}
           </Button>
         </DialogFooter>
       </DialogContent>

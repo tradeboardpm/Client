@@ -115,13 +115,13 @@ export default function JournalTradePage() {
     fetchWeeklyMetrics();
   }, [selectedDate]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowWelcome(false);
-    }, 5000);
+  // useEffect(() => {
+  //   const timer = setTimeout(() => {
+  //     setShowWelcome(false);
+  //   }, 5000);
 
-    return () => clearTimeout(timer);
-  }, []);
+  //   return () => clearTimeout(timer);
+  // }, []);
 
   const fetchCapital = async () => {
     try {

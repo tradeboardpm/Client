@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +31,7 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
   const [error, setError] = React.useState("");
   const [calculatedExchangeRate, setCalculatedExchangeRate] = React.useState(0);
   const [exchangeRateEdited, setExchangeRateEdited] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   React.useEffect(() => {
     setEditedTrade(trade);
@@ -88,8 +89,7 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
   };
 
   const handleQuantityChange = (e) => {
-    const value = Number(e.target.value);
-    if (value < 0) return;
+    const value = Math.max(0, Number(parseFloat(e.target.value).toFixed(2)));
     setError("");
     setEditedTrade({
       ...editedTrade,
@@ -100,7 +100,7 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
   const handleOpenTradeEdit = async () => {
     if (!editedTrade) return;
     if (!validateTrade()) return;
-
+    setIsLoading(true);
     try {
       const token = Cookies.get("token");
       const charges = calculateCharges({
@@ -129,6 +129,8 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
       setError("");
     } catch (error) {
       console.error("Error editing open trade:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -246,7 +248,10 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
                       : editedTrade.sellingPrice ?? ""
                   }
                   onChange={(e) => {
-                    const price = Number(e.target.value);
+                    const price = Math.max(
+                      0,
+                      Number(parseFloat(e.target.value).toFixed(2))
+                    );
                     setError("");
                     setEditedTrade({
                       ...editedTrade,
@@ -311,7 +316,10 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
                     type="number"
                     value={editedTrade.exchangeRate}
                     onChange={(e) => {
-                      const value = Number(e.target.value);
+                      const value = Math.max(
+                        0,
+                        Number(parseFloat(e.target.value).toFixed(2))
+                      );
                       setEditedTrade({
                         ...editedTrade,
                         exchangeRate: value,
@@ -338,7 +346,10 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
                   onChange={(e) =>
                     setEditedTrade({
                       ...editedTrade,
-                      brokerage: Number(e.target.value),
+                      brokerage: Math.max(
+                        0,
+                        Number(parseFloat(e.target.value).toFixed(2))
+                      ),
                     })
                   }
                 />
@@ -358,8 +369,12 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleOpenTradeEdit} className="bg-primary">
-            Save Changes
+          <Button
+            onClick={handleOpenTradeEdit}
+            className="bg-primary"
+            disabled={isLoading}
+          >
+            {isLoading ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>

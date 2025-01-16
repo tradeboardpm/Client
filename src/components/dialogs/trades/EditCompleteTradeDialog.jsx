@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +34,7 @@ export function EditCompleteTradeDialog({
   const [error, setError] = React.useState("");
   const [calculatedExchangeRate, setCalculatedExchangeRate] = React.useState(0);
   const [exchangeRateEdited, setExchangeRateEdited] = React.useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   React.useEffect(() => {
     setEditedTrade(trade);
@@ -85,8 +86,7 @@ export function EditCompleteTradeDialog({
   };
 
   const handleQuantityChange = (e) => {
-    const value = Number(e.target.value);
-    if (value < 0) return;
+    const value = Math.max(0, Number(parseFloat(e.target.value).toFixed(2)));
     setError("");
     setEditedTrade({
       ...editedTrade,
@@ -97,7 +97,7 @@ export function EditCompleteTradeDialog({
   const handleCompleteTradeEdit = async () => {
     if (!editedTrade) return;
     if (!validateTrade()) return;
-
+    setIsLoading(true);
     try {
       const token = Cookies.get("token");
       const buyCharges = calculateCharges({
@@ -134,6 +134,8 @@ export function EditCompleteTradeDialog({
       setError("");
     } catch (error) {
       console.error("Error editing complete trade:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -209,10 +211,14 @@ export function EditCompleteTradeDialog({
                   type="number"
                   value={editedTrade.buyingPrice ?? ""}
                   onChange={(e) => {
+                    const price = Math.max(
+                      0,
+                      Number(parseFloat(e.target.value).toFixed(2))
+                    );
                     setError("");
                     setEditedTrade({
                       ...editedTrade,
-                      buyingPrice: Number(e.target.value),
+                      buyingPrice: price,
                     });
                   }}
                 />
@@ -226,10 +232,14 @@ export function EditCompleteTradeDialog({
                   type="number"
                   value={editedTrade.sellingPrice ?? ""}
                   onChange={(e) => {
+                    const price = Math.max(
+                      0,
+                      Number(parseFloat(e.target.value).toFixed(2))
+                    );
                     setError("");
                     setEditedTrade({
                       ...editedTrade,
-                      sellingPrice: Number(e.target.value),
+                      sellingPrice: price,
                     });
                   }}
                 />
@@ -288,7 +298,10 @@ export function EditCompleteTradeDialog({
                     type="number"
                     value={editedTrade.exchangeRate}
                     onChange={(e) => {
-                      const value = Number(e.target.value);
+                      const value = Math.max(
+                        0,
+                        Number(parseFloat(e.target.value).toFixed(2))
+                      );
                       setEditedTrade({
                         ...editedTrade,
                         exchangeRate: value,
@@ -315,7 +328,10 @@ export function EditCompleteTradeDialog({
                   onChange={(e) =>
                     setEditedTrade({
                       ...editedTrade,
-                      brokerage: Number(e.target.value),
+                      brokerage: Math.max(
+                        0,
+                        Number(parseFloat(e.target.value).toFixed(2))
+                      ),
                     })
                   }
                 />
@@ -335,8 +351,12 @@ export function EditCompleteTradeDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleCompleteTradeEdit} className="bg-primary">
-            Save Changes
+          <Button
+            onClick={handleCompleteTradeEdit}
+            className="bg-primary"
+            disabled={isLoading}
+          >
+            {isLoading ? "Saving..." : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
