@@ -78,12 +78,17 @@ const getWeekDateRange = (date) => {
   const currentDate = new Date(date);
   const day = currentDate.getDay();
 
-  // Adjust for Monday being start of week (Sunday is 0, we want Monday to be start)
+  // Adjust for Monday being the start of the week (Sunday is 0, Monday is 1)
   const diff = currentDate.getDate() - day + (day === 0 ? -6 : 1);
 
-  const weekStart = new Date(currentDate.setDate(diff));
-  const weekEnd = new Date(currentDate.setDate(diff + 6));
+  // Calculate start and end of the week without modifying the same object
+  const weekStart = new Date(currentDate);
+  weekStart.setDate(diff);
 
+  const weekEnd = new Date(currentDate);
+  weekEnd.setDate(diff + 6);
+
+  // Format the date
   const formatDate = (date) => {
     return date.toLocaleDateString("en-US", {
       day: "numeric",
