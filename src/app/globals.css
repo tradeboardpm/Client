@@ -105,6 +105,15 @@ body {
   body {
     @apply bg-background text-foreground;
   }
+
+::-moz-selection { /* Code for Firefox */
+  @apply bg-primary text-background ;
+}
+
+::selection {
+  @apply bg-primary text-background ;
+}
+
 }
 
 @layer utilities {
@@ -130,3 +139,4 @@ body {
     background-color: #A073F03f;
   }
 }
+

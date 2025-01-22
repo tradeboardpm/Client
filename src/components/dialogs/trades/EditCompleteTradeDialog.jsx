@@ -324,7 +324,7 @@ export function EditCompleteTradeDialog({
                 <Label>Brokerage (₹)</Label>
                 <Input
                   type="number"
-                  value={editedTrade.brokerage}
+                  value={editedTrade.brokerage.toFixed(2)}
                   onChange={(e) =>
                     setEditedTrade({
                       ...editedTrade,
@@ -341,7 +341,7 @@ export function EditCompleteTradeDialog({
               <div className="flex justify-start gap-2 items-center">
                 <span className="font-medium">Total Order Amount:</span>
                 <span className="text-base font-medium text-primary">
-                  ₹ {calculateTotalOrder(editedTrade)}
+                  ₹ {calculateTotalOrder(editedTrade).toFixed(2)}
                 </span>
               </div>
             </div>

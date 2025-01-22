@@ -27,7 +27,7 @@ import { EmptyState } from "./EmptyState";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const MAX_RULE_LENGTH = 150;
 
-export function RulesSection({ selectedDate, onUpdate }) {
+export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   const [rules, setRules] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingRule, setEditingRule] = useState(null);
@@ -171,6 +171,8 @@ export function RulesSection({ selectedDate, onUpdate }) {
         )
       );
 
+      onRulesChange?.()
+
       toast({
         title: `Rule ${isFollowed ? "unfollowed" : "followed"}`,
         description: `The rule has been ${
@@ -207,6 +209,7 @@ export function RulesSection({ selectedDate, onUpdate }) {
       setRules((prevRules) =>
         prevRules.map((rule) => ({ ...rule, isFollowed }))
       );
+      onRulesChange?.();
 
       toast({
         title: `All rules ${isFollowed ? "followed" : "unfollowed"}`,
@@ -384,29 +387,33 @@ export function RulesSection({ selectedDate, onUpdate }) {
                       disabled={isLoadingAction.followRule}
                       className="w-3.5 h-3.5 cursor-pointer accent-primary hover:border-ring"
                     />
-                    
                   </div>
                   <span className="text-secondary-foreground text-[0.8rem]">
                     {rule.description}
                   </span>
-                  <div className="flex items-center gap-2 p-0">
-                    <button
-                      className="text-gray-500/50 hover:text-gray-700 p-0"
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       onClick={() => setEditingRule(rule)}
                       disabled={isLoadingAction.editRule}
+                      className="p-0 w-fit text-gray-500/35 hover:text-purple-500 size-5"
                     >
                       <SquarePen className="h-4 w-4" />
-                    </button>
-                    <button
-                      className="text-gray-500/50 hover:text-red-700 p-0"
+                    </Button>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
                       onClick={() => {
                         setRuleToDelete(rule);
                         setIsDeleteDialogOpen(true);
                       }}
                       disabled={isLoadingAction.deleteRule}
+                      className="p-0 w-fit text-gray-500/35 hover:text-red-500 size-5"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ))}

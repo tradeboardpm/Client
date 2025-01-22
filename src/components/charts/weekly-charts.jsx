@@ -74,8 +74,29 @@ const LoadingState = () => (
   </div>
 );
 
+const getWeekDateRange = (date) => {
+  const currentDate = new Date(date);
+  const day = currentDate.getDay();
+
+  // Adjust for Monday being start of week (Sunday is 0, we want Monday to be start)
+  const diff = currentDate.getDate() - day + (day === 0 ? -6 : 1);
+
+  const weekStart = new Date(currentDate.setDate(diff));
+  const weekEnd = new Date(currentDate.setDate(diff + 6));
+
+  const formatDate = (date) => {
+    return date.toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
+};
+
 export function WeeklyCharts({
-  selectedDate = new Date(),
+  selectedDate ,
   tradesPerDay = 10,
   weeklyDataOverride = null,
   noDataComponent: NoDataComponent = DefaultNoDataComponent,
@@ -192,6 +213,12 @@ export function WeeklyCharts({
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-4xl">
+      <h2 className="text-xl font-medium -mb-2 flex flex-col">
+        Performance{" "}
+        <span className="text-xs opacity-80">
+          ({getWeekDateRange(selectedDate)})
+        </span>
+      </h2>
       <Card className={chartConfig.className}>
         <CardHeader className="py-2 px-4">
           <CardTitle className="text-sm font-medium flex items-center gap-1">

@@ -314,7 +314,7 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
                 <div className="flex items-center space-x-2">
                   <Input
                     type="number"
-                    value={editedTrade.exchangeRate}
+                    value={editedTrade.exchangeRate.toFixed(2)}
                     onChange={(e) => {
                       const value = Math.max(
                         0,
@@ -359,7 +359,7 @@ export function EditOpenTradeDialog({ open, onOpenChange, trade, onSubmit }) {
               <div className="flex justify-start gap-2 items-center">
                 <span className="font-medium">Total Order Amount:</span>
                 <span className="text-base font-medium text-primary">
-                  ₹ {calculateTotalOrder(editedTrade)}
+                  ₹ {calculateTotalOrder(editedTrade).toFixed(2)}
                 </span>
               </div>
             </div>

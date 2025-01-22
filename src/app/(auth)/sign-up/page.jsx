@@ -12,10 +12,20 @@ import { GoogleLogin, GoogleOAuthProvider } from "@react-oauth/google";
 import axios from "axios";
 import { useToast } from "@/hooks/use-toast";
 import Cookies from "js-cookie";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 
 import GoogleSignUpButton from "@/components/buttons/google-signup-button";
 import { Checkbox } from "@/components/ui/checkbox";
 import PhoneNumberInput from "@/components/ui/phone-input";
+import PrivacyPolicy from "@/app/(misc)/privacy/page";
+import TermsOfService from "@/app/(misc)/terms/page";
 
 const countryCodes = [
   { value: "91", label: "India (+91)" },
@@ -24,6 +34,35 @@ const countryCodes = [
   { value: "81", label: "Japan (+81)" },
   { value: "86", label: "China (+86)" },
 ];
+
+const LegalDrawer = ({ isOpen, onClose, content }) => (
+  <Drawer open={isOpen} onOpenChange={onClose}>
+    <DrawerContent>
+      <DrawerHeader>
+        <DrawerTitle>{content.title}</DrawerTitle>
+      </DrawerHeader>
+      <div className="p-4 max-h-[70vh] overflow-y-auto">
+        <p className="text-sm text-foreground">{content.content}</p>
+      </div>
+      <DrawerFooter>
+        <DrawerClose asChild>
+          <Button>Close</Button>
+        </DrawerClose>
+      </DrawerFooter>
+    </DrawerContent>
+  </Drawer>
+);
+
+// content for Terms and Privacy
+const termsContent = {
+  title: "Terms & Conditions",
+  content: <TermsOfService />,
+};
+
+const privacyContent = {
+  title: "Privacy Policy",
+  content: <PrivacyPolicy />,
+};
 
 export default function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
@@ -39,6 +78,7 @@ export default function SignUp() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
+  const [openDrawer, setOpenDrawer] = useState(null);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -201,6 +241,11 @@ export default function SignUp() {
     });
   };
 
+    const handleLegalClick = (e, type) => {
+      e.preventDefault();
+      setOpenDrawer(type);
+    };
+
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
       <div className="flex-1 flex items-center justify-center px-6 py-16">
@@ -209,15 +254,14 @@ export default function SignUp() {
             <h1 className="text-3xl font-semibold mb-3">Sign up</h1>
             <p className="text-[#A6A8B1] mb-6">Please create an account</p>
 
-            <div className="w-full flex items-center justify-center mb-4">
-
+            <div className="w-full flex items-center justify-center mb-4 ">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 useOneTap={false}
                 disabled={isLoading}
-                className="w-full"
-                width={"550px"}
+                // className="w-full px-8"
+                width={600}
               />
             </div>
 
@@ -347,16 +391,19 @@ export default function SignUp() {
                   className="text-xs mt-2 text-gray-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   By creating an account you agree to our{" "}
-                  <Link href="/terms" className="text-primary hover:underline">
+                  <button
+                    onClick={(e) => handleLegalClick(e, "terms")}
+                    className="text-primary hover:underline"
+                  >
                     Terms & Conditions
-                  </Link>{" "}
+                  </button>{" "}
                   and{" "}
-                  <Link
-                    href="/privacy"
+                  <button
+                    onClick={(e) => handleLegalClick(e, "privacy")}
                     className="text-primary hover:underline"
                   >
                     Privacy Policy
-                  </Link>
+                  </button>
                   .
                 </label>
               </div>
@@ -378,6 +425,17 @@ export default function SignUp() {
           </CardContent>
         </Card>
       </div>
+
+      <LegalDrawer
+        isOpen={openDrawer === "terms"}
+        onClose={() => setOpenDrawer(null)}
+        content={termsContent}
+      />
+      <LegalDrawer
+        isOpen={openDrawer === "privacy"}
+        onClose={() => setOpenDrawer(null)}
+        content={privacyContent}
+      />
     </GoogleOAuthProvider>
   );
 }

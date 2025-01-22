@@ -365,7 +365,7 @@ export function CompleteTradeDialog({
             <div className="flex justify-start gap-2 items-center">
               <span className="font-medium">Total Order Amount:</span>
               <span className="text-base font-medium text-primary">
-                ₹ {calculateTotalOrder(completeTrade)}
+                ₹ {calculateTotalOrder(completeTrade).toFixed(2)}
               </span>
             </div>
           </div>

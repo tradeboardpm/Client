@@ -185,7 +185,7 @@ export default function JournalTradePage() {
     }
   };
 
-  const handleTradeUpdate = async () => {
+  const handleChartsUpdate = async () => {
     await Promise.all([fetchCapital(), fetchWeeklyMetrics()]);
     setForceChartUpdate((prev) => prev + 1); // Increment to force chart update
   };
@@ -230,9 +230,6 @@ export default function JournalTradePage() {
                   />
 
                   <div>
-                    <h2 className="text-xl font-medium mb-2 mt-4">
-                      Performance
-                    </h2>
                     <WeeklyCharts
                       selectedDate={selectedDate}
                       tradesPerDay={tradesPerDay}
@@ -249,11 +246,11 @@ export default function JournalTradePage() {
           <div className="flex flex-col sm:flex-row justify-between items-center relative">
             <div className="flex-1 w-full sm:w-auto order-2 sm:order-1"></div>
             <div className="w-full sm:w-auto sm:absolute sm:left-1/2 sm:-translate-x-1/2 bg-[#ffffff]/30 text-center text-background px-2 py-1 rounded-lg mb-2 sm:mb-0 order-1 sm:order-2">
-              <p className="text-base px-3 py-1 ">{formatDate(selectedDate)}</p>
+              <p className="text-lg px-3 py-1 font-semibold">{formatDate(selectedDate)}</p>
             </div>
             <p className="text-background text-sm sm:text-base lg:text-xl order-3 px-4">
               {/* Capital: ₹ {capital.toFixed(2)}  */}
-             Capital: {formattedCapital}
+              Capital: {formattedCapital}
             </p>
           </div>
         </div>
@@ -266,6 +263,7 @@ export default function JournalTradePage() {
           <RulesSection
             selectedDate={selectedDate}
             onUpdate={fetchJournalData}
+            onRulesChange={handleChartsUpdate}
           />
         </div>
 
@@ -275,7 +273,7 @@ export default function JournalTradePage() {
             onUpdate={fetchJournalData}
             brokerage={brokerage}
             trades={journalData?.trades || []}
-            onTradeChange={handleTradeUpdate} // Add this new prop
+            onTradeChange={handleChartsUpdate}
           />
         </div>
       </main>
@@ -295,7 +293,7 @@ export default function JournalTradePage() {
                 />
 
                 <div>
-                  <h2 className="text-xl font-medium mb-2 mt-4">Performance</h2>
+                  
                   <WeeklyCharts
                     selectedDate={selectedDate}
                     tradesPerDay={tradesPerDay}

@@ -19,8 +19,8 @@ import {
   Youtube,
   X,
 } from "lucide-react";
-import TermsPage from "@/app/(misc)/terms/page";
-import PrivacyPage from "@/app/(misc)/privacy/page";
+import TermsOfService from "@/app/(misc)/terms/page";
+import PrivacyPolicy from "@/app/(misc)/privacy/page";
 
 const navItems = [
   { name: "Home", href: "home" },
@@ -53,15 +53,15 @@ const socialLinks = [
   },
 ];
 
-// Sample content for Terms and Privacy - replace with your actual content
+// content for Terms and Privacy - replace with your actual content
 const termsContent = {
   title: "Terms & Conditions",
-  content: <TermsPage />,
+  content: <TermsOfService />,
 };
 
 const privacyContent = {
   title: "Privacy Policy",
-  content: <PrivacyPage/>,
+  content: <PrivacyPolicy/>,
 };
 
 const LegalDrawer = ({ isOpen, onClose, content }) => (
@@ -70,12 +70,12 @@ const LegalDrawer = ({ isOpen, onClose, content }) => (
       <DrawerHeader>
         <DrawerTitle>{content.title}</DrawerTitle>
       </DrawerHeader>
-      <div className="p-4 max-h-[60vh] overflow-y-auto">
-        <p className="text-sm text-gray-600">{content.content}</p>
+      <div className="p-4 max-h-[70vh] overflow-y-auto">
+        <p className="text-sm text-foreground">{content.content}</p>
       </div>
       <DrawerFooter>
         <DrawerClose asChild>
-          <Button variant="outline">Close</Button>
+          <Button >Close</Button>
         </DrawerClose>
       </DrawerFooter>
     </DrawerContent>
@@ -162,7 +162,7 @@ const Footer = () => {
 
         <div className="mt-8 py-4 border-t border-[#BEC0CA]/50 text-xs flex flex-col md:flex-row items-center justify-between">
           <p className="text-center md:text-left mb-4 md:mb-0">
-            © Copyright 2024. All Rights Reserved by TradeBoard
+            © 2025 Rezilienza Tech Private Limited | All rights reserved
           </p>
 
           <p className="text-center md:text-right mt-4 md:mt-0">

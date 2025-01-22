@@ -26,6 +26,8 @@ import {
   TRANSACTION_TYPES,
 } from "@/utils/tradeCalculations";
 import { cn } from "@/lib/utils";
+import TimePicker from "@/components/ui/time-picker";
+import ChargesBreakdown from "./charges-breakdown";
 
 export function AddTradeDialog({
   open,
@@ -197,7 +199,7 @@ export function AddTradeDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="md:max-w-[50vw]">
+      <DialogContent className="md:max-w-[50vw] max-h-[90vh] ">
         <DialogHeader className="border-b pb-4">
           <DialogTitle>Add Trade</DialogTitle>
         </DialogHeader>
@@ -325,12 +327,9 @@ export function AddTradeDialog({
             </div>
             <div className="col-span-2">
               <Label>Time</Label>
-              <Input
-                type="time"
+              <TimePicker
                 value={newTrade.time}
-                onChange={(e) =>
-                  setNewTrade({ ...newTrade, time: e.target.value })
-                }
+                onChange={(time) => setNewTrade({ ...newTrade, time: time })}
               />
             </div>
           </div>
@@ -381,13 +380,8 @@ export function AddTradeDialog({
               />
             </div>
           </div>
-          <div className="bg-[#F4E4FF] dark:bg-[#312d33] p-4 rounded-lg">
-            <div className="flex justify-start gap-2 items-center">
-              <span className="font-medium">Total Order Amount:</span>
-              <span className="text-base font-medium text-primary">
-                ₹ {calculateTotalOrder(newTrade)}
-              </span>
-            </div>
+          <div className="bg-[#F4E4FF] dark:bg-[#312d33] p-4 rounded-lg max-h-52 overflow-y-auto">
+            <ChargesBreakdown trade={newTrade} />
           </div>
         </div>
         <DialogFooter>

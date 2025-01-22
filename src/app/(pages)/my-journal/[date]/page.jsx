@@ -189,8 +189,6 @@ const JournalDetailsPage = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-[360px] overflow-auto">
             <div className="mt-4">
-              
-                <h2 className="text-xl font-medium mb-2 mt-4">Performance</h2>
                 <WeeklyCharts
                   selectedDate={format(currentDate, "yyyy-MM-dd")}
                   tradesPerDay={tradesPerDay}
@@ -210,9 +208,6 @@ const JournalDetailsPage = () => {
         >
           {sidebarExpanded ? (
             <div className="p-4 space-y-6">
-              
-              
-                <h2 className="text-xl font-medium mb-2 mt-4">Performance</h2>
                 <WeeklyCharts
                   selectedDate={format(currentDate, "yyyy-MM-dd")}
                   tradesPerDay={tradesPerDay}

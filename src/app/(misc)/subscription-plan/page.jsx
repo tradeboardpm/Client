@@ -15,13 +15,14 @@ import Image from "next/image";
 const pricingPlans = [
   {
     name: "7-day trial plan",
+    subtitle: "(₹ 0)",
     price: "Free",
     period: "",
     features: [
       "Dashboard",
       "My Journal",
       "Trade Logs",
-      "Auto Import Logs",
+      "Weekly/Monthly Analysis",
       "Performance Analytics",
       "Accountability Partner",
     ],
@@ -30,13 +31,14 @@ const pricingPlans = [
   },
   {
     name: "6 month plan",
+    subtitle: "(₹ 1,194 / Half Year)",
     price: "₹ 199",
     period: "per month",
     features: [
       "Dashboard",
       "My Journal",
       "Trade Logs",
-      "Auto Import Logs",
+      "Weekly/Monthly Analysis",
       "Performance Analytics",
       "Accountability Partner",
     ],
@@ -45,13 +47,14 @@ const pricingPlans = [
   },
   {
     name: "12 month plan",
+    subtitle: "(₹ 1,788 / Year)",
     price: "₹ 149",
     period: "per month",
     features: [
       "Dashboard",
       "My Journal",
       "Trade Logs",
-      "Auto Import Logs",
+      "Weekly/Monthly Analysis",
       "Performance Analytics",
       "Accountability Partner",
     ],
@@ -69,15 +72,12 @@ export default function PricingPage() {
     router.push("/dashboard");
   };
 
-
-
-
   return (
     <div className="flex items-center justify-center h-screen">
       <div className="container mx-auto px-4 flex flex-col items-center justify-center relative">
         <Button
           variant="outline"
-          className=" rounded-ful border-black rounded-full size-10 p-0 bg-background text-foreground absolute top-0 left-40"
+          className="rounded-ful border-black rounded-full size-10 p-0 bg-background text-foreground absolute top-0 left-40"
           onClick={() => router.back()}
         >
           <ArrowLeft className="h-4 w-4" />
@@ -94,20 +94,6 @@ export default function PricingPage() {
         <div className="flex flex-col md:flex-row gap-10 justify-center items-center container lg:px-48 relative">
           {pricingPlans.map((plan, index) => (
             <div key={index} className="relative">
-              {plan.discount && (
-                <div className="absolute -top-12 -right-1 flex items-center">
-                  <Image
-                    src="/images/arrow_black.svg"
-                    alt="Discount"
-                    width={80}
-                    height={80}
-                    className="mr- "
-                  />
-                  <span className="text-[0.75rem] mb-4 mr-4 font-medium text-green-400 ">
-                    SAVE UP TO 30%
-                  </span>
-                </div>
-              )}
               <Card
                 className={`${
                   plan.highlight ? "border-primary" : ""
@@ -128,6 +114,9 @@ export default function PricingPage() {
                         /{plan.period}
                       </span>
                     )}
+                  </div>
+                  <div className="text-sm font-normal mt-1 text-gray-600">
+                    {plan.subtitle}
                   </div>
                 </CardHeader>
                 <CardContent>

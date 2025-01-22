@@ -364,6 +364,15 @@ export default function PerformaceAnalytics() {
     }));
   };
 
+  const formatDateRange = (range) => {
+    if (!range.from || !range.to) return "";
+    return `(${format(range.from, "MMM dd, yyyy")} - ${format(
+      range.to,
+      "MMM dd, yyyy"
+    )})`;
+  };
+
+
   useEffect(() => {
     fetchData();
   }, [
@@ -466,7 +475,16 @@ export default function PerformaceAnalytics() {
         {/* Tradeboard Intelligence section (same as before) */}
         <div className="bg-card shadow-md border border-border p-4 rounded-xl">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-xl font-semibold">Tradeboard Intelligence</h1>
+            <h1 className="text-xl font-semibold">
+              Tradeboard Intelligence
+              {period === "customRange" &&
+                metricsDateRange.from &&
+                metricsDateRange.to && (
+                  <span className="ml-2 text-muted-foreground font-normal text-sm">
+                    {formatDateRange(metricsDateRange)}
+                  </span>
+                )}
+            </h1>
 
             <div className="flex flex-wrap gap-4">
               <Select value={period} onValueChange={setPeriod}>
@@ -577,9 +595,15 @@ export default function PerformaceAnalytics() {
 
         {/* Journal Analysis section */}
         <div className="bg-card shadow-md border border-border p-4 rounded-xl min-h-[60vh]">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Journal Analysis</h2>
-
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-xl font-semibold">
+              Journal Analysis
+              {journalsDateRange.from && journalsDateRange.to && (
+                <span className="ml-2 text-muted-foreground font-normal text-sm">
+                  {formatDateRange(journalsDateRange)}
+                </span>
+              )}
+            </h2>
             <div className="flex flex-wrap gap-4 items-center">
               <p className="font-semibold">Filter By: </p>
 

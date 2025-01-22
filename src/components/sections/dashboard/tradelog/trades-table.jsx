@@ -97,7 +97,7 @@ export function TradesTable({
                         size="icon"
                         variant="ghost"
                         onClick={() => onCompleteTrade(trade)}
-                        className="p-0 w-fit text-gray-500/35 hover:text-green-500"
+                        className="p-0 w-fit text-gray-500/35 hover:text-green-500 size-5"
                       >
                         <CheckSquare className="h-4 w-4" />
                       </Button>
@@ -114,7 +114,7 @@ export function TradesTable({
                       onClick={() =>
                         trade.isOpen ? onEditOpen(trade) : onEditComplete(trade)
                       }
-                      className="p-0 w-fit text-gray-500/35 hover:text-purple-500"
+                      className="p-0 w-fit text-gray-500/35 hover:text-purple-500 size-5"
                     >
                       <SquarePen className="h-4 w-4" />
                     </Button>
@@ -129,7 +129,7 @@ export function TradesTable({
                       variant="ghost"
                       onClick={() => onDelete(trade)}
                       disabled={isDeleting}
-                      className="p-0 w-fit text-gray-500/35 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-0 w-fit text-gray-500/35 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed size-5"
                     >
                       {isDeleting ? (
                         <Loader2 className="h-4 w-4 animate-spin" />

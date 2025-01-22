@@ -11,7 +11,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { X, ImagePlus, Info, Loader2, ChevronDown, Trash2 } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import axios from "axios";
 import Cookies from "js-cookie";
@@ -23,39 +23,98 @@ import {
 } from "@/components/ui/hover-card";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ImageDialog = ({ isOpen, onClose, imageUrl, onDelete, isDeleting }) => {
+const DeleteConfirmationDialog = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  isDeleting,
+}) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl w-[90vw] h-[75vh] p-2">
-        <div className="relative h-full w-full overflow-auto p-2">
-          <img
-            src={imageUrl}
-            alt="Selected image"
-            className="w-full h-auto rounded-lg shadow-sm border"
-          />
-          <div className="fixed bottom-4 right-4 flex gap-2">
-            <div className="group relative">
-              <Button
-                size="icon"
-                variant="destructive"
-                onClick={onDelete}
-                disabled={isDeleting}
-                className="relative rounded-full disabled:opacity-50 disabled:cursor-not-allowed "
-              >
-                {isDeleting ? (
-                  <Loader2 className="h-6 w-6 animate-spin" />
-                ) : (
-                  <Trash2 className="h-6 w-6" />
-                )}
-              </Button>
-              <span className="absolute -top-10 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-3 rounded-lg border  bg-popover py-2 text-sm font-bold shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
-                {isDeleting ? "Deleting..." : "Delete"}
-              </span>
-            </div>
-          </div>
-        </div>
+      <DialogContent >
+        <DialogHeader>
+          <DialogTitle>Delete Image</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete this image? This action cannot be
+            undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={isDeleting}>
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={onConfirm}
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="mr-2 h-4 w-4" />
+            )}
+            {isDeleting ? "Deleting..." : "Delete"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+};
+
+const ImageDialog = ({ isOpen, onClose, imageUrl, onDelete, isDeleting }) => {
+  const [showDeleteConfirmation, setShowDeleteConfirmation] =
+    React.useState(false);
+
+  const handleDelete = () => {
+    setShowDeleteConfirmation(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDelete();
+    setShowDeleteConfirmation(false);
+  };
+
+  return (
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl h-[80vh] p-2">
+          <div className="relative h-full w-full overflow-auto p-2">
+            <img
+              src={imageUrl}
+              alt="Selected image"
+              className="w-fit h-fit rounded-lg shadow-sm border object-contain"
+            />
+            <div className="fixed bottom-4 right-4 flex gap-2">
+              <div className="group relative">
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="relative rounded-full disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? (
+                    <Loader2 className="h-6 w-6 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-6 w-6" />
+                  )}
+                </Button>
+                <span className="absolute -top-10 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-3 rounded-lg border bg-popover py-2 text-sm font-bold shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <DeleteConfirmationDialog
+        isOpen={showDeleteConfirmation}
+        onClose={() => setShowDeleteConfirmation(false)}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
+    </>
   );
 };
 
@@ -316,7 +375,7 @@ export function JournalSection({ selectedDate }) {
                   className="w-full h-full object-cover"
                 />
                
-                <button
+                {/* <button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleFileDelete(fileKey);
@@ -329,7 +388,7 @@ export function JournalSection({ selectedDate }) {
                   ) : (
                     <X className="h-4 w-4" />
                   )}
-                </button>
+                </button> */}
               </motion.div>
             ))}
           </div>

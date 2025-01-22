@@ -1,13 +1,19 @@
 import { Check } from "lucide-react";
 
 const { Button } = require("@/components/ui/button");
-const { Card, CardHeader, CardTitle, CardContent, CardFooter } = require("@/components/ui/card");
+const {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+} = require("@/components/ui/card");
 const { default: Image } = require("next/image");
 
-// components/sections/PricingSection.jsx
 const pricingPlans = [
   {
     name: "7-day trial plan",
+    subtitle: "(₹ 0)",
     price: "Free",
     period: "",
     features: [
@@ -23,6 +29,7 @@ const pricingPlans = [
   },
   {
     name: "6 month plan",
+    subtitle: "(₹ 1,194 / Half Year)",
     price: "₹ 199",
     period: "per month",
     features: [
@@ -38,6 +45,7 @@ const pricingPlans = [
   },
   {
     name: "12 month plan",
+    subtitle: "(₹ 1,788 / Year)",
     price: "₹ 149",
     period: "per month",
     features: [
@@ -51,7 +59,7 @@ const pricingPlans = [
     buttonText: "Get Started Now",
     buttonVariant: "default",
     highlight: true,
-    discount: true, // New property to indicate discount
+    discount: true,
   },
 ];
 
@@ -72,20 +80,6 @@ const PricingSection = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 sm:gap-8 lg:gap-14 justify-items-center">
           {pricingPlans.map((plan, index) => (
             <div key={index} className="relative">
-              {plan.discount && (
-                <div className="absolute -top-8 -right-10 flex items-center">
-                  <Image
-                    src="/images/arrow.svg"
-                    alt="Discount"
-                    width={50}
-                    height={50}
-                    className="mr-2"
-                  />
-                  <span className="text-base font-bold text-green-400">
-                    SAVE UP TO 30%
-                  </span>
-                </div>
-              )}
               <Card
                 className={`${
                   plan.highlight ? "border-primary" : ""
@@ -103,12 +97,15 @@ const PricingSection = () => {
                       </span>
                     )}
                   </div>
+                  <div className="text-sm font-normal mt-1 text-gray-600">
+                    {plan.subtitle}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
                     {plan.features.map((feature, featureIndex) => (
                       <li key={featureIndex} className="flex items-center">
-                        <Check className="mr-2 h-4 w-4 text-[#0ED991]" />
+                        <Check className="mr-2 h-3 w-3 outline-double outline-[#0ED991] text-background rounded bg-[#0ED991]" />
                         {feature}
                       </li>
                     ))}

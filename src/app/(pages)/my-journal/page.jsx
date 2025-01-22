@@ -119,7 +119,7 @@ const JournalPage = () => {
               >
                 <ChevronsLeft className="h-5 w-5" />
               </button>
-              <h2 className="text-xl font-medium text-white px-4 py-2 rounded-lg bg-[#ffffff]/30 w-48 text-center">
+              <h2 className="text-xl font-medium text-white px-4 py-2 rounded-lg bg-[#ffffff]/30 w-52 text-center">
                 {currentDate.toLocaleString("default", {
                   month: "long",
                   year: "numeric",
