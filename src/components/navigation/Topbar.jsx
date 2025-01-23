@@ -126,7 +126,7 @@ export default function Topbar({
         <img
           src="/images/Tradeboard_logo_RGB.png"
           alt="logo"
-          className="h-8 object-cover p-1 mt-2"
+          className="h-7 object-cover p-1 mt-2"
         />
       </div>
       <div className="flex items-center space-x-4">

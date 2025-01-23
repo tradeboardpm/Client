@@ -43,7 +43,7 @@ export default function AuthLayout({ children }) {
         <img
           src="/images/Tradeboard_logo_RGB.png"
           alt="logo"
-          className="h-8 object-cover p-1"
+          className="h-7 object-cover p-1"
         />
       </button>
       <div className="flex-1 flex items-center justify-center">
