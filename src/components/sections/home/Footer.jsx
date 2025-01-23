@@ -72,12 +72,12 @@ const LegalDrawer = ({ isOpen, onClose, content }) => (
       </DrawerHeader>
       <div className="p-4 max-h-[70vh] overflow-y-auto">
         <p className="text-sm text-foreground">{content.content}</p>
-      </div>
-      <DrawerFooter>
-        <DrawerClose asChild>
-          <Button >Close</Button>
+       <div className="w-full flex items-center justify-end">
+         <DrawerClose asChild className="w-32">
+          <Button>Close</Button>
         </DrawerClose>
-      </DrawerFooter>
+       </div>
+      </div>
     </DrawerContent>
   </Drawer>
 );

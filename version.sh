@@ -40,6 +40,25 @@ update_changelog() {
     print_color "$GREEN" "CHANGELOG.md updated with version $version."
 }
 
+update_env_version() {
+    local version="$1"
+    local env_file=".env"
+
+    # Check if .env file exists
+    if [ ! -f "$env_file" ]; then
+        print_color "$YELLOW" ".env file not found. Creating a new one..."
+        touch "$env_file"
+    fi
+
+    # Remove existing NEXT_PUBLIC_APP_VERSION line if it exists
+    sed -i '/^NEXT_PUBLIC_APP_VERSION=/d' "$env_file"
+
+    # Add new version to .env file
+    echo "NEXT_PUBLIC_APP_VERSION=${version#v}" >> "$env_file"
+
+    print_color "$GREEN" ".env file updated with version $version."
+}
+
 # Check if git is installed
 if ! command -v git >/dev/null 2>&1; then
     print_color "$RED" "Error: Git is not installed or not in PATH"
@@ -127,6 +146,9 @@ done
 
 # Update CHANGELOG.md
 update_changelog "$new_version"
+
+# Update .env file with new version
+update_env_version "$new_version"
 
 # Create commit and tag
 print_color "$YELLOW" "\nCreating commit and tag..."
