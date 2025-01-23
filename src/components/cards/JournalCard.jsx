@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { ArrowUpRight, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { useToast } from "@/hooks/use-toast";
 import {
   Card,
   CardHeader,
@@ -18,10 +21,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 
 const JournalCard = ({
+  id,
   date,
   note,
   mistake,
@@ -31,9 +36,13 @@ const JournalCard = ({
   profit,
   tradesTaken,
   onDelete,
+  refreshJournalData,
+  showDeleteButton = false, // New prop with default value false
 }) => {
   const router = useRouter();
+  const { toast } = useToast();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const getProfitColor = () => {
     if (profit > 100) return "bg-[#5BFBC2]/35 border border-[#5BFBC2]";
@@ -63,40 +72,61 @@ const JournalCard = ({
   };
 
   const handleCardClick = (e) => {
-    // Prevent navigation if clicking delete button
     if (e.target.closest(".delete-button")) return;
     router.push(`/my-journal/${date}`);
   };
 
-  const handleDelete = () => {
-    setShowDeleteDialog(false);
-    if (onDelete) onDelete(date);
+  const handleDelete = async () => {
+    try {
+      setIsDeleting(true);
+      const token = Cookies.get("token");
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/journals/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setShowDeleteDialog(false);
+      toast({
+        title: "Journal Entry Deleted",
+        description: "The journal entry was successfully deleted.",
+        variant: "default",
+      });
+      onDelete(id);
+      await refreshJournalData();
+    } catch (error) {
+      console.error("Error deleting journal entry:", error);
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete journal entry. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
     <>
       <Card
         onClick={handleCardClick}
-        className={`relative transition-all duration-300 group shadow-[0px_5px_10px_2px_rgba(0,0,0,0.04)] hover:shadow-xl hover:scale-[1.02] max-w-[22.5rem] cursor-pointer border-[1rem] ${getProfitColor()}`}
+        className={`relative rounded-2xl transition-all duration-300 group shadow-[0px_5px_10px_2px_rgba(0,0,0,0.04)] hover:shadow-xl hover:scale-[1.02] max-w-[22.5rem] cursor-pointer border-[1rem] ${getProfitColor()}`}
       >
+        {showDeleteButton && (
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteDialog(true);
+            }}
+            className="delete-button absolute top-0 left-0 z-10 bg-destructive border-red-400 rounded-none rounded-tl-lg hover:bg-red-100 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-br-3xl border-t-0 border-l-0"
+          >
+            <Trash2 className="w-4 h-4 text-white" />
+          </Button>
+        )}
         <CardHeader className={`pb-2 ${getProfitBorderColor()}`}>
           <CardTitle className="text-base flex justify-between font-semibold">
-            <div className="flex items-center gap-2">
-              {/* Delete button */}
-              <Button
-                size="icon"
-                variant="outline"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowDeleteDialog(true);
-                }}
-                className="delete-button bg-transparent border-red-400 rounded-full hover:bg-red-100 dark:hover:bg-red-900/20  opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              >
-                <Trash2 className="w-4 h-4 text-red-500" />
-              </Button>
-
-              {formattedDate}
-            </div>
+            <div className="flex items-center gap-2">{formattedDate}</div>
             <span
               className={`border rounded-full p-1 transition-all duration-300 size-8 flex items-center justify-center 
                 group-hover:translate-x-5 group-hover:-translate-y-5 group-hover:scale-125 group-hover:rounded-lg
@@ -169,8 +199,9 @@ const JournalCard = ({
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-red-500 hover:bg-red-600"
+              disabled={isDeleting}
             >
-              Delete
+              {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

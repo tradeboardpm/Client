@@ -1,16 +1,11 @@
-"use client";
-
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
-import { ArrowUpRight, ChevronsLeft, ChevronsRight } from "lucide-react";
-import JournalCard from "@/components/cards/JournalCard";
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+"use client"
+import { useState, useEffect } from "react"
+import axios from "axios"
+import Cookies from "js-cookie"
+import { ArrowUpRight, ChevronsLeft, ChevronsRight } from "lucide-react"
+import { useToast } from "@/hooks/use-toast";
+import JournalCard from "@/components/cards/JournalCard"
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 
 const JournalCardSkeleton = () => {
   return (
@@ -56,39 +51,42 @@ const JournalCardSkeleton = () => {
         </div>
       </CardFooter>
     </Card>
-  );
-};
+  )
+}
+
 
 const JournalPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [journalData, setJournalData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+    const { toast } = useToast();
+
+  const fetchJournalData = async () => {
+    try {
+      setIsLoading(true);
+      const token = Cookies.get("token");
+      const response = await axios.get(
+        `${
+          process.env.NEXT_PUBLIC_API_URL
+        }/journals/monthly?year=${currentDate.getFullYear()}&month=${
+          currentDate.getMonth() + 1
+        }`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setJournalData(response.data);
+    } catch (error) {
+      console.error("Error fetching journal data:", error);
+      toast.error("Failed to fetch journal data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchJournalData = async () => {
-      try {
-        setIsLoading(true);
-        const token = Cookies.get("token");
-        const response = await axios.get(
-          `${
-            process.env.NEXT_PUBLIC_API_URL
-          }/journals/monthly?year=${currentDate.getFullYear()}&month=${
-            currentDate.getMonth() + 1
-          }`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setJournalData(response.data);
-      } catch (error) {
-        console.error("Error fetching journal data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchJournalData();
   }, [currentDate]);
 
@@ -98,6 +96,16 @@ const JournalPage = () => {
       newDate.setMonth(prevDate.getMonth() + direction);
       return newDate;
     });
+  };
+
+  const handleDeleteJournal = async (id) => {
+    setJournalData((prevData) => {
+      const newData = { ...prevData };
+      delete newData[id];
+      return newData;
+    });
+    // Refresh the journal data after deletion
+    await fetchJournalData();
   };
 
   const renderSkeletons = () => {
@@ -142,19 +150,21 @@ const JournalPage = () => {
             </div>
           ) : Object.keys(journalData).length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {Object.keys(journalData).map((date) => (
+              {Object.entries(journalData).map(([date, journal]) => (
                 <JournalCard
                   key={date}
+                  id={date}
                   date={date}
-                  note={journalData[date].note}
-                  mistake={journalData[date].mistake}
-                  lesson={journalData[date].lesson}
-                  rulesFollowedPercentage={
-                    journalData[date].rulesFollowedPercentage
-                  }
-                  winRate={journalData[date].winRate}
-                  profit={journalData[date].profit}
-                  tradesTaken={journalData[date].tradesTaken}
+                  note={journal.note}
+                  mistake={journal.mistake}
+                  lesson={journal.lesson}
+                  rulesFollowedPercentage={journal.rulesFollowedPercentage}
+                  winRate={journal.winRate}
+                  profit={journal.profit}
+                  tradesTaken={journal.tradesTaken}
+                  onDelete={handleDeleteJournal}
+                  refreshJournalData={fetchJournalData}
+                  showDeleteButton= {true}
                 />
               ))}
             </div>

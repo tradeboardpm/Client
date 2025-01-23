@@ -14,7 +14,7 @@ import Image from "next/image";
 
 const pricingPlans = [
   {
-    name: "7-day trial plan",
+    name: "One Week on Us",
     subtitle: "(₹ 0)",
     price: "Free",
     period: "",
@@ -30,7 +30,7 @@ const pricingPlans = [
     buttonVariant: "",
   },
   {
-    name: "6 month plan",
+    name: "Half-Year Adventure",
     subtitle: "(₹ 1,194 / Half Year)",
     price: "₹ 199",
     period: "per month",
@@ -46,7 +46,7 @@ const pricingPlans = [
     buttonVariant: "",
   },
   {
-    name: "12 month plan",
+    name: "Year of Possibilities",
     subtitle: "(₹ 1,788 / Year)",
     price: "₹ 149",
     period: "per month",
