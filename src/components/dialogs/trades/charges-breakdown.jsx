@@ -54,13 +54,13 @@ const ChargesBreakdown = ({ trade }) => {
             ].map(({ label, value }, index) => (
               <div key={index} className="flex justify-between">
                 <span className="text-muted-foreground">{label}</span>
-                <span>₹ {value.toFixed(2)}</span>
+                <span>₹ {value}</span>
               </div>
             ))}
             <div className="border-t pt-1 mt-1 space-y-1 font-medium">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Total Charges:</span>
-                <span>₹ {charges.totalCharges.toFixed(2)}</span>
+                <span>₹ {charges.totalCharges}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">

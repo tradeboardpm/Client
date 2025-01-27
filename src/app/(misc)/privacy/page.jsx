@@ -66,7 +66,7 @@ const PrivacyPolicy = () => {
             Privacy Policy
           </h1>
           <p className="text-xl text-foreground/60">
-            Privacy notice for Rezilienza Tech Pvt. Ltd.
+            Rezilienza Tech Pvt. Ltd.
           </p>
         </div>
       </div>
@@ -109,10 +109,10 @@ const PrivacyPolicy = () => {
                   If you have any questions or concerns about this Privacy
                   Policy or our data practices, please contact us at{" "}
                   <a
-                    href="mailto:info@tradeboard.in"
+                    href="mailto:contact@tradeboard.in"
                     className="text-primary hover:underline"
                   >
-                    info@tradeboard.in
+                    contact@tradeboard.in
                   </a>
                 </p>
               </div>

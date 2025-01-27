@@ -37,7 +37,10 @@ export function TradeSummary({ summary }) {
               <HoverCardContent className="w-80">
                 <div className="flex flex-col gap-2">
                   <p className="text-sm text-muted-foreground">
-                    Today's Charges = Exchange charges + Brokerage
+                    Add the same trades here which you executed on your broker’s
+                    platform. When you journal your every trade, we build
+                    analytics on your trading pattern. This ultimately helps you
+                    to become more disciplined while taking trades
                   </p>
                 </div>
               </HoverCardContent>

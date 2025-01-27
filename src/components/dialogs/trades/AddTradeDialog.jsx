@@ -72,10 +72,13 @@ export function AddTradeDialog({
         brokerage: newTrade.brokerage,
       });
       setCalculatedExchangeRate(charges.totalCharges - charges.brokerage);
-      setNewTrade((prev) => ({
-        ...prev,
-        exchangeRate: charges.totalCharges - charges.brokerage,
-      }));
+      // Only update exchangeRate if it hasn't been manually edited
+      if (!exchangeRateEdited) {
+        setNewTrade((prev) => ({
+          ...prev,
+          exchangeRate: charges.totalCharges - charges.brokerage,
+        }));
+      }
     }
   }, [
     newTrade.buyingPrice,
@@ -84,6 +87,7 @@ export function AddTradeDialog({
     newTrade.action,
     newTrade.equityType,
     newTrade.brokerage,
+    exchangeRateEdited,
   ]);
 
   const handleTradeTypeChange = (value) => {
@@ -175,6 +179,7 @@ export function AddTradeDialog({
       equityType: EQUITY_TYPES.INTRADAY,
     });
     setError("");
+    setExchangeRateEdited(false);
   };
 
   const calculateTotalOrder = (trade) => {

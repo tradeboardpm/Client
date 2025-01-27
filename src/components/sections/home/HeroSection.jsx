@@ -92,7 +92,6 @@ const HeroSection = ({ heroSectionRef }) => {
                 src="/images/Dashboard.png"
                 alt="Tradeboard Dashboard"
                 layout="fill"
-                objectFit="contain"
                 className="rounded-3xl"
               />
             </div>

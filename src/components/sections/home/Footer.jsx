@@ -61,22 +61,22 @@ const termsContent = {
 
 const privacyContent = {
   title: "Privacy Policy",
-  content: <PrivacyPolicy/>,
+  content: <PrivacyPolicy />,
 };
 
 const LegalDrawer = ({ isOpen, onClose, content }) => (
   <Drawer open={isOpen} onOpenChange={onClose}>
     <DrawerContent>
       <DrawerHeader>
-        <DrawerTitle>{content.title}</DrawerTitle>
+        {/* <DrawerTitle>{content.title}</DrawerTitle> */}
       </DrawerHeader>
       <div className="p-4 max-h-[70vh] overflow-y-auto">
         <p className="text-sm text-foreground">{content.content}</p>
-       <div className="w-full flex items-center justify-end">
-         <DrawerClose asChild className="w-32">
-          <Button>Close</Button>
-        </DrawerClose>
-       </div>
+        <div className="w-full flex items-center justify-end">
+          <DrawerClose asChild className="w-32">
+            <Button>Close</Button>
+          </DrawerClose>
+        </div>
       </div>
     </DrawerContent>
   </Drawer>
@@ -150,12 +150,12 @@ const Footer = () => {
           </div>
           <div className="mt-6 md:mt-0">
             <h3 className="text-xl font-semibold mb-4">Contact & Support</h3>
-            <p className="text-base flex items-center gap-2 mb-4">
+            {/* <p className="text-base flex items-center gap-2 mb-4">
               <Phone size={14} /> +91 8457691231
-            </p>
+            </p> */}
             <p className="text-base flex items-center gap-2 hover:underline cursor-pointer underline">
               <Mail size={14} />
-              info@tradeboard.in
+              contact@tradeboard.in
             </p>
           </div>
         </div>

@@ -37,7 +37,8 @@ const JournalCard = ({
   tradesTaken,
   onDelete,
   refreshJournalData,
-  showDeleteButton = false, // New prop with default value false
+  showDeleteButton = true,
+  mainPage="my-journal"
 }) => {
   const router = useRouter();
   const { toast } = useToast();
@@ -73,7 +74,7 @@ const JournalCard = ({
 
   const handleCardClick = (e) => {
     if (e.target.closest(".delete-button")) return;
-    router.push(`/my-journal/${date}`);
+    router.push(`/${mainPage}/${date}`);
   };
 
   const handleDelete = async () => {
@@ -109,7 +110,7 @@ const JournalCard = ({
     <>
       <Card
         onClick={handleCardClick}
-        className={`relative rounded-2xl transition-all duration-300 group shadow-[0px_5px_10px_2px_rgba(0,0,0,0.04)] hover:shadow-xl hover:scale-[1.02] max-w-[22.5rem] cursor-pointer border-[1rem] ${getProfitColor()}`}
+        className={`overflow-hidden relative rounded-2xl transition-all duration-300 group shadow-[0px_5px_10px_2px_rgba(0,0,0,0.04)] hover:shadow-xl hover:scale-[1.02] max-w-[22.5rem] cursor-pointer border-[1rem] ${getProfitColor()}`}
       >
         {showDeleteButton && (
           <Button
@@ -119,7 +120,7 @@ const JournalCard = ({
               e.stopPropagation();
               setShowDeleteDialog(true);
             }}
-            className="delete-button absolute top-0 left-0 z-10 bg-destructive border-red-400 rounded-none rounded-tl-lg hover:bg-red-100 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-br-3xl border-t-0 border-l-0"
+            className="absolute top-0 left-0 z-10 bg-destructive border-red-400 rounded-none rounded-tl-lg  opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-br-3xl border-t-0 border-l-0"
           >
             <Trash2 className="w-4 h-4 text-white" />
           </Button>

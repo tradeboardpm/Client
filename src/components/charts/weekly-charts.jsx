@@ -22,7 +22,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import Cookies from "js-cookie";
-import { parseISO, isValid } from "date-fns";
+import { parseISO, isValid, format } from "date-fns";
 
 const days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
@@ -131,6 +131,36 @@ export function WeeklyCharts({
         );
   };
 
+
+   const CustomTooltipContent = ({ active, payload, label, formatter }) => {
+     if (!active || !payload || !payload.length) return null;
+
+     // Find the corresponding date for the day label
+     const dayData = processedData.find((d) => d.day === label);
+     const formattedDate = dayData
+       ? format(parseISO(dayData.fullDate), "EEE dd MMM")
+       : label;
+
+     return (
+       <div className="rounded-lg shadow-lg bg-background border p-2 text-xs">
+         <p className="font-medium mb-1">{formattedDate}</p>
+         {payload.map((item, index) => (
+           <div key={index} className="flex items-center gap-2">
+             <div
+               className="w-2 h-2 rounded-full"
+               style={{ backgroundColor: item.color }}
+             />
+             <span>{item.name}:</span>
+             <span className="font-medium">
+               {formatter ? formatter(item.value) : item.value}
+             </span>
+           </div>
+         ))}
+       </div>
+     );
+   };
+
+
   const chartConfig = {
     containerHeight: "h-32",
     margin: { top: 5, right: 15, bottom: 5, left: 0 },
@@ -207,6 +237,7 @@ export function WeeklyCharts({
     const dayData = weeklyData?.[date] || {};
     return {
       day,
+      fullDate: date, // Store the full date for tooltip
       trades: dayData.tradesTaken || 0,
       win: dayData.winTrades || 0,
       loss: dayData.lossTrades || 0,
@@ -227,7 +258,7 @@ export function WeeklyCharts({
       <Card className={chartConfig.className}>
         <CardHeader className="py-2 px-4">
           <CardTitle className="text-sm font-medium flex items-center gap-1">
-            Trades Taken
+            Trades
             <CardDescription className="text-xs font-light">
               (Daily limit: {tradesPerDay})
             </CardDescription>
@@ -260,7 +291,7 @@ export function WeeklyCharts({
                   axisLine={false}
                   tickMargin={8}
                 />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip content={<CustomTooltipContent />} />
                 <Line
                   type="linear"
                   dataKey="trades"
@@ -275,6 +306,7 @@ export function WeeklyCharts({
         </CardContent>
       </Card>
 
+      {/* Update the tooltips in other charts similarly */}
       <Card className={chartConfig.className}>
         <CardHeader className="py-2 px-4 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">Win Rate</CardTitle>
@@ -293,7 +325,7 @@ export function WeeklyCharts({
               loss: { label: "Loss", color: "#F44C60" },
             }}
           >
-            <ResponsiveContainer className="h-[400px]">
+            <ResponsiveContainer>
               <BarChart data={processedData} margin={chartConfig.margin}>
                 <CartesianGrid
                   vertical={false}
@@ -313,7 +345,7 @@ export function WeeklyCharts({
                   axisLine={false}
                   tickMargin={8}
                 />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip content={<CustomTooltipContent />} />
                 <Bar
                   dataKey="win"
                   stackId="winLoss"
@@ -370,17 +402,7 @@ export function WeeklyCharts({
                       : `${(value / 1000).toFixed(0)}K`
                   }
                 />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value) =>
-                        value >= 0
-                          ? `+${(value / 1000).toFixed(1)}K`
-                          : `${(value / 1000).toFixed(1)}K`
-                      }
-                    />
-                  }
-                />
+                <ChartTooltip content={<CustomTooltipContent />} />
                 <Line
                   type="linear"
                   dataKey="profitLoss"
@@ -433,7 +455,7 @@ export function WeeklyCharts({
                   axisLine={false}
                   tickMargin={8}
                 />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip content={<CustomTooltipContent />} />
                 <Bar
                   dataKey="followed"
                   stackId="ruleStatus"

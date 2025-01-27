@@ -57,7 +57,6 @@ export default function ImageCarousel() {
                 src={src}
                 alt={`Slide ${index + 1}`}
                 layout="fill"
-                objectFit="contain"
                 className="rounded-lg p-6"
               />
             </div>

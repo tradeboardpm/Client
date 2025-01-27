@@ -39,16 +39,16 @@ const LegalDrawer = ({ isOpen, onClose, content }) => (
   <Drawer open={isOpen} onOpenChange={onClose}>
     <DrawerContent>
       <DrawerHeader>
-        <DrawerTitle>{content.title}</DrawerTitle>
+        {/* <DrawerTitle>{content.title}</DrawerTitle> */}
       </DrawerHeader>
       <div className="p-4 max-h-[70vh] overflow-y-auto">
         <p className="text-sm text-foreground">{content.content}</p>
-      </div>
-      <DrawerFooter>
-        <DrawerClose asChild>
+       <div className="w-full flex items-center justify-end">
+         <DrawerClose asChild className="w-32">
           <Button>Close</Button>
         </DrawerClose>
-      </DrawerFooter>
+       </div>
+      </div>
     </DrawerContent>
   </Drawer>
 );
@@ -95,35 +95,31 @@ export default function SignUp() {
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
-    if (id === "password") {
-      const passwordErrors = validatePassword(value);
-      setErrors((prev) => ({ ...prev, password: passwordErrors }));
-    }
-    if (id === "confirmPassword") {
-      setErrors((prev) => ({
-        ...prev,
-        confirmPassword:
-          value !== formData.password ? ["Passwords do not match"] : [],
-      }));
-    }
+ if (id === "password" && validatePassword(value).length === 0) {
+   setErrors((prev) => ({ ...prev, password: [] }));
+ }
+ if (id === "confirmPassword" && value === formData.password) {
+   setErrors((prev) => ({ ...prev, confirmPassword: [] }));
+ }
   };
 
   const handleCountryCodeChange = (value) => {
     setFormData({ ...formData, countryCode: value });
   };
 
-  const isFormValid = () => {
-    const isPhoneValid = formData.mobile.length >= 10;
-    return (
-      formData.fullName &&
-      formData.email &&
-      isPhoneValid &&
-      formData.password &&
-      formData.confirmPassword &&
-      Object.values(errors).every((error) => error.length === 0) &&
-      termsAccepted
-    );
-  };
+const isFormValid = () => {
+  // Remove the isPhoneValid check since we're already enforcing this through the input
+  return (
+    formData.fullName.trim() !== "" &&
+    formData.email.trim() !== "" &&
+    formData.password.trim() !== "" &&
+    formData.confirmPassword.trim() !== "" &&
+    formData.password === formData.confirmPassword &&
+    // Only check for password errors, not all errors
+    (!errors.password || errors.password.length === 0) &&
+    termsAccepted
+  );
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
