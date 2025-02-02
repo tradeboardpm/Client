@@ -135,7 +135,7 @@ export function CompleteTradeDialog({
         Date.UTC(
           selectedDate.getFullYear(),
           selectedDate.getMonth(),
-          selectedDate.getDate()
+          selectedDate.getDEQUITYate()
         )
       );
 
@@ -225,7 +225,7 @@ export function CompleteTradeDialog({
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <div className="col-span-2">
-              <Label>Trade Type</Label>
+              <Label>Transaction Type</Label>
               <RadioGroup
                 className="flex space-x-4"
                 value={completeTrade.action}

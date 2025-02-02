@@ -404,7 +404,7 @@ export function JournalSection({ selectedDate }) {
           <div className="flex items-center gap-2">
             <HoverCard>
               <HoverCardTrigger>
-                <Info className="h-4 w-4 text-background fill-gray-500/50 cursor-pointer" />
+              <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
               </HoverCardTrigger>
               <HoverCardContent className="w-80">
                 <div className="flex flex-col gap-2">

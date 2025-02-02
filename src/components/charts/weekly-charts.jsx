@@ -1,54 +1,30 @@
-import React, { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Line,
-  LineChart,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-} from "recharts";
-import Cookies from "js-cookie";
-import { parseISO, isValid, format } from "date-fns";
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { ChartContainer, ChartTooltip } from "@/components/ui/chart"
+import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis, ResponsiveContainer } from "recharts"
+import Cookies from "js-cookie"
+import { parseISO, isValid, format } from "date-fns"
 
-const days = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+const days = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]
 
 const CustomLegend = ({ items }) => (
   <div className="flex items-center gap-4 ml-4 text-xs text-muted-foreground">
     {items.map((item, index) => (
       <div key={index} className="flex items-center gap-1">
-        <div
-          className="w-2 h-2 rounded-full"
-          style={{ backgroundColor: item.color }}
-        />
+        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
         <span>{item.label}</span>
       </div>
     ))}
   </div>
-);
+)
 
 const DefaultNoDataComponent = () => (
   <div className="flex flex-col items-center justify-start p-8 text-center min-h-[160px]">
     <img src="/images/no_charts.svg" alt="No Data" className="mb-4 w-24 h-24" />
     <h2 className="text-xl font-medium mb-2">No Data</h2>
-    <p className="text-muted-foreground">
-      Please start journaling daily to see your performance here
-    </p>
+    <p className="text-muted-foreground">Please start journaling daily to see your performance here</p>
   </div>
-);
+)
 
 const ChartSkeleton = () => (
   <div className="animate-pulse">
@@ -59,7 +35,7 @@ const ChartSkeleton = () => (
       <div className="w-full h-full bg-muted rounded"></div>
     </div>
   </div>
-);
+)
 
 const LoadingState = () => (
   <div className="flex flex-col gap-4 w-full max-w-4xl">
@@ -72,21 +48,18 @@ const LoadingState = () => (
       </Card>
     ))}
   </div>
-);
+)
 
 const getWeekDateRange = (date) => {
-  const currentDate = new Date(date);
-  const day = currentDate.getDay();
+  const currentDate = new Date(date)
+  const day = currentDate.getDay()
 
-  // Adjust for Monday being the start of the week (Sunday is 0, Monday is 1)
-  const diff = currentDate.getDate() - day + (day === 0 ? -6 : 1);
+  // Calculate start and end of the week (Sunday to Saturday)
+  const weekStart = new Date(currentDate)
+  weekStart.setDate(currentDate.getDate() - day)
 
-  // Calculate start and end of the week without modifying the same object
-  const weekStart = new Date(currentDate);
-  weekStart.setDate(diff);
-
-  const weekEnd = new Date(currentDate);
-  weekEnd.setDate(diff + 6);
+  const weekEnd = new Date(currentDate)
+  weekEnd.setDate(weekStart.getDate() + 6)
 
   // Format the date
   const formatDate = (date) => {
@@ -94,127 +67,112 @@ const getWeekDateRange = (date) => {
       day: "numeric",
       month: "short",
       year: "numeric",
-    });
-  };
+    })
+  }
 
-  return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`;
-};
+  return `${formatDate(weekStart)} - ${formatDate(weekEnd)}`
+}
 
 export function WeeklyCharts({
-  selectedDate ,
+  selectedDate,
   tradesPerDay = 10,
   weeklyDataOverride = null,
   noDataComponent: NoDataComponent = DefaultNoDataComponent,
   forceUpdate,
 }) {
-  const [weeklyData, setWeeklyData] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [weeklyData, setWeeklyData] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
 
   const normalizeDate = (date) => {
-    let normalizedDate;
+    let normalizedDate
     if (date instanceof Date) {
-      normalizedDate = date;
+      normalizedDate = date
     } else if (typeof date === "string") {
-      normalizedDate = parseISO(date);
+      normalizedDate = parseISO(date)
     } else {
-      normalizedDate = new Date(date);
+      normalizedDate = new Date(date)
     }
     return !isValid(normalizedDate)
       ? new Date()
-      : new Date(
-          Date.UTC(
-            normalizedDate.getFullYear(),
-            normalizedDate.getMonth(),
-            normalizedDate.getDate()
-          )
-        );
-  };
+      : new Date(Date.UTC(normalizedDate.getFullYear(), normalizedDate.getMonth(), normalizedDate.getDate()))
+  }
 
+  const CustomTooltipContent = ({ active, payload, label, formatter }) => {
+    if (!active || !payload || !payload.length) return null
 
-   const CustomTooltipContent = ({ active, payload, label, formatter }) => {
-     if (!active || !payload || !payload.length) return null;
+    // Find the corresponding date for the day label
+    const dayData = processedData.find((d) => d.day === label)
+    const formattedDate = dayData ? format(parseISO(dayData.fullDate), "EEE dd MMM") : label
 
-     // Find the corresponding date for the day label
-     const dayData = processedData.find((d) => d.day === label);
-     const formattedDate = dayData
-       ? format(parseISO(dayData.fullDate), "EEE dd MMM")
-       : label;
-
-     return (
-       <div className="rounded-lg shadow-lg bg-background border p-2 text-xs">
-         <p className="font-medium mb-1">{formattedDate}</p>
-         {payload.map((item, index) => (
-           <div key={index} className="flex items-center gap-2">
-             <div
-               className="w-2 h-2 rounded-full"
-               style={{ backgroundColor: item.color }}
-             />
-             <span>{item.name}:</span>
-             <span className="font-medium">
-               {formatter ? formatter(item.value) : item.value}
-             </span>
-           </div>
-         ))}
-       </div>
-     );
-   };
-
+    return (
+      <div className="rounded-lg shadow-lg bg-background border p-2 text-xs">
+        <p className="font-medium mb-1">{formattedDate}</p>
+        {payload.map((item, index) => (
+          <div key={index} className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+            <span>{item.name}:</span>
+            <span className="font-medium">{formatter ? formatter(item.value) : item.value}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   const chartConfig = {
     containerHeight: "h-32",
-    margin: { top: 5, right: 15, bottom: 5, left: 0 },
+    margin: { top: 5, right: 20, bottom: 5, left: 0 },
     className:
       "border bg-background shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]",
-  };
+  }
 
   const fetchWeeklyData = async (date) => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
 
     if (weeklyDataOverride) {
-      setWeeklyData(weeklyDataOverride);
-      setIsLoading(false);
-      return weeklyDataOverride;
+      setWeeklyData(weeklyDataOverride)
+      setIsLoading(false)
+      return weeklyDataOverride
     }
 
     try {
-      const normalizedDate = normalizeDate(date);
-      const formattedDate = normalizedDate.toISOString().split("T")[0];
-      const token = Cookies.get("token");
+      const normalizedDate = normalizeDate(date)
+      // Adjust to get the Sunday of the week
+      const sunday = new Date(normalizedDate)
+      sunday.setDate(normalizedDate.getDate() - normalizedDate.getDay())
+      const formattedDate = sunday.toISOString().split("T")[0]
+      const token = Cookies.get("token")
 
-      if (!token) throw new Error("No authentication token found");
+      if (!token) throw new Error("No authentication token found")
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/metrics/weekly?date=${formattedDate}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/metrics/weekly?date=${formattedDate}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Failed to fetch weekly data");
+        const errorData = await response.json().catch(() => null)
+        throw new Error(errorData?.message || "Failed to fetch weekly data")
       }
 
-      const data = await response.json();
-      setWeeklyData(data);
-      return data;
+      const data = await response.json()
+      setWeeklyData(data)
+      return data
     } catch (err) {
-      setError(err.message);
-      console.error("Failed to fetch weekly data:", err);
-      return null;
+      setError(err.message)
+      console.error("Failed to fetch weekly data:", err)
+      return null
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchWeeklyData(selectedDate);
-  }, [selectedDate, forceUpdate]);
+    fetchWeeklyData(selectedDate)
+  }, [selectedDate, forceUpdate])
 
   const hasNoData =
     weeklyData &&
@@ -225,16 +183,16 @@ export function WeeklyCharts({
         dayData.rulesUnfollowed === 0 &&
         dayData.totalProfitLoss === 0 &&
         dayData.winTrades === 0 &&
-        dayData.lossTrades === 0
-    );
+        dayData.lossTrades === 0,
+    )
 
-  if (isLoading) return <LoadingState />;
-  if (error) return <div>Error loading weekly data: {error}</div>;
-  if (!weeklyData || hasNoData) return <NoDataComponent />;
+  if (isLoading) return <LoadingState />
+  if (error) return <div>Error loading weekly data: {error}</div>
+  if (!weeklyData || hasNoData) return <NoDataComponent />
 
   const processedData = days.map((day, index) => {
-    const date = weeklyData ? Object.keys(weeklyData)[index] : null;
-    const dayData = weeklyData?.[date] || {};
+    const date = weeklyData ? Object.keys(weeklyData)[index] : null
+    const dayData = weeklyData?.[date] || {}
     return {
       day,
       fullDate: date, // Store the full date for tooltip
@@ -244,24 +202,19 @@ export function WeeklyCharts({
       profitLoss: dayData.totalProfitLoss || 0,
       followed: dayData.rulesFollowed || 0,
       broken: dayData.rulesUnfollowed || 0,
-    };
-  });
+    }
+  })
 
   return (
     <div className="flex flex-col gap-4 w-full max-w-4xl">
       <h2 className="text-xl font-medium -mb-2 flex flex-col">
-        Performance{" "}
-        <span className="text-xs opacity-80">
-          ({getWeekDateRange(selectedDate)})
-        </span>
+        Performance <span className="text-xs opacity-80">({getWeekDateRange(selectedDate)})</span>
       </h2>
       <Card className={chartConfig.className}>
         <CardHeader className="py-2 px-4">
           <CardTitle className="text-sm font-medium flex items-center gap-1">
             Trades
-            <CardDescription className="text-xs font-light">
-              (Daily limit: {tradesPerDay})
-            </CardDescription>
+            <CardDescription className="text-xs font-light">(Daily limit: {tradesPerDay})</CardDescription>
           </CardTitle>
         </CardHeader>
         <CardContent className={`p-0 ${chartConfig.containerHeight}`}>
@@ -273,24 +226,9 @@ export function WeeklyCharts({
           >
             <ResponsiveContainer>
               <LineChart data={processedData} margin={chartConfig.margin}>
-                <CartesianGrid
-                  vertical={false}
-                  stroke="var(--border)"
-                  strokeDasharray="3 3"
-                />
-                <XAxis
-                  className="text-xs"
-                  dataKey="day"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
-                <YAxis
-                  className="text-xs"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
+                <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis className="text-xs" dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
+                <YAxis className="text-xs" tickLine={false} axisLine={false} tickMargin={8} />
                 <ChartTooltip content={<CustomTooltipContent />} />
                 <Line
                   type="linear"
@@ -327,39 +265,12 @@ export function WeeklyCharts({
           >
             <ResponsiveContainer>
               <BarChart data={processedData} margin={chartConfig.margin}>
-                <CartesianGrid
-                  vertical={false}
-                  stroke="var(--border)"
-                  strokeDasharray="3 3"
-                />
-                <XAxis
-                  className="text-xs"
-                  dataKey="day"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
-                <YAxis
-                  className="text-xs"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
+                <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis className="text-xs" dataKey="day" tickLine={false} axisLine={false}/>
+                <YAxis className="text-xs" tickLine={false} axisLine={false}/>
                 <ChartTooltip content={<CustomTooltipContent />} />
-                <Bar
-                  dataKey="win"
-                  stackId="winLoss"
-                  fill="#0ED991"
-                  barSize={16}
-                  radius={[2, 2, 0, 0]}
-                />
-                <Bar
-                  dataKey="loss"
-                  stackId="winLoss"
-                  fill="#F44C60"
-                  barSize={16}
-                  radius={[2, 2, 0, 0]}
-                />
+                <Bar dataKey="win" stackId="winLoss" fill="#0ED991" barSize={20} radius={4} />
+                <Bar dataKey="loss" stackId="winLoss" fill="#F44C60" barSize={20} radius={4} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
@@ -379,27 +290,15 @@ export function WeeklyCharts({
           >
             <ResponsiveContainer className="h-[400px]">
               <LineChart data={processedData} margin={chartConfig.margin}>
-                <CartesianGrid
-                  vertical={false}
-                  stroke="var(--border)"
-                  strokeDasharray="3 3"
-                />
-                <XAxis
-                  className="text-xs"
-                  dataKey="day"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
+                <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis className="text-xs" dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
                 <YAxis
                   className="text-xs"
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
                   tickFormatter={(value) =>
-                    value >= 0
-                      ? `+${(value / 1000).toFixed(0)}K`
-                      : `${(value / 1000).toFixed(0)}K`
+                    value >= 0 ? `+${(value / 1000).toFixed(0)}K` : `${(value / 1000).toFixed(0)}K`
                   }
                 />
                 <ChartTooltip content={<CustomTooltipContent />} />
@@ -437,44 +336,18 @@ export function WeeklyCharts({
           >
             <ResponsiveContainer className="h-[400px]">
               <BarChart data={processedData} margin={chartConfig.margin}>
-                <CartesianGrid
-                  vertical={false}
-                  stroke="var(--border)"
-                  strokeDasharray="3 3"
-                />
-                <XAxis
-                  className="text-xs"
-                  dataKey="day"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
-                <YAxis
-                  className="text-xs"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
+                <CartesianGrid vertical={false} stroke="var(--border)" strokeDasharray="3 3" />
+                <XAxis className="text-xs" dataKey="day" tickLine={false} axisLine={false} tickMargin={8} />
+                <YAxis className="text-xs" tickLine={false} axisLine={false} tickMargin={8} />
                 <ChartTooltip content={<CustomTooltipContent />} />
-                <Bar
-                  dataKey="followed"
-                  stackId="ruleStatus"
-                  fill="#0ED991"
-                  barSize={16}
-                  radius={[2, 2, 0, 0]}
-                />
-                <Bar
-                  dataKey="broken"
-                  stackId="ruleStatus"
-                  fill="#F44C60"
-                  barSize={16}
-                  radius={[2, 2, 0, 0]}
-                />
+                <Bar dataKey="followed" stackId="ruleStatus" fill="#0ED991" barSize={20} radius={4} />
+                <Bar dataKey="broken" stackId="ruleStatus" fill="#F44C60" barSize={20} radius={4} />
               </BarChart>
             </ResponsiveContainer>
           </ChartContainer>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
+

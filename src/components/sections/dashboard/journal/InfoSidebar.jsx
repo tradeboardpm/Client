@@ -11,7 +11,7 @@ import {
 import {
   useMonthlyProfitLoss,
 } from "@/hooks/useMonthlyProfitLoss";
-import { WeeklyCharts } from "../../../charts/weekly-charts";
+// import { WeeklyCharts } from "../../../charts/weekly-charts";
 import { cn } from "@/lib/utils";
 
 export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
@@ -108,7 +108,7 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
                 "hover:bg-secondary focus:bg-transparent"
               ),
               day_selected:
-                "bg-card shadow  hover:text-primary-foreground z-10",
+                "bg-card border border-primary shadow  hover:text-primary-foreground z-10",
             }}
           />
           {/* Legend */}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,7 @@ import {
   EQUITY_TYPES,
   TRANSACTION_TYPES,
 } from "@/utils/tradeCalculations";
+import ChargesBreakdown from "./charges-breakdown";
 
 export function EditCompleteTradeDialog({
   open,
@@ -30,18 +31,19 @@ export function EditCompleteTradeDialog({
   trade,
   onSubmit,
 }) {
-  const [editedTrade, setEditedTrade] = React.useState(trade);
-  const [error, setError] = React.useState("");
-  const [calculatedExchangeRate, setCalculatedExchangeRate] = React.useState(0);
-  const [exchangeRateEdited, setExchangeRateEdited] = React.useState(false);
+  const [editedTrade, setEditedTrade] = useState(trade);
+  const [error, setError] = useState("");
+  const [calculatedExchangeRate, setCalculatedExchangeRate] = useState(0);
+  const [exchangeRateEdited, setExchangeRateEdited] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setEditedTrade(trade);
     setError("");
+    setExchangeRateEdited(false);
   }, [trade]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (editedTrade) {
       const buyCharges = calculateCharges({
         equityType: editedTrade.equityType,
@@ -100,24 +102,6 @@ export function EditCompleteTradeDialog({
     setIsLoading(true);
     try {
       const token = Cookies.get("token");
-      const buyCharges = calculateCharges({
-        equityType: editedTrade.equityType,
-        action: TRANSACTION_TYPES.BUY,
-        price: editedTrade.buyingPrice,
-        quantity: editedTrade.quantity,
-        brokerage: editedTrade.brokerage / 2,
-      });
-      const sellCharges = calculateCharges({
-        equityType: editedTrade.equityType,
-        action: TRANSACTION_TYPES.SELL,
-        price: editedTrade.sellingPrice,
-        quantity: editedTrade.quantity,
-        brokerage: editedTrade.brokerage / 2,
-      });
-      const totalExchangeCharges =
-        buyCharges.totalCharges +
-        sellCharges.totalCharges -
-        editedTrade.brokerage;
       await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/trades/complete/${editedTrade._id}`,
         {
@@ -137,29 +121,6 @@ export function EditCompleteTradeDialog({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const calculateTotalOrder = (trade) => {
-    const buyCharges = calculateCharges({
-      equityType: trade.equityType,
-      action: TRANSACTION_TYPES.BUY,
-      price: trade.buyingPrice,
-      quantity: trade.quantity,
-      brokerage: trade.brokerage / 2,
-    });
-    const sellCharges = calculateCharges({
-      equityType: trade.equityType,
-      action: TRANSACTION_TYPES.SELL,
-      price: trade.sellingPrice,
-      quantity: trade.quantity,
-      brokerage: trade.brokerage / 2,
-    });
-    return (
-      buyCharges.turnover +
-      sellCharges.turnover +
-      buyCharges.totalCharges +
-      sellCharges.totalCharges
-    );
   };
 
   const resetExchangeRate = () => {
@@ -268,10 +229,13 @@ export function EditCompleteTradeDialog({
                       F&O-FUTURES
                     </SelectItem>
                     <SelectItem value={EQUITY_TYPES.INTRADAY}>
-                      INTRADAY
+                      INTRADAY EQUITY
                     </SelectItem>
                     <SelectItem value={EQUITY_TYPES.DELIVERY}>
-                      DELIVERY
+                      DELIVERY EQUITY
+                    </SelectItem>
+                    <SelectItem value={EQUITY_TYPES.OTHER}>
+                      OTHER
                     </SelectItem>
                   </SelectContent>
                 </Select>
@@ -337,14 +301,12 @@ export function EditCompleteTradeDialog({
                 />
               </div>
             </div>
-            <div className="bg-[#F4E4FF] dark:bg-[#312d33] p-4 rounded-lg">
-              <div className="flex justify-start gap-2 items-center">
-                <span className="font-medium">Total Order Amount:</span>
-                <span className="text-base font-medium text-primary">
-                  ₹ {calculateTotalOrder(editedTrade).toFixed(2)}
-                </span>
-              </div>
-            </div>
+            <ChargesBreakdown 
+                trade={{
+                  ...editedTrade,
+                  manualExchangeCharge: exchangeRateEdited || editedTrade.equityType === EQUITY_TYPES.OTHER
+                }}
+              />
           </div>
         )}
         <DialogFooter>

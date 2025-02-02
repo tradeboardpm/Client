@@ -397,7 +397,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
                       variant="ghost"
                       onClick={() => setEditingRule(rule)}
                       disabled={isLoadingAction.editRule}
-                      className="p-0 w-fit text-gray-500/35 hover:text-purple-500 size-5"
+                      className="p-0 w-fit text-gray-500/35 dark:text-gray-400 hover:text-purple-500 size-5"
                     >
                       <SquarePen className="h-4 w-4" />
                     </Button>
@@ -410,7 +410,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
                         setIsDeleteDialogOpen(true);
                       }}
                       disabled={isLoadingAction.deleteRule}
-                      className="p-0 w-fit text-gray-500/35 hover:text-red-500 size-5"
+                      className="p-0 w-fit text-gray-500/35 dark:text-gray-400 hover:text-red-500 size-5"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
