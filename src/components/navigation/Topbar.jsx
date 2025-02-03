@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Bell, Menu, Sun, Moon, Laptop, LogOut } from "lucide-react";
+import { Bell, Menu, Sun, Moon, Laptop, LogOut, Check } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,6 +97,8 @@ export default function Topbar({
     applyTheme(newTheme);
   };
 
+  const isSelected = (value) => theme === value;
+
   const getThemeIcon = () => {
     switch (theme) {
       case "light":
@@ -174,14 +176,17 @@ export default function Topbar({
             <DropdownMenuItem onClick={() => changeTheme("light")}>
               <Sun className="mr-2 h-4 w-4" />
               <span>Light</span>
+              {isSelected("light") && <span className="ml-auto"><Check className="w-4 h-4" /></span>}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => changeTheme("dark")}>
               <Moon className="mr-2 h-4 w-4" />
               <span>Dark</span>
+              {isSelected("dark") && <span className="ml-auto"><Check className="w-4 h-4" /></span>}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => changeTheme("system")}>
               <Laptop className="mr-2 h-4 w-4" />
               <span>System</span>
+              {isSelected("system") && <span className="ml-auto"><Check className="w-4 h-4" /></span>}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

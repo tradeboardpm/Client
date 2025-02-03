@@ -1,17 +1,11 @@
-import { useState } from "react";
-import { format } from "date-fns";
-import { ArrowUpRight, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import axios from "axios";
-import Cookies from "js-cookie";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { useState } from "react"
+import { format } from "date-fns"
+import { ArrowUpRight, Trash2 } from "lucide-react"
+import { useRouter } from "next/navigation"
+import axios from "axios"
+import Cookies from "js-cookie"
+import { useToast } from "@/hooks/use-toast"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,9 +15,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
 
 const JournalCard = ({
   id,
@@ -38,73 +31,77 @@ const JournalCard = ({
   onDelete,
   refreshJournalData,
   showDeleteButton = true,
-  mainPage="my-journal"
+  mainPage = "my-journal",
 }) => {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter()
+  const { toast } = useToast()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const getProfitColor = () => {
-    if (profit > 100) return "bg-[#5BFBC2]/35 border border-[#5BFBC2]";
-    return "bg-[#FFE0DE]/50 dark:bg-[#552c29] border border-[#F44C60]";
-  };
+    if (profit > 100) return "bg-[#5BFBC2]/35 border border-[#5BFBC2]"
+    if (profit < -100) return "bg-[#FFE0DE]/50 dark:bg-[#552c29] border border-[#F44C60]"
+    return "bg-[#FAC300]/35 border border-[#FAC300]"
+  }
 
   const getProfitBorderColor = () => {
-    if (profit > 100) return "border-[#0ED991] transition-all duration-300";
-    return "border-[#F44C60] transition-all duration-300";
-  };
+    if (profit > 100) return "border-[#0ED991] transition-all duration-300"
+    if (profit < -100) return "border-[#F44C60] transition-all duration-300"
+    return "border-[#FAC300] transition-all duration-300"
+  }
 
   const getInnerProfitBorderColor = () => {
-    if (profit > 100) return "border-[#0ED991]/50 transition-all duration-300";
-    return "border-[#F44C60]/50 transition-all duration-300";
-  };
+    if (profit > 100) return "border-[#0ED991]/50 transition-all duration-300"
+    if (profit < -100) return "border-[#F44C60]/50 transition-all duration-300"
+    return "border-[#FAC300]/50 transition-all duration-300"
+  }
 
   const getArrowColor = () => {
-    if (profit > 100) return "text-[#0ED991] group-hover:text-[#0ED99180]";
-    return "text-[#F44C60] group-hover:text-[#F44C60]";
-  };
+    if (profit > 100) return "text-[#0ED991] group-hover:text-[#0ED99180]"
+    if (profit < -100) return "text-[#F44C60] group-hover:text-[#F44C60]"
+    return "text-[#FAC300] group-hover:text-[#FAC300]"
+  }
 
-  const formattedDate = format(new Date(date), "EEE, dd MMM");
+  const formattedDate = format(new Date(date), "EEE, dd MMM")
 
   const truncateText = (text, maxLength = 50) => {
-    if (!text) return " ";
-    return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
-  };
+    if (!text) return " "
+    return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text
+  }
 
   const handleCardClick = (e) => {
-    if (e.target.closest(".delete-button")) return;
-    router.push(`/${mainPage}/${date}`);
-  };
+    if (e.target.closest(".delete-button")) return
+    router.push(`/${mainPage}/${date}`)
+  }
 
   const handleDelete = async () => {
     try {
-      setIsDeleting(true);
-      const token = Cookies.get("token");
+      setIsDeleting(true)
+      const token = Cookies.get("token")
       await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/journals/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
-      setShowDeleteDialog(false);
+      })
+      setShowDeleteDialog(false)
       toast({
         title: "Journal Entry Deleted",
         description: "The journal entry was successfully deleted.",
         variant: "default",
-      });
-      onDelete(id);
-      await refreshJournalData();
+      })
+      onDelete(id)
+      await refreshJournalData()
     } catch (error) {
-      console.error("Error deleting journal entry:", error);
+      console.error("Error deleting journal entry:", error)
       toast({
         title: "Delete Failed",
         description: "Failed to delete journal entry. Please try again.",
         variant: "destructive",
-      });
+      })
     } finally {
-      setIsDeleting(false);
+      setIsDeleting(false)
     }
-  };
+  }
 
   return (
     <>
@@ -115,12 +112,12 @@ const JournalCard = ({
         {showDeleteButton && (
           <Button
             size="icon"
-            variant="outline"
+            variant="destructive"
             onClick={(e) => {
-              e.stopPropagation();
-              setShowDeleteDialog(true);
+              e.stopPropagation()
+              setShowDeleteDialog(true)
             }}
-            className="absolute top-0 left-0 z-10 bg-destructive border-red-400 rounded-none rounded-tl-lg  opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-br-3xl border-t-0 border-l-0"
+            className="absolute top-0 left-0 z-10 hover:scale-110 rounded-none rounded-tl-lg  opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-br-3xl border-t-0 border-l-0"
           >
             <Trash2 className="w-4 h-4 text-white" />
           </Button>
@@ -164,23 +161,15 @@ const JournalCard = ({
           <div className="flex justify-between space-x-4 w-full p-2">
             <div className="flex flex-col items-center space-x-1 w-full">
               <p className="text-xs">Rules</p>
-              <span className="font-semibold">
-                {Number(rulesFollowedPercentage).toFixed(2)}%
-              </span>
+              <span className="font-semibold">{Number(rulesFollowedPercentage).toFixed(2)}%</span>
             </div>
-            <div
-              className={`flex flex-col items-center space-x-1 w-full border-x ${getInnerProfitBorderColor()}`}
-            >
+            <div className={`flex flex-col items-center space-x-1 w-full border-x ${getInnerProfitBorderColor()}`}>
               <p className="text-xs">Win Rate</p>
-              <span className="font-semibold">
-                {Number(winRate).toFixed(2)}%
-              </span>
+              <span className="font-semibold">{Number(winRate).toFixed(2)}%</span>
             </div>
             <div className="flex flex-col items-center space-x-1 w-full">
               <p className="text-xs">Profit</p>
-              <span className="font-semibold text-foreground">
-                {Number(profit).toFixed(2)}
-              </span>
+              <span className="font-semibold text-foreground">{Number(profit).toFixed(2)}</span>
             </div>
           </div>
         </CardFooter>
@@ -191,24 +180,20 @@ const JournalCard = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Journal Entry</AlertDialogTitle>
             <AlertDialogDescription>
-              Do you want to delete this Journal entry? This action cannot be
-              undone.
+              Do you want to delete this Journal entry? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-500 hover:bg-red-600"
-              disabled={isDeleting}
-            >
+            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-600" disabled={isDeleting}>
               {isDeleting ? "Deleting..." : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
-};
+  )
+}
 
-export default JournalCard;
+export default JournalCard
+

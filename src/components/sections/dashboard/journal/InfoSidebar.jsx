@@ -107,8 +107,11 @@ export function TradingCalendar({ selectedDate, onSelect, tradesPerDay }) {
                 "h-8 w-8 p-0 font-normal text-[0.74rem] rounded-[4px]",
                 "hover:bg-secondary focus:bg-transparent"
               ),
-              day_selected:
-                "bg-card border border-primary shadow  hover:text-primary-foreground z-10",
+              day_selected: cn(
+                "border border-primary shadow hover:text-primary-foreground z-10",
+                isToday(selectedDate) ? "border-purple-500 bg-purple-100 dark:bg-purple-900" : "bg-card"
+              ),
+              
             }}
           />
           {/* Legend */}

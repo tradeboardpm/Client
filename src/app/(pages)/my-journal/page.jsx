@@ -94,9 +94,16 @@ const JournalPage = () => {
     setCurrentDate((prevDate) => {
       const newDate = new Date(prevDate);
       newDate.setMonth(prevDate.getMonth() + direction);
+      
+      const today = new Date();
+      if (newDate > today) {
+        return prevDate; // Prevent moving to future months
+      }
+  
       return newDate;
     });
   };
+  
 
   const handleDeleteJournal = async (id) => {
     setJournalData((prevData) => {

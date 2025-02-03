@@ -19,8 +19,6 @@ import { toast } from "@/hooks/use-toast";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const MAX_RULE_LENGTH = 150;
 
-
-
 export const AddRulesDialog = ({
   open,
   onOpenChange,
@@ -50,6 +48,12 @@ export const AddRulesDialog = ({
   const handleAddRuleInput = () => {
     if (rulesList.length < 10) {
       setRulesList([...rulesList, ""]);
+    } else {
+      toast({
+        title: "Maximum Rules Reached",
+        description: "You cannot add more than 10 rules at once.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -148,7 +152,6 @@ export const AddRulesDialog = ({
         <div className="space-y-2 py-4 max-h-[300px] overflow-y-auto pr-2">
           {rulesList.map((rule, index) => (
             <div key={index} className="flex flex-col space-y-1 p-2">
-              {/* <p className="text-xs">Rule</p> */}
               <div className="flex items-center space-x-2">
                 <Input
                   ref={(el) => {
@@ -188,7 +191,6 @@ export const AddRulesDialog = ({
         >
           <Plus className="mr-2 h-4 w-4" />
           Add Another Rule
-          {rulesList.length > 0 && ` (${rulesList.length}/10)`}
         </Button>
         <DialogFooter className="flex justify-between mt-4">
           <Button

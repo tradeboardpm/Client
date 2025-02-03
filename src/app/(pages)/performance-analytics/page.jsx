@@ -1,44 +1,20 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
-import {
-  format,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-  subWeeks,
-  subMonths,
-} from "date-fns";
-import Image from "next/image";
+import { useState, useEffect, useRef } from "react"
+import axios from "axios"
+import Cookies from "js-cookie"
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns"
+import Image from "next/image"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Calendar } from "@/components/ui/calendar";
-import { ArrowUpRight, X, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
-import JournalCard from "@/components/cards/JournalCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Calendar } from "@/components/ui/calendar"
+import { ArrowUpRight, X, ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
+import JournalCard from "@/components/cards/JournalCard"
 import {
   Pagination,
   PaginationContent,
@@ -47,8 +23,8 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@/components/ui/pagination";
-import FilterPopover from "./filter-popover";
+} from "@/components/ui/pagination"
+import FilterPopover from "./filter-popover"
 
 const StatCard = ({ title, stats, colorClass }) => (
   <Card className="w-full h-full border border-foreground/15">
@@ -82,14 +58,14 @@ const StatCard = ({ title, stats, colorClass }) => (
       </div>
     </CardContent>
   </Card>
-);
+)
 
 const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const handleCardClick = () => {
-    setIsDialogOpen(true);
-  };
+    setIsDialogOpen(true)
+  }
 
   return (
     <>
@@ -116,18 +92,12 @@ const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
           <p className="mt-2">
             <span
               className={`text-2xl font-semibold ${
-                isTopFollowedRules
-                  ? "text-green-400"
-                  : rules[0]?.count
-                  ? "text-red-400"
-                  : "text-green-400"
+                isTopFollowedRules ? "text-green-400" : rules[0]?.count ? "text-red-400" : "text-green-400"
               }`}
             >
               {rules[0]?.count || 0}
             </span>{" "}
-            <span className="text-xs text-foreground/35">
-              times this {period}
-            </span>
+            <span className="text-xs text-foreground/35">times this {period}</span>
           </p>
         </CardContent>
       </Card>
@@ -136,9 +106,7 @@ const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>List of {title}</DialogTitle>
-            <DialogDescription>
-              Detailed breakdown of rules for this category
-            </DialogDescription>
+            <DialogDescription>Detailed breakdown of rules for this category</DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-2 py-4 overflow-auto max-h-[75vh]">
@@ -152,11 +120,7 @@ const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
                 </div>
                 <div
                   className={`font-semibold w-36 text-right ${
-                    isTopFollowedRules
-                      ? "text-green-500"
-                      : ruleItem.count
-                      ? "text-red-500"
-                      : "text-green-500"
+                    isTopFollowedRules ? "text-green-500" : ruleItem.count ? "text-red-500" : "text-green-500"
                   }`}
                 >
                   {ruleItem.count} times
@@ -167,25 +131,48 @@ const RuleCard = ({ title, rules, period, isTopFollowedRules = false }) => {
         </DialogContent>
       </Dialog>
     </>
-  );
-};
+  )
+}
+
+const formatPeriodDateRange = (period) => {
+  const today = new Date()
+  switch (period) {
+    case "thisWeek":
+      const thisWeekStart = new Date(today.setDate(today.getDate() - today.getDay()))
+      const thisWeekEnd = new Date(thisWeekStart)
+      thisWeekEnd.setDate(thisWeekStart.getDate() + 6)
+      return `(${format(thisWeekStart, "MMM dd")} - ${format(thisWeekEnd, "MMM dd")})`
+    case "lastWeek":
+      const lastWeekStart = new Date(today.setDate(today.getDate() - today.getDay() - 7))
+      const lastWeekEnd = new Date(lastWeekStart)
+      lastWeekEnd.setDate(lastWeekStart.getDate() + 6)
+      return `(${format(lastWeekStart, "MMM dd")} - ${format(lastWeekEnd, "MMM dd")})`
+    case "thisMonth":
+      return `(${format(today, "MMMM")})`
+    case "lastMonth":
+      const lastMonth = subMonths(today, 1)
+      return `(${format(lastMonth, "MMMM")})`
+    default:
+      return ""
+  }
+}
 
 export default function PerformaceAnalytics() {
   const [pagination, setPagination] = useState({
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    limit: 12,
-  });
-  const [period, setPeriod] = useState("thisWeek");
+    limit: 6,
+  })
+  const [period, setPeriod] = useState("thisWeek")
   const [metricsDateRange, setMetricsDateRange] = useState({
     from: null,
     to: null,
-  });
+  })
   const [journalsDateRange, setJournalsDateRange] = useState({
     from: startOfMonth(new Date()),
     to: endOfMonth(new Date()),
-  });
+  })
   const [filters, setFilters] = useState({
     minWinRate: 0,
     maxWinRate: 100,
@@ -193,25 +180,39 @@ export default function PerformaceAnalytics() {
     maxTrades: 50,
     minRulesFollowed: 0,
     maxRulesFollowed: 100,
-  });
-  const [metrics, setMetrics] = useState(null);
-  const [monthlyJournals, setMonthlyJournals] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [openPopover, setOpenPopover] = useState(null);
-  const popoverRef = useRef(null);
+  })
+  const [metrics, setMetrics] = useState(null)
+  const [monthlyJournals, setMonthlyJournals] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [openPopover, setOpenPopover] = useState(null)
+  const popoverRef = useRef(null)
 
   // Compute date range based on selected period
   const computeDateRange = () => {
     const periodMap = {
-      thisWeek: () => ({
-        from: startOfWeek(new Date(), { weekStartsOn: 1 }),
-        to: endOfWeek(new Date(), { weekStartsOn: 1 }),
-      }),
-      lastWeek: () => ({
-        from: startOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 }),
-        to: endOfWeek(subWeeks(new Date(), 1), { weekStartsOn: 1 }),
-      }),
+      thisWeek: () => {
+        const today = new Date()
+        const sunday = new Date(today)
+        sunday.setDate(today.getDate() - today.getDay()) // Go back to last Sunday
+        const saturday = new Date(sunday)
+        saturday.setDate(sunday.getDate() + 6) // Go forward to Saturday
+        return {
+          from: sunday,
+          to: saturday,
+        }
+      },
+      lastWeek: () => {
+        const today = new Date()
+        const lastSunday = new Date(today)
+        lastSunday.setDate(today.getDate() - today.getDay() - 7) // Go back to last week's Sunday
+        const lastSaturday = new Date(lastSunday)
+        lastSaturday.setDate(lastSunday.getDate() + 6) // Go forward to last Saturday
+        return {
+          from: lastSunday,
+          to: lastSaturday,
+        }
+      },
       thisMonth: () => ({
         from: startOfMonth(new Date()),
         to: endOfMonth(new Date()),
@@ -224,23 +225,23 @@ export default function PerformaceAnalytics() {
         from: metricsDateRange.from || new Date(),
         to: metricsDateRange.to || new Date(),
       }),
-    };
-
-    return periodMap[period]();
-  };
-
-  const fetchData = async () => {
-    const token = Cookies.get("token");
-    if (!token) {
-      setError("No authentication token found");
-      return;
     }
 
-    setLoading(true);
-    setError(null);
+    return periodMap[period]()
+  }
+
+  const fetchData = async () => {
+    const token = Cookies.get("token")
+    if (!token) {
+      setError("No authentication token found")
+      return
+    }
+
+    setLoading(true)
+    setError(null)
 
     try {
-      const { from: startDate, to: endDate } = computeDateRange();
+      const { from: startDate, to: endDate } = computeDateRange()
 
       const [metricsResponse, journalsResponse] = await Promise.all([
         axios.get(`${process.env.NEXT_PUBLIC_API_URL}/metrics/date-range`, {
@@ -253,106 +254,158 @@ export default function PerformaceAnalytics() {
         }),
         axios.get(`${process.env.NEXT_PUBLIC_API_URL}/journals/filters`, {
           params: {
-            startDate:
-              journalsDateRange.from?.toISOString() ||
-              startOfMonth(new Date()).toISOString(),
-            endDate:
-              journalsDateRange.to?.toISOString() ||
-              endOfMonth(new Date()).toISOString(),
+            startDate: journalsDateRange.from?.toISOString() || startOfMonth(new Date()).toISOString(),
+            endDate: journalsDateRange.to?.toISOString() || endOfMonth(new Date()).toISOString(),
             page: pagination.currentPage,
             limit: pagination.limit,
             ...filters,
           },
           headers: { Authorization: `Bearer ${token}` },
         }),
-      ]);
+      ])
 
-      setMetrics(
-        Object.keys(metricsResponse.data).length === 0
-          ? null
-          : metricsResponse.data
-      );
+      setMetrics(Object.keys(metricsResponse.data).length === 0 ? null : metricsResponse.data)
 
       // Update state with new paginated response format
-      setMonthlyJournals(
-        Object.keys(journalsResponse.data.data).length === 0
-          ? null
-          : journalsResponse.data.data
-      );
-      setPagination(journalsResponse.data.pagination);
+      setMonthlyJournals(Object.keys(journalsResponse.data.data).length === 0 ? null : journalsResponse.data.data)
+      setPagination(journalsResponse.data.pagination)
     } catch (err) {
-      setError(err.response?.data?.error || "An error occurred");
+      setError(err.response?.data?.error || "An error occurred")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  // Add page change handler
-  const handlePageChange = (newPage) => {
-    setPagination((prev) => ({
-      ...prev,
-      currentPage: newPage,
-    }));
-  };
+  const handlePageChange = (page) => {
+    setPagination((prevPagination) => ({
+      ...prevPagination,
+      currentPage: page,
+    }))
+  }
 
   const formatDateRange = (range) => {
-    if (!range.from || !range.to) return "";
-    return `(${format(range.from, "MMM dd, yyyy")} - ${format(
-      range.to,
-      "MMM dd, yyyy"
-    )})`;
-  };
-
+    if (!range.from || !range.to) return ""
+    return `(${format(range.from, "MMM dd, yyyy")} - ${format(range.to, "MMM dd, yyyy")})`
+  }
 
   useEffect(() => {
-    fetchData();
-  }, [
-    period,
-    metricsDateRange,
-    journalsDateRange,
-    filters,
-    pagination.currentPage,
-  ]);
+    fetchData()
+  }, [period, metricsDateRange, journalsDateRange, filters, pagination.currentPage])
 
   useEffect(() => {
-    fetchData();
-  }, [period, metricsDateRange, journalsDateRange, filters]);
+    fetchData()
+  }, [period, metricsDateRange, journalsDateRange, filters])
 
   // Close popover when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (popoverRef.current && !popoverRef.current.contains(event.target)) {
-        setOpenPopover(null);
+        setOpenPopover(null)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  const renderPagination = () => {
+    if (pagination.totalPages <= 1) return null
+
+    return (
+      <div className="mt-6 flex justify-center border-t p-2">
+        <Pagination>
+          <PaginationContent>
+            {pagination.currentPage > 1 && (
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  className="cursor-pointer"
+                />
+              </PaginationItem>
+            )}
+
+            {/* First Page */}
+            {pagination.currentPage > 2 && (
+              <PaginationItem>
+                <PaginationLink onClick={() => handlePageChange(1)} className="cursor-pointer">
+                  1
+                </PaginationLink>
+              </PaginationItem>
+            )}
+
+            {/* Ellipsis if needed */}
+            {pagination.currentPage > 3 && (
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+            )}
+
+            {/* Current Page and Adjacent Pages */}
+            {Array.from({ length: 3 }, (_, i) => {
+              const pageNumber = pagination.currentPage + i - 1
+              if (pageNumber > 0 && pageNumber <= pagination.totalPages) {
+                return (
+                  <PaginationItem key={pageNumber}>
+                    <PaginationLink
+                      onClick={() => handlePageChange(pageNumber)}
+                      isActive={pageNumber === pagination.currentPage}
+                      className="cursor-pointer"
+                    >
+                      {pageNumber}
+                    </PaginationLink>
+                  </PaginationItem>
+                )
+              }
+              return null
+            })}
+
+            {/* Ellipsis if needed */}
+            {pagination.currentPage < pagination.totalPages - 2 && (
+              <PaginationItem>
+                <PaginationEllipsis />
+              </PaginationItem>
+            )}
+
+            {/* Last Page */}
+            {pagination.currentPage < pagination.totalPages - 1 && (
+              <PaginationItem>
+                <PaginationLink onClick={() => handlePageChange(pagination.totalPages)} className="cursor-pointer">
+                  {pagination.totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            )}
+
+            {pagination.currentPage < pagination.totalPages && (
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  className="cursor-pointer"
+                />
+              </PaginationItem>
+            )}
+          </PaginationContent>
+        </Pagination>
+      </div>
+    )
+  }
 
   const renderDateRangeButton = (dateRange, placeholder) => {
     // Check if the date range matches the default month range
     const isDefaultRange =
-      dateRange.from &&
-      dateRange.to &&
-      format(dateRange.from, "LLL y") ===
-        format(startOfMonth(new Date()), "LLL y");
+      dateRange.from && dateRange.to && format(dateRange.from, "LLL y") === format(startOfMonth(new Date()), "LLL y")
 
     return (
       <Button
         variant="outline"
         className={cn(
           "w-fit  text-left font-normal h-8 flex items-center justify-between gap-2",
-          (!dateRange.from || isDefaultRange) && "text-foreground"
+          (!dateRange.from || isDefaultRange) && "text-foreground",
         )}
       >
         {/* <CalendarIcon className="mr-2 h-4 w-4" /> */}
         {dateRange.from && !isDefaultRange ? (
           dateRange.to ? (
-            `${format(dateRange.from, "LLL dd, y")} - ${format(
-              dateRange.to,
-              "LLL dd, y"
-            )}`
+            `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}`
           ) : (
             format(dateRange.from, "LLL dd, y")
           )
@@ -362,8 +415,8 @@ export default function PerformaceAnalytics() {
 
         <ChevronDown className="h-4 w-4 text-foreground/65" />
       </Button>
-    );
-  };
+    )
+  }
 
   const clearAllFilters = () => {
     // Reset filters to default values
@@ -374,17 +427,17 @@ export default function PerformaceAnalytics() {
       maxTrades: 50,
       minRulesFollowed: 0,
       maxRulesFollowed: 100,
-    });
+    })
 
     // Reset date ranges to default
     setJournalsDateRange({
       from: startOfMonth(new Date()),
       to: endOfMonth(new Date()),
-    });
+    })
 
     // Close any open popovers
-    setOpenPopover(null);
-  };
+    setOpenPopover(null)
+  }
 
   const hasActiveFilters = () => {
     return (
@@ -394,11 +447,9 @@ export default function PerformaceAnalytics() {
       filters.maxTrades !== 50 ||
       filters.minRulesFollowed !== 0 ||
       filters.maxRulesFollowed !== 100 ||
-      (journalsDateRange.from &&
-        format(journalsDateRange.from, "LLL y") !==
-          format(startOfMonth(new Date()), "LLL y"))
-    );
-  };
+      (journalsDateRange.from && format(journalsDateRange.from, "LLL y") !== format(startOfMonth(new Date()), "LLL y"))
+    )
+  }
 
   return (
     <div className="bg-card">
@@ -408,13 +459,14 @@ export default function PerformaceAnalytics() {
           <div className="flex justify-between items-center mb-4">
             <h1 className="text-xl font-semibold">
               Tradeboard Intelligence
-              {period === "customRange" &&
-                metricsDateRange.from &&
-                metricsDateRange.to && (
-                  <span className="ml-2 text-muted-foreground font-normal text-sm">
-                    {formatDateRange(metricsDateRange)}
-                  </span>
-                )}
+              {period !== "customRange" && (
+                <span className="ml-2 text-muted-foreground font-normal text-sm">{formatPeriodDateRange(period)}</span>
+              )}
+              {period === "customRange" && metricsDateRange.from && metricsDateRange.to && (
+                <span className="ml-2 text-muted-foreground font-normal text-sm">
+                  {formatDateRange(metricsDateRange)}
+                </span>
+              )}
             </h1>
 
             <div className="flex flex-wrap gap-4">
@@ -423,17 +475,9 @@ export default function PerformaceAnalytics() {
                   <SelectValue placeholder="Select period" />
                 </SelectTrigger>
                 <SelectContent>
-                  {[
-                    "thisWeek",
-                    "lastWeek",
-                    "thisMonth",
-                    "lastMonth",
-                    "customRange",
-                  ].map((periodOption) => (
+                  {["thisWeek", "lastWeek", "thisMonth", "lastMonth", "customRange"].map((periodOption) => (
                     <SelectItem key={periodOption} value={periodOption}>
-                      {periodOption
-                        .replace(/([A-Z])/g, " $1")
-                        .replace(/^./, (str) => str.toUpperCase())}
+                      {periodOption.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -442,10 +486,7 @@ export default function PerformaceAnalytics() {
               {period === "customRange" && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    {renderDateRangeButton(
-                      metricsDateRange,
-                      "Pick a date range"
-                    )}
+                    {renderDateRangeButton(metricsDateRange, "Pick a date range")}
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
@@ -453,9 +494,7 @@ export default function PerformaceAnalytics() {
                       mode="range"
                       defaultMonth={metricsDateRange.from}
                       selected={metricsDateRange}
-                      onSelect={(range) =>
-                        setMetricsDateRange(range || { from: null, to: null })
-                      }
+                      onSelect={(range) => setMetricsDateRange(range || { from: null, to: null })}
                       numberOfMonths={2}
                     />
                   </PopoverContent>
@@ -465,10 +504,7 @@ export default function PerformaceAnalytics() {
           </div>
 
           {error && (
-            <div
-              className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
-              role="alert"
-            >
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
               {error}
             </div>
           )}
@@ -488,12 +524,7 @@ export default function PerformaceAnalytics() {
                   color: "text-blue-500",
                 },
               ].map(({ title, key, color }) => (
-                <StatCard
-                  key={key}
-                  title={title}
-                  stats={metrics[key]}
-                  colorClass={color}
-                />
+                <StatCard key={key} title={title} stats={metrics[key]} colorClass={color} />
               ))}
               <div className="grid md:grid-cols-2 gap-6">
                 <RuleCard
@@ -502,30 +533,19 @@ export default function PerformaceAnalytics() {
                   isTopFollowedRules={true}
                   period={period}
                 />
-                <RuleCard
-                  title="Your Most Broken Rules"
-                  rules={metrics.topUnfollowedRules}
-                  period={period}
-                />
+                <RuleCard title="Your Most Broken Rules" rules={metrics.topUnfollowedRules} period={period} />
               </div>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center p-8">
-              <Image
-                src="/images/no_box.png"
-                alt="No data"
-                width={200}
-                height={200}
-              />
-              <p className="mt-4 text-lg text-gray-500">
-                No data available for Tradeboard Intelligence
-              </p>
+              <Image src="/images/no_box.png" alt="No data" width={200} height={200} />
+              <p className="mt-4 text-lg text-gray-500">No data available for Tradeboard Intelligence</p>
             </div>
           )}
         </div>
 
         {/* Journal Analysis section */}
-        <div className="bg-card shadow-md border border-border p-4 rounded-xl min-h-[60vh]">
+        <div className="bg-card shadow-md border border-border p-4 rounded-xl min-h-full">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-xl font-semibold">
               Journal Analysis
@@ -548,9 +568,7 @@ export default function PerformaceAnalytics() {
                     mode="range"
                     defaultMonth={journalsDateRange.from}
                     selected={journalsDateRange}
-                    onSelect={(range) =>
-                      setJournalsDateRange(range || { from: null, to: null })
-                    }
+                    onSelect={(range) => setJournalsDateRange(range || { from: null, to: null })}
                     numberOfMonths={2}
                   />
                 </PopoverContent>
@@ -593,14 +611,8 @@ export default function PerformaceAnalytics() {
                         [valueKey[1]]: max,
                       }))
                     }
-                    open={
-                      openPopover === title.replace(/\s/g, "").toLowerCase()
-                    }
-                    onOpenChange={(open) =>
-                      setOpenPopover(
-                        open ? title.replace(/\s/g, "").toLowerCase() : null
-                      )
-                    }
+                    open={openPopover === title.replace(/\s/g, "").toLowerCase()}
+                    onOpenChange={(open) => setOpenPopover(open ? title.replace(/\s/g, "").toLowerCase() : null)}
                     showPercentage={showPercentage}
                   />
                 ))}
@@ -621,9 +633,9 @@ export default function PerformaceAnalytics() {
             </div>
           </div>
           {monthlyJournals ? (
-            <div className="mt-4">
+            <div className="mt-4 ">
               {Object.keys(monthlyJournals).length > 0 ? (
-                <>
+                <div className="flex flex-col justify-between min-h-[75vh]">
                   <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {Object.entries(monthlyJournals).map(([date, journal]) => (
                       <JournalCard
@@ -632,9 +644,7 @@ export default function PerformaceAnalytics() {
                         note={journal.note}
                         mistake={journal.mistake}
                         lesson={journal.lesson}
-                        rulesFollowedPercentage={
-                          journal.rulesFollowedPercentage
-                        }
+                        rulesFollowedPercentage={journal.rulesFollowedPercentage}
                         winRate={journal.winRate}
                         profit={journal.profit}
                         tradesTaken={journal.tradesTaken}
@@ -643,129 +653,25 @@ export default function PerformaceAnalytics() {
                     ))}
                   </div>
 
-                  {/* Pagination Controls */}
-                  {pagination.totalPages > 1 && (
-                    <div className="mt-6 flex justify-center">
-                      <Pagination>
-                        <PaginationContent>
-                          <PaginationItem>
-                            <PaginationPrevious
-                              onClick={() =>
-                                handlePageChange(pagination.currentPage - 1)
-                              }
-                              disabled={pagination.currentPage === 1}
-                            />
-                          </PaginationItem>
-
-                          {/* First Page */}
-                          {pagination.currentPage > 2 && (
-                            <PaginationItem>
-                              <PaginationLink
-                                onClick={() => handlePageChange(1)}
-                              >
-                                1
-                              </PaginationLink>
-                            </PaginationItem>
-                          )}
-
-                          {/* Ellipsis if needed */}
-                          {pagination.currentPage > 3 && (
-                            <PaginationItem>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          )}
-
-                          {/* Current Page and Adjacent Pages */}
-                          {Array.from({ length: 3 }, (_, i) => {
-                            const pageNumber = pagination.currentPage + i - 1;
-                            if (
-                              pageNumber > 0 &&
-                              pageNumber <= pagination.totalPages
-                            ) {
-                              return (
-                                <PaginationItem key={pageNumber}>
-                                  <PaginationLink
-                                    onClick={() => handlePageChange(pageNumber)}
-                                    isActive={
-                                      pageNumber === pagination.currentPage
-                                    }
-                                  >
-                                    {pageNumber}
-                                  </PaginationLink>
-                                </PaginationItem>
-                              );
-                            }
-                            return null;
-                          })}
-
-                          {/* Ellipsis if needed */}
-                          {pagination.currentPage <
-                            pagination.totalPages - 2 && (
-                            <PaginationItem>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          )}
-
-                          {/* Last Page */}
-                          {pagination.currentPage <
-                            pagination.totalPages - 1 && (
-                            <PaginationItem>
-                              <PaginationLink
-                                onClick={() =>
-                                  handlePageChange(pagination.totalPages)
-                                }
-                              >
-                                {pagination.totalPages}
-                              </PaginationLink>
-                            </PaginationItem>
-                          )}
-
-                          <PaginationItem>
-                            <PaginationNext
-                              onClick={() =>
-                                handlePageChange(pagination.currentPage + 1)
-                              }
-                              disabled={
-                                pagination.currentPage === pagination.totalPages
-                              }
-                            />
-                          </PaginationItem>
-                        </PaginationContent>
-                      </Pagination>
-                    </div>
-                  )}
-                </>
+                  {/* Updated Pagination Controls */}
+                  {renderPagination()}
+                </div>
               ) : (
-                <div className="flex flex-col items-center justify-center p-8">
-                  <Image
-                    src="/images/no_box.png"
-                    alt="No data"
-                    width={200}
-                    height={200}
-                  />
-                  <p className="mt-4 text-lg text-gray-500">
-                    No journal entries for this period
-                  </p>
+                <div className="flex flex-col items-center justify-center p-8 h-96">
+                  <Image src="/images/no_box.png" alt="No data" width={200} height={200} />
+                  <p className="mt-4 text-lg text-gray-500">No journal entries for this period</p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center p-8">
-              <Image
-                src="/images/no_box.png"
-                alt="No data"
-                width={200}
-                height={200}
-              />
-              <p className="mt-4 text-lg text-gray-500">
-                No data available for Journal Analysis
-              </p>
+            <div className="flex flex-col items-center justify-center p-8 h-96">
+              <Image src="/images/no_box.png" alt="No data" width={200} height={200} />
+              <p className="mt-4 text-lg text-gray-500">No data available for Journal Analysis</p>
             </div>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-// export default PerformaceAnalytics;

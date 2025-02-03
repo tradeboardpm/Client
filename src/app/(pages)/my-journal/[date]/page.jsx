@@ -1,131 +1,107 @@
-"use client";
+"use client"
 
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import Cookies from "js-cookie";
-import { format, addDays, parseISO } from "date-fns";
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  BarChart,
-  CalendarIcon,
-} from "lucide-react";
-import { useRouter, useParams } from "next/navigation";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { WeeklyCharts } from "../../../../components/charts/weekly-charts";
-import { TradingCalendar } from "../../../../components/sections/dashboard/journal/InfoSidebar";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { useState, useEffect } from "react"
+import axios from "axios"
+import Cookies from "js-cookie"
+import { format, addDays, parseISO } from "date-fns"
+import { ArrowLeft, ChevronLeft, ChevronRight, BarChart, X } from "lucide-react"
+import { useRouter, useParams } from "next/navigation"
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { WeeklyCharts } from "../../../../components/charts/weekly-charts"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { cn } from "@/lib/utils"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 const JournalDetailsPage = () => {
-  const router = useRouter();
-  const params = useParams();
-  const [journalDetails, setJournalDetails] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentDate, setCurrentDate] = useState(parseISO(params.date));
+  const router = useRouter()
+  const params = useParams()
+  const [journalDetails, setJournalDetails] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [currentDate, setCurrentDate] = useState(parseISO(params.date))
   const [sidebarExpanded, setSidebarExpanded] = useState(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("sidebarExpanded");
-      return saved !== null ? JSON.parse(saved) : true;
+      const saved = localStorage.getItem("sidebarExpanded")
+      return saved !== null ? JSON.parse(saved) : true
     }
-    return true;
-  });
-  const [isMobile, setIsMobile] = useState(false);
-  const [isSideSheetOpen, setIsSideSheetOpen] = useState(false);
-  const [selectedSection, setSelectedSection] = useState("calendar");
-  const [tradesPerDay, setTradesPerDay] = useState(4);
+    return true
+  })
+  const [isMobile, setIsMobile] = useState(false)
+  const [isSideSheetOpen, setIsSideSheetOpen] = useState(false)
+  const [selectedSection, setSelectedSection] = useState("calendar")
+  const [tradesPerDay, setTradesPerDay] = useState(4)
+  const [selectedImage, setSelectedImage] = useState(null)
 
   // Mobile detection
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+      setIsMobile(window.innerWidth <= 768)
+    }
 
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
 
   // Persist sidebar state
   useEffect(() => {
-    localStorage.setItem("sidebarExpanded", JSON.stringify(sidebarExpanded));
-  }, [sidebarExpanded]);
+    localStorage.setItem("sidebarExpanded", JSON.stringify(sidebarExpanded))
+  }, [sidebarExpanded])
 
   useEffect(() => {
     const fetchJournalDetails = async () => {
       try {
-        setIsLoading(true);
-        const token = Cookies.get("token");
-        const formattedDate = format(currentDate, "yyyy-MM-dd");
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/journals/details?date=${formattedDate}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        setJournalDetails(response.data);
+        setIsLoading(true)
+        const token = Cookies.get("token")
+        const formattedDate = format(currentDate, "yyyy-MM-dd")
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/journals/details?date=${formattedDate}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        setJournalDetails(response.data)
       } catch (error) {
-        console.error("Error fetching journal details:", error);
-        setJournalDetails(null);
+        console.error("Error fetching journal details:", error)
+        setJournalDetails(null)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
-    };
+    }
 
-    fetchJournalDetails();
-  }, [currentDate, params.date]);
+    fetchJournalDetails()
+  }, [currentDate, params.date])
 
   const toggleSidebar = () => {
-    setSidebarExpanded(!sidebarExpanded);
-  };
+    setSidebarExpanded(!sidebarExpanded)
+  }
 
   const handleSectionClick = (section) => {
-    setSelectedSection(section);
-    setSidebarExpanded(true);
-  };
+    setSelectedSection(section)
+    setSidebarExpanded(true)
+  }
 
   const handleDateChange = (date) => {
-    const formattedDate = format(date, "yyyy-MM-dd");
-    router.push(`/my-journal/${formattedDate}`);
-    setCurrentDate(date);
+    const formattedDate = format(date, "yyyy-MM-dd")
+    router.push(`/my-journal/${formattedDate}`)
+    setCurrentDate(date)
 
     if (isMobile) {
-      setIsSideSheetOpen(false);
+      setIsSideSheetOpen(false)
     }
-  };
+  }
 
   const changeDate = (days) => {
-    const newDate = addDays(currentDate, days);
-    const formattedDate = format(newDate, "yyyy-MM-dd");
-    router.push(`/my-journal/${formattedDate}`);
-    setCurrentDate(newDate);
-  };
+    const newDate = addDays(currentDate, days)
+    const formattedDate = format(newDate, "yyyy-MM-dd")
+    setCurrentDate(newDate)
+    router.push(`/my-journal/${formattedDate}`, undefined, { shallow: true })
+  }
+
+  const handleImageClick = (imageUrl) => {
+    setSelectedImage(imageUrl)
+  }
 
   const renderDateNavigation = () => (
     <nav aria-label="Journal Date Navigation">
@@ -158,13 +134,13 @@ const JournalDetailsPage = () => {
         </div>
       </div>
     </nav>
-  );
+  )
 
   const renderLoadingState = () => (
     <div className="flex justify-center items-center h-screen">
       <p>Loading...</p>
     </div>
-  );
+  )
 
   const renderNoJournalState = () => (
     <div className="flex flex-col md:flex-row min-h-screen bg-card">
@@ -176,7 +152,7 @@ const JournalDetailsPage = () => {
       </main>
       {renderSidebar()}
     </div>
-  );
+  )
 
   const renderSidebar = () => {
     if (isMobile) {
@@ -184,19 +160,16 @@ const JournalDetailsPage = () => {
         <Sheet open={isSideSheetOpen} onOpenChange={setIsSideSheetOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon">
-              <Menu />
+              {/* <Menu /> */}
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[360px] overflow-auto">
             <div className="mt-4">
-                <WeeklyCharts
-                  selectedDate={format(currentDate, "yyyy-MM-dd")}
-                  tradesPerDay={tradesPerDay}
-                />
+              <WeeklyCharts selectedDate={format(currentDate, "yyyy-MM-dd")} tradesPerDay={tradesPerDay} />
             </div>
           </SheetContent>
         </Sheet>
-      );
+      )
     }
 
     return (
@@ -208,14 +181,10 @@ const JournalDetailsPage = () => {
         >
           {sidebarExpanded ? (
             <div className="p-4 space-y-6">
-                <WeeklyCharts
-                  selectedDate={format(currentDate, "yyyy-MM-dd")}
-                  tradesPerDay={tradesPerDay}
-                />
+              <WeeklyCharts selectedDate={format(currentDate, "yyyy-MM-dd")} tradesPerDay={tradesPerDay} />
             </div>
           ) : (
             <div className="flex flex-col items-center gap-4 pt-6 bg-card">
-              
               <Button
                 variant="ghost"
                 size="icon"
@@ -231,19 +200,15 @@ const JournalDetailsPage = () => {
             onClick={toggleSidebar}
             className="absolute top-1/2 p-0 -left-5 z-10 h-8 w-8 rounded-full bg-card shadow-md border-none flex items-center justify-center transform -translate-y-1/2 border border-border"
           >
-            {!sidebarExpanded ? (
-              <ChevronLeft className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
-            )}
+            {!sidebarExpanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </Button>
         </div>
       </div>
-    );
-  };
+    )
+  }
 
   const renderJournalContent = () => {
-    const journalData = journalDetails?.journalDetails || {};
+    const journalData = journalDetails?.journalDetails || {}
 
     return (
       <div className="flex flex-col md:flex-row min-h-screen bg-card">
@@ -290,10 +255,11 @@ const JournalDetailsPage = () => {
                     {journalData.attachedFiles.map((file, index) => (
                       <div
                         key={index}
-                        className="relative group rounded-lg overflow-hidden w-20 h-9 shadow border"
+                        className="relative group rounded-lg overflow-hidden w-20 h-9 shadow border cursor-pointer"
+                        onClick={() => handleImageClick(file)}
                       >
                         <img
-                          src={file}
+                          src={file || "/placeholder.svg"}
                           alt={`Uploaded file ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
@@ -338,17 +304,12 @@ const JournalDetailsPage = () => {
                               // Add onCheckedChange handler
                             />
                           </div>
-                          <span className="text-gray-700 text-[0.8rem]">
-                            {rule.description}
-                          </span>
+                          <span className="text-gray-700 text-[0.8rem]">{rule.description}</span>
                         </div>
                       ))}
 
-                      {(!journalData.rules ||
-                        journalData.rules.length === 0) && (
-                        <div className="text-center text-muted-foreground p-4">
-                          No rules tracked
-                        </div>
+                      {(!journalData.rules || journalData.rules.length === 0) && (
+                        <div className="text-center text-muted-foreground p-4">No rules tracked</div>
                       )}
                     </div>
                   </div>
@@ -370,72 +331,42 @@ const JournalDetailsPage = () => {
                   <Table className="rounded-b-lg overflow-hidden bg-background">
                     <TableHeader className="bg-[#F4E4FF] dark:bg-[#49444c]">
                       <TableRow className="border-none">
-                        <TableHead className="text-nowrap text-[0.8rem] text-center">
-                          Time
-                        </TableHead>
-                        <TableHead className="text-nowrap text-[0.8rem] text-center">
-                          Instrument
-                        </TableHead>
-                        <TableHead className="text-nowrap text-[0.8rem] text-center">
-                          Type
-                        </TableHead>
-                        <TableHead className="text-nowrap text-[0.8rem] text-center">
-                          Action
-                        </TableHead>
-                        <TableHead className="text-nowrap text-[0.8rem] text-center">
-                          Quantity
-                        </TableHead>
-                        <TableHead className="text-nowrap text-[0.8rem] text-center">
-                          Buying Price
-                        </TableHead>
-                        <TableHead className="text-nowrap text-[0.8rem] text-center">
-                          Selling Price
-                        </TableHead>
-                        <TableHead className="text-nowrap text-[0.8rem] text-center">
-                          Brokerage
-                        </TableHead>
+                        <TableHead className="text-nowrap text-[0.8rem] text-center">Time</TableHead>
+                        <TableHead className="text-nowrap text-[0.8rem] text-center">Instrument</TableHead>
+                        <TableHead className="text-nowrap text-[0.8rem] text-center">Type</TableHead>
+                        <TableHead className="text-nowrap text-[0.8rem] text-center">Action</TableHead>
+                        <TableHead className="text-nowrap text-[0.8rem] text-center">Quantity</TableHead>
+                        <TableHead className="text-nowrap text-[0.8rem] text-center">Buying Price</TableHead>
+                        <TableHead className="text-nowrap text-[0.8rem] text-center">Selling Price</TableHead>
+                        <TableHead className="text-nowrap text-[0.8rem] text-center">Brokerage</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {journalData.trades.map((trade) => (
                         <TableRow key={trade._id}>
-                          <TableCell className="text-nowrap text-[0.8rem] text-center">
-                            {trade.time}
-                          </TableCell>
+                          <TableCell className="text-nowrap text-[0.8rem] text-center">{trade.time}</TableCell>
                           <TableCell
                             className={cn(
                               !trade.buyingPrice || !trade.sellingPrice
                                 ? "text-foreground font-semibold  text-center"
                                 : trade.buyingPrice < trade.sellingPrice
-                                ? "text-green-500 font-semibold  text-center"
-                                : "text-red-500 font-semibold  text-center"
+                                  ? "text-green-500 font-semibold  text-center"
+                                  : "text-red-500 font-semibold  text-center",
                             )}
                           >
                             {trade.instrumentName}
                           </TableCell>
+                          <TableCell className="text-nowrap text-[0.8rem] text-center">{trade.equityType}</TableCell>
+                          <TableCell className="text-nowrap text-[0.8rem] text-center">{trade.action}</TableCell>
+                          <TableCell className="text-nowrap text-[0.8rem] text-center">{trade.quantity}</TableCell>
                           <TableCell className="text-nowrap text-[0.8rem] text-center">
-                            {trade.equityType}
+                            {trade.buyingPrice ? `₹${trade.buyingPrice.toFixed(2)}` : "-"}
                           </TableCell>
                           <TableCell className="text-nowrap text-[0.8rem] text-center">
-                            {trade.action}
+                            {trade.sellingPrice ? `₹${trade.sellingPrice.toFixed(2)}` : "-"}
                           </TableCell>
                           <TableCell className="text-nowrap text-[0.8rem] text-center">
-                            {trade.quantity}
-                          </TableCell>
-                          <TableCell className="text-nowrap text-[0.8rem] text-center">
-                            {trade.buyingPrice
-                              ? `₹${trade.buyingPrice.toFixed(2)}`
-                              : "-"}
-                          </TableCell>
-                          <TableCell className="text-nowrap text-[0.8rem] text-center">
-                            {trade.sellingPrice
-                              ? `₹${trade.sellingPrice.toFixed(2)}`
-                              : "-"}
-                          </TableCell>
-                          <TableCell className="text-nowrap text-[0.8rem] text-center">
-                            {trade.brokerage
-                              ? `₹${trade.brokerage.toFixed(2)}`
-                              : "-"}
+                            {trade.brokerage ? `₹${trade.brokerage.toFixed(2)}` : "-"}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -445,25 +376,19 @@ const JournalDetailsPage = () => {
                 <div className="flex gap-6 items-center justify-between mt-6">
                   <div
                     className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
-                      journalDetails.summary?.totalPnL >= 0
-                        ? "bg-green-600/20"
-                        : "bg-red-600/20"
+                      journalDetails.summary?.totalPnL >= 0 ? "bg-green-600/20" : "bg-red-600/20"
                     }`}
                   >
                     <div
                       className={`text-sm font-medium ${
-                        journalDetails.summary?.totalPnL >= 0
-                          ? "text-green-800"
-                          : "text-red-800"
+                        journalDetails.summary?.totalPnL >= 0 ? "text-green-800" : "text-red-800"
                       }`}
                     >
                       Today's Profit:
                     </div>
                     <div
                       className={`text-lg font-medium ${
-                        journalDetails.summary?.totalPnL >= 0
-                          ? "text-green-900"
-                          : "text-red-900"
+                        journalDetails.summary?.totalPnL >= 0 ? "text-green-900" : "text-red-900"
                       }`}
                     >
                       ₹ {(journalDetails.summary?.totalPnL ?? 0).toFixed(2)}
@@ -471,9 +396,7 @@ const JournalDetailsPage = () => {
                   </div>
 
                   <div className="rounded-lg bg-[#A073F0]/25 flex items-center gap-2 p-2 w-fit">
-                    <div className="text-sm font-medium text-primary">
-                      Today's Charges:
-                    </div>
+                    <div className="text-sm font-medium text-primary">Today's Charges:</div>
                     <div className="text-lg font-medium text-primary">
                       ₹ {(journalDetails.summary?.totalCharges ?? 0).toFixed(2)}
                     </div>
@@ -481,25 +404,19 @@ const JournalDetailsPage = () => {
 
                   <div
                     className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
-                      journalDetails.summary?.netPnL >= 0
-                        ? "bg-green-600/20"
-                        : "bg-red-600/20"
+                      journalDetails.summary?.netPnL >= 0 ? "bg-green-600/20" : "bg-red-600/20"
                     }`}
                   >
                     <div
                       className={`text-sm font-medium ${
-                        journalDetails.summary?.netPnL >= 0
-                          ? "text-green-800"
-                          : "text-red-800"
+                        journalDetails.summary?.netPnL >= 0 ? "text-green-800" : "text-red-800"
                       }`}
                     >
                       Net Realised P&L:
                     </div>
                     <div
                       className={`text-lg font-medium ${
-                        journalDetails.summary?.netPnL >= 0
-                          ? "text-green-900"
-                          : "text-red-900"
+                        journalDetails.summary?.netPnL >= 0 ? "text-green-900" : "text-red-900"
                       }`}
                     >
                       ₹ {(journalDetails.summary?.netPnL ?? 0).toFixed(2)}
@@ -512,13 +429,31 @@ const JournalDetailsPage = () => {
         </main>
         {renderSidebar()}
       </div>
-    );
-  };
+    )
+  }
 
-  if (isLoading) return renderLoadingState();
-  if (!journalDetails) return renderNoJournalState();
+  if (isLoading) return renderLoadingState()
+  if (!journalDetails) return renderNoJournalState()
 
-  return renderJournalContent();
-};
+  return (
+    <>
+      {renderJournalContent()}
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-card p-4 rounded-lg max-w-3xl max-h-[90vh] relative">
+            <img src={selectedImage || "/placeholder.svg"} alt="Selected file" className="max-w-full h-auto rounded-lg" />
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="bg-popover rounded-full absolute -top-3 -right-3 p-1"
+            >
+              <X/>
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
 
-export default JournalDetailsPage;
+export default JournalDetailsPage
+

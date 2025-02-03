@@ -65,9 +65,9 @@ const PrivacyPolicy = () => {
           <h1 className="text-4xl md:text-5xl font-bold text-foreground/90 mb-4">
             Privacy Policy
           </h1>
-          <p className="text-xl text-foreground/60">
+          {/* <p className="text-xl text-foreground/60">
             Rezilienza Tech Pvt. Ltd.
-          </p>
+          </p> */}
         </div>
       </div>
 

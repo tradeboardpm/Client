@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/drawer";
 
 import GoogleSignUpButton from "@/components/buttons/google-signup-button";
-import { Checkbox } from "@/components/ui/checkbox";
 import PhoneNumberInput from "@/components/ui/phone-input";
 import PrivacyPolicy from "@/app/(misc)/privacy/page";
 import TermsOfService from "@/app/(misc)/terms/page";
@@ -39,7 +38,6 @@ const LegalDrawer = ({ isOpen, onClose, content }) => (
   <Drawer open={isOpen} onOpenChange={onClose}>
     <DrawerContent>
       <DrawerHeader>
-        {/* <DrawerTitle>{content.title}</DrawerTitle> */}
       </DrawerHeader>
       <div className="p-4 max-h-[70vh] overflow-y-auto">
         <p className="text-sm text-foreground">{content.content}</p>
@@ -53,7 +51,6 @@ const LegalDrawer = ({ isOpen, onClose, content }) => (
   </Drawer>
 );
 
-// content for Terms and Privacy
 const termsContent = {
   title: "Terms & Conditions",
   content: <TermsOfService />,
@@ -95,31 +92,29 @@ export default function SignUp() {
   const handleChange = (e) => {
     const { id, value } = e.target;
     setFormData({ ...formData, [id]: value });
- if (id === "password" && validatePassword(value).length === 0) {
-   setErrors((prev) => ({ ...prev, password: [] }));
- }
- if (id === "confirmPassword" && value === formData.password) {
-   setErrors((prev) => ({ ...prev, confirmPassword: [] }));
- }
+    if (id === "password" && validatePassword(value).length === 0) {
+      setErrors((prev) => ({ ...prev, password: [] }));
+    }
+    if (id === "confirmPassword" && value === formData.password) {
+      setErrors((prev) => ({ ...prev, confirmPassword: [] }));
+    }
   };
 
   const handleCountryCodeChange = (value) => {
     setFormData({ ...formData, countryCode: value });
   };
 
-const isFormValid = () => {
-  // Remove the isPhoneValid check since we're already enforcing this through the input
-  return (
-    formData.fullName.trim() !== "" &&
-    formData.email.trim() !== "" &&
-    formData.password.trim() !== "" &&
-    formData.confirmPassword.trim() !== "" &&
-    formData.password === formData.confirmPassword &&
-    // Only check for password errors, not all errors
-    (!errors.password || errors.password.length === 0) &&
-    termsAccepted
-  );
-};
+  const isFormValid = () => {
+    return (
+      formData.fullName.trim() !== "" &&
+      formData.email.trim() !== "" &&
+      formData.password.trim() !== "" &&
+      formData.confirmPassword.trim() !== "" &&
+      formData.password === formData.confirmPassword &&
+      (!errors.password || errors.password.length === 0) &&
+      termsAccepted
+    );
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -181,7 +176,6 @@ const isFormValid = () => {
 
       const { token, user, expiresIn } = response.data;
 
-      // Store token and user info
       Cookies.set("token", token, {
         expires: expiresIn / 86400,
         secure: process.env.NODE_ENV === "production",
@@ -237,10 +231,10 @@ const isFormValid = () => {
     });
   };
 
-    const handleLegalClick = (e, type) => {
-      e.preventDefault();
-      setOpenDrawer(type);
-    };
+  const handleLegalClick = (e, type) => {
+    e.preventDefault();
+    setOpenDrawer(type);
+  };
 
   return (
     <GoogleOAuthProvider clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}>
@@ -256,7 +250,6 @@ const isFormValid = () => {
                 onError={handleGoogleError}
                 useOneTap={false}
                 disabled={isLoading}
-                // className="w-full px-8"
                 width={600}
               />
             </div>
@@ -376,15 +369,16 @@ const isFormValid = () => {
                 )}
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox
+                <input
+                  type="checkbox"
                   id="terms"
                   checked={termsAccepted}
-                  onCheckedChange={(checked) => setTermsAccepted(checked)}
-                  className="peer h-4 w-4 border-2 border-gray-400 rounded"
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="h-4 w-4 rounded border-2 border-gray-400 cursor-pointer accent-primary"
                 />
                 <label
                   htmlFor="terms"
-                  className="text-xs mt-2 text-gray-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  className="text-xs mt-2 text-gray-600 leading-none cursor-pointer"
                 >
                   By creating an account you agree to our{" "}
                   <button
@@ -435,5 +429,3 @@ const isFormValid = () => {
     </GoogleOAuthProvider>
   );
 }
-
-
