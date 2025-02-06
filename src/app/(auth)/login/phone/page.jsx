@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -16,15 +15,13 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/auth/login-phone`,
         {
-          phone: phoneNumber,
+          phone: phoneNumber, // This will now send the full phone number
         }
       );
-
       if (response.status === 200) {
         router.push(
           `/login/phone/verify-otp?phone=${encodeURIComponent(phoneNumber)}`
