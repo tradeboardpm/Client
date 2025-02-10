@@ -1,20 +1,52 @@
 "use client"
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight, Crown } from "lucide-react"
 import Image from "next/image"
 import { usePointsStore } from "@/stores/points-store"
+import axios from "axios"
+import Cookies from 'js-cookie'
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL
 
 export default function Sidebar({ isOpen }) {
   const pathname = usePathname()
+  const router = useRouter()
   const { points, currentLevel, nextLevel, pointsToNextLevel } = usePointsStore()
   const sidebarRef = useRef(null)
   const [hasOverflow, setHasOverflow] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(true) // Default collapsed for medium screens
+  const [isCollapsed, setIsCollapsed] = useState(true)
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0)
+  const [subscriptionData, setSubscriptionData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      try {
+        const token = Cookies.get('token')
+        if (!token) {
+          console.error('No authentication token found')
+          return
+        }
+
+        const response = await axios.get(`${API_URL}/user/subscription`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        setSubscriptionData(response.data)
+      } catch (error) {
+        console.error('Error fetching subscription:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchSubscription()
+  }, [])
 
   useEffect(() => {
     const handleResize = () => {
@@ -37,6 +69,19 @@ export default function Sidebar({ isOpen }) {
     window.addEventListener("resize", checkOverflow)
     return () => window.removeEventListener("resize", checkOverflow)
   }, [])
+
+  const needsUpgrade = () => {
+    if (!subscriptionData) return true
+    
+    const expiryDate = new Date(subscriptionData.expiresAt)
+    const currentDate = new Date()
+    
+    return subscriptionData.plan === "one-week" || expiryDate < currentDate
+  }
+
+  const handleUpgradeClick = () => {
+    router.push('/plans')
+  }
 
   const navItems = [
     {
@@ -72,17 +117,17 @@ export default function Sidebar({ isOpen }) {
   ]
 
   const toggleCollapse = () => {
-    setIsCollapsed(!isCollapsed)
+    const newState = !isCollapsed
+    setIsCollapsed(newState)
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState))
   }
 
   const isRouteActive = (pattern) => {
     return pattern.test(pathname)
   }
 
-  // Determine if we're on a small screen
-  const isSmallScreen = windowWidth < 768 // md breakpoint
+  const isSmallScreen = windowWidth < 768
 
-  // Determine sidebar classes based on screen size
   const getSidebarClasses = () => {
     if (isSmallScreen) {
       return `fixed inset-y-0 left-0 transform ${
@@ -131,7 +176,6 @@ export default function Sidebar({ isOpen }) {
           </nav>
 
           <div className="flex flex-col gap-2">
-            {/* Points Card */}
             <Card
               className={`bg-gradient-to-b from-[#A073F0] to-[#7886DD] shadow-[0px_8px_24px_rgba(6,46,112,0.25)] flex-shrink-0 ${
                 isCollapsed && !isSmallScreen ? "p-2 rounded-lg" : "rounded-3xl"
@@ -157,41 +201,46 @@ export default function Sidebar({ isOpen }) {
               </CardContent>
             </Card>
 
-            {/* Upgrade Card */}
-            <Card className={`bg-transparent flex-shrink-0 ${
-              isCollapsed && !isSmallScreen ? "pt-4" : "pt-12"
-            } relative shadow-none`}>
-              <CardContent
-                className={`text-center flex flex-col items-center bg-[#EBEEFF] dark:bg-[#38383c] ${
-                  isCollapsed && !isSmallScreen ? "px-2 py-4 rounded-lg" : "p-4 rounded-3xl"
-                }`}
-              >
-                {isCollapsed && !isSmallScreen ? (
-                  <div className="flex justify-center w-full">
-                    <Crown className="h-5 w-5 text-primary" />
-                  </div>
-                ) : (
-                  <>
-                    <Image
-                      src="/images/Feature.png"
-                      width={175}
-                      height={100}
-                      alt="Upgrade"
-                      className="absolute top-1.5"
-                    />
-                    <p className="mt-24 font-semibold">
-                      Upgrade to <span className="text-primary">PRO</span> for more features.
-                    </p>
-                    <Button className="text-background w-full mt-2">Upgrade</Button>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+            {needsUpgrade() && (
+              <Card className={`bg-transparent flex-shrink-0 ${
+                isCollapsed && !isSmallScreen ? "pt-4" : "pt-12"
+              } relative shadow-none`}>
+                <CardContent
+                  className={`text-center flex flex-col items-center bg-[#EBEEFF] dark:bg-[#38383c] ${
+                    isCollapsed && !isSmallScreen ? "px-2 py-4 rounded-lg" : "p-4 rounded-3xl"
+                  }`}
+                >
+                  {isCollapsed && !isSmallScreen ? (
+                    <div className="flex justify-center w-full">
+                      <Crown className="h-5 w-5 text-primary" />
+                    </div>
+                  ) : (
+                    <>
+                      <Image
+                        src="/images/Feature.png"
+                        width={175}
+                        height={100}
+                        alt="Upgrade"
+                        className="absolute top-1.5"
+                      />
+                      <p className="mt-24 font-semibold">
+                        Upgrade to <span className="text-primary">PRO</span> for more features.
+                      </p>
+                      <Button 
+                        className="text-background w-full mt-2"
+                        onClick={handleUpgradeClick}
+                      >
+                        Upgrade
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Collapse button - only show on medium and large screens */}
       {!isSmallScreen && (
         <Button
           variant="ghost"
@@ -202,7 +251,6 @@ export default function Sidebar({ isOpen }) {
         </Button>
       )}
 
-      {/* Overlay for small screens */}
       {isSmallScreen && isOpen && (
         <div
           className="fixed inset-0"

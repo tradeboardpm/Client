@@ -1,14 +1,13 @@
 import { Check } from "lucide-react";
-
-const { Button } = require("@/components/ui/button");
-const {
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
   Card,
   CardHeader,
   CardTitle,
   CardContent,
   CardFooter,
-} = require("@/components/ui/card");
-const { default: Image } = require("next/image");
+} from "@/components/ui/card";
 
 const pricingPlans = [
   {
@@ -26,6 +25,7 @@ const pricingPlans = [
     ],
     buttonText: "Get Started Now",
     buttonVariant: "",
+    planId: "free"
   },
   {
     name: "Half-Year Adventure",
@@ -42,6 +42,7 @@ const pricingPlans = [
     ],
     buttonText: "Get Started Now",
     buttonVariant: "",
+    planId: "half-year"
   },
   {
     name: "Year of Possibilities",
@@ -60,10 +61,22 @@ const pricingPlans = [
     buttonVariant: "default",
     highlight: true,
     discount: true,
+    planId: "yearly"
   },
 ];
 
 const PricingSection = () => {
+  const router = useRouter();
+
+  const handlePlanSelection = (planId) => {
+    // Store the selected plan and current route in localStorage
+    localStorage.setItem('selectedPlan', planId);
+    localStorage.setItem('sourceRoute', window.location.pathname);
+    
+    // Navigate to signup page
+    router.push('/sign-up');
+  };
+
   return (
     <section
       className="py-20 primary_gradient scroll-mt-20 text-background"
@@ -112,7 +125,11 @@ const PricingSection = () => {
                   </ul>
                 </CardContent>
                 <CardFooter>
-                  <Button className="w-full" variant={plan.buttonVariant}>
+                  <Button 
+                    className="w-full" 
+                    variant={plan.buttonVariant}
+                    onClick={() => handlePlanSelection(plan.planId)}
+                  >
                     {plan.buttonText}
                   </Button>
                 </CardFooter>

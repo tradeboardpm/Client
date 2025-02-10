@@ -59,7 +59,7 @@ const JournalPage = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [journalData, setJournalData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-    const { toast } = useToast();
+  const { toast } = useToast();
 
   const fetchJournalData = async () => {
     try {
@@ -103,7 +103,6 @@ const JournalPage = () => {
       return newDate;
     });
   };
-  
 
   const handleDeleteJournal = async (id) => {
     setJournalData((prevData) => {
@@ -120,6 +119,9 @@ const JournalPage = () => {
       .fill(null)
       .map((_, index) => <JournalCardSkeleton key={`skeleton-${index}`} />);
   };
+
+  // Check if the currentDate is in the same month as the current date
+  const isCurrentMonth = currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
 
   return (
     <div className="bg-card">
@@ -142,8 +144,8 @@ const JournalPage = () => {
               </h2>
               <button
                 onClick={() => changeMonth(1)}
-                className="text-white hover:bg-white/20 p-2 rounded-full transition-colors flex-shrink-0"
-                disabled={isLoading}
+                className={` p-2 rounded-full transition-colors flex-shrink-0 ${isCurrentMonth ? " opacity-40" : "text-white hover:bg-white/20"}`}
+                disabled={isLoading || isCurrentMonth}
               >
                 <ChevronsRight className="h-5 w-5" />
               </button>

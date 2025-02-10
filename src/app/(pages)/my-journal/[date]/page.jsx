@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import axios from "axios"
 import Cookies from "js-cookie"
-import { format, addDays, parseISO } from "date-fns"
+import { format, parseISO } from "date-fns"
 import { ArrowLeft, ChevronLeft, ChevronRight, BarChart, X } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
@@ -21,6 +21,7 @@ const JournalDetailsPage = () => {
   const [journalDetails, setJournalDetails] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(parseISO(params.date))
+  const [journalDates, setJournalDates] = useState([]) // Array of all journal dates
   const [sidebarExpanded, setSidebarExpanded] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("sidebarExpanded")
@@ -34,22 +35,26 @@ const JournalDetailsPage = () => {
   const [tradesPerDay, setTradesPerDay] = useState(4)
   const [selectedImage, setSelectedImage] = useState(null)
 
-  // Mobile detection
+  // Fetch all journal dates
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768)
+    const fetchJournalDates = async () => {
+      try {
+        const token = Cookies.get("token")
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/metrics/dates`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+        setJournalDates(response.data.dates)
+      } catch (error) {
+        console.error("Error fetching journal dates:", error)
+      }
     }
 
-    checkMobile()
-    window.addEventListener("resize", checkMobile)
-    return () => window.removeEventListener("resize", checkMobile)
+    fetchJournalDates()
   }, [])
 
-  // Persist sidebar state
-  useEffect(() => {
-    localStorage.setItem("sidebarExpanded", JSON.stringify(sidebarExpanded))
-  }, [sidebarExpanded])
-
+  // Fetch journal details for the current date
   useEffect(() => {
     const fetchJournalDetails = async () => {
       try {
@@ -77,34 +82,33 @@ const JournalDetailsPage = () => {
     setSidebarExpanded(!sidebarExpanded)
   }
 
-  const handleSectionClick = (section) => {
-    setSelectedSection(section)
-    setSidebarExpanded(true)
-  }
+  // Navigate to the next or previous journal
+  const navigateJournal = (direction) => {
+    const currentIndex = journalDates.findIndex((date) => date === format(currentDate, "yyyy-MM-dd"))
+    if (currentIndex === -1) return
 
-  const handleDateChange = (date) => {
-    const formattedDate = format(date, "yyyy-MM-dd")
-    router.push(`/my-journal/${formattedDate}`)
-    setCurrentDate(date)
-
-    if (isMobile) {
-      setIsSideSheetOpen(false)
+    const newIndex = currentIndex + direction
+    if (newIndex >= 0 && newIndex < journalDates.length) {
+      const newDate = parseISO(journalDates[newIndex])
+      setCurrentDate(newDate)
+      router.push(`/my-journal/${journalDates[newIndex]}`)
     }
   }
 
-  const changeDate = (days) => {
-    const newDate = addDays(currentDate, days)
-    const formattedDate = format(newDate, "yyyy-MM-dd")
-    setCurrentDate(newDate)
-    router.push(`/my-journal/${formattedDate}`, undefined, { shallow: true })
+  // Check if there is a next or previous journal
+  const hasNextJournal = () => {
+    const currentIndex = journalDates.findIndex((date) => date === format(currentDate, "yyyy-MM-dd"))
+    return currentIndex < journalDates.length - 1
   }
 
-  const handleImageClick = (imageUrl) => {
-    setSelectedImage(imageUrl)
+  const hasPreviousJournal = () => {
+    const currentIndex = journalDates.findIndex((date) => date === format(currentDate, "yyyy-MM-dd"))
+    return currentIndex > 0
   }
 
+  // Render date navigation with next/previous journal buttons
   const renderDateNavigation = () => (
-    <nav aria-label="Journal Date Navigation">
+    <nav aria-label="Journal Navigation">
       <button
         onClick={() => router.push("/my-journal")}
         className="flex items-center text-foreground/70 hover:text-foreground transition-colors mb-4 rounded-full border size-10 justify-center"
@@ -115,9 +119,10 @@ const JournalDetailsPage = () => {
       <div className="flex items-center mb-6 space-x-4 primary_gradient rounded-xl">
         <div className="flex flex-1 bg-accent/20 p-2 rounded-lg items-center justify-center gap-4">
           <button
-            onClick={() => changeDate(-1)}
+            onClick={() => navigateJournal(-1)}
             className="p-1 hover:bg-[#ffffff]/50 text-background rounded-full transition-colors"
-            aria-label="Previous Day"
+            aria-label="Previous Journal"
+            disabled={!hasPreviousJournal()}
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
@@ -125,9 +130,10 @@ const JournalDetailsPage = () => {
             {format(currentDate, "EEE, d MMM yyyy")}
           </h2>
           <button
-            onClick={() => changeDate(1)}
+            onClick={() => navigateJournal(1)}
             className="p-1 hover:bg-[#ffffff]/50 text-background rounded-full transition-colors"
-            aria-label="Next Day"
+            aria-label="Next Journal"
+            disabled={!hasNextJournal()}
           >
             <ChevronRight className="h-5 w-5" />
           </button>
@@ -135,7 +141,6 @@ const JournalDetailsPage = () => {
       </div>
     </nav>
   )
-
   const renderLoadingState = () => (
     <div className="flex justify-center items-center h-screen">
       <p>Loading...</p>

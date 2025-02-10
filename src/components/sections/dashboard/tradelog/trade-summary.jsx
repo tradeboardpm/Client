@@ -3,6 +3,10 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 import { Info } from 'lucide-react';
 
 export function TradeSummary({ summary }) {
+  if (summary.totalPnL === 0 && summary.totalCharges === 0 && summary.totalNetPnL === 0) {
+    return null;
+  }
+
   return (
     <div className="flex gap-6 items-center justify-between mt-6">
       <div
@@ -37,10 +41,7 @@ export function TradeSummary({ summary }) {
               <HoverCardContent className="w-80">
                 <div className="flex flex-col gap-2">
                   <p className="text-sm text-muted-foreground">
-                    Add the same trades here which you executed on your broker’s
-                    platform. When you journal your every trade, we build
-                    analytics on your trading pattern. This ultimately helps you
-                    to become more disciplined while taking trades
+                    Total Charges = Exchange charge + Brokerage
                   </p>
                 </div>
               </HoverCardContent>
@@ -76,4 +77,3 @@ export function TradeSummary({ summary }) {
     </div>
   );
 }
-

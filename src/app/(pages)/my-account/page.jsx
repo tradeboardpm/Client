@@ -69,6 +69,8 @@ export default function AccountPage() {
     symbol: false,
   });
 
+
+
   const [isGoogleUser, setIsGoogleUser] = useState(false);
   const [createPasswordOpen, setCreatePasswordOpen] = useState(false);
   const [addPhoneOpen, setAddPhoneOpen] = useState(false);
@@ -350,6 +352,34 @@ export default function AccountPage() {
     }
   };
 
+
+
+  const formatPlanName = (plan) => {
+    switch (plan) {
+      case "one-week":
+        return "Free 7 Days";
+      case "half-year":
+        return "6 Months Plan";
+      case "yearly":
+        return "Yearly Plan";
+      default:
+        return plan;
+    }
+  };
+
+  // Function to check if plan needs upgrade
+  const needsUpgrade = () => {
+    if (!user?.subscription) return false;
+    
+    const expiryDate = new Date(user.subscription.expiresAt);
+    const currentDate = new Date();
+    
+    return (
+      user.subscription.plan === "one-week" ||
+      expiryDate <= currentDate
+    );
+  };
+
   return (
     <div className="bg-card">
       <div className="p-6 bg-background rounded-t-xl">
@@ -483,7 +513,7 @@ export default function AccountPage() {
         )}
 
         {/* Dashboard Settings Section */}
-        <Card>
+        <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle>Dashboard Settings</CardTitle>
@@ -509,6 +539,46 @@ export default function AccountPage() {
               <div>
                 <Label>Trades Per Day</Label>
                 <Input value={settings?.tradesPerDay} readOnly />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card >
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Subscription Plan</CardTitle>
+              <CardDescription>
+                Manage your subscription details
+              </CardDescription>
+            </div>
+            {needsUpgrade() && (
+              <Button 
+                variant="outline"
+                onClick={() => router.push('/plans')}
+              >
+                Upgrade Plan
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="grid gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Current Plan</Label>
+                <Input 
+                  value={user?.subscription ? formatPlanName(user.subscription.plan) : 'No Plan'} 
+                  readOnly 
+                />
+              </div>
+              <div>
+                <Label>Expiry Date</Label>
+                <Input 
+                  value={user?.subscription 
+                    ? new Date(user.subscription.expiresAt).toLocaleDateString()
+                    : 'N/A'
+                  } 
+                  readOnly 
+                />
               </div>
             </div>
           </CardContent>

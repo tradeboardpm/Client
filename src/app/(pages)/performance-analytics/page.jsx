@@ -162,7 +162,7 @@ export default function PerformaceAnalytics() {
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    limit: 6,
+    limit: 12,
   })
   const [period, setPeriod] = useState("thisWeek")
   const [metricsDateRange, setMetricsDateRange] = useState({
@@ -641,6 +641,7 @@ export default function PerformaceAnalytics() {
                       <JournalCard
                         key={date}
                         date={date}
+                        id={date}
                         note={journal.note}
                         mistake={journal.mistake}
                         lesson={journal.lesson}

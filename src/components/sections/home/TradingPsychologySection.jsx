@@ -45,9 +45,10 @@ const TradingPsychologySection = () => {
                 Trade Log
               </h3>
               <p className="text-sm md:text-base mb-2 md:mb-4">
-                Automatically add the trades log using tradebook provided by
-                your broker or create manual trades entries. We analyse this
-                data to provide you best trading performance analytics.
+                Add the same trades here which you executed on your broker’s
+                platform. When you journal your every trade, we build analytics
+                on your trading pattern. This ultimately helps you to become
+                more disciplined while taking trades.
               </p>
             </Card>
             <div className="p-4 rounded-xl bg-[#8885FF]/15 w-fit ">

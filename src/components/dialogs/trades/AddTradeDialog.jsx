@@ -260,7 +260,7 @@ export function AddTradeDialog({ open, onOpenChange, onSubmit, brokerage: initia
                   <SelectItem value={EQUITY_TYPES.FNO_OPTIONS}>F&O-OPTIONS</SelectItem>
                   <SelectItem value={EQUITY_TYPES.FNO_FUTURES}>F&O-FUTURES</SelectItem>
                   <SelectItem value={EQUITY_TYPES.INTRADAY}>INTRADAY EQUITY</SelectItem>
-                  <SelectItem value={EQUITY_TYPES.DELIVERY}>DELIVERY</SelectItem>
+                  <SelectItem value={EQUITY_TYPES.DELIVERY}>DELIVERY EQUITY</SelectItem>
                   <SelectItem value={EQUITY_TYPES.OTHER}>OTHER</SelectItem>
                 </SelectContent>
               </Select>
