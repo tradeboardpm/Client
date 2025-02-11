@@ -85,6 +85,7 @@ export default function JournalTradePage() {
   const { setPoints } = usePointsStore();
 
   const userName = Cookies.get("userName") || "Trader";
+  const subscription = Cookies.get("subscription");
 
   // Mobile detection
   useEffect(() => {

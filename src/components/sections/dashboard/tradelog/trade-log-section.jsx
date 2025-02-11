@@ -15,11 +15,10 @@ import { EditCompleteTradeDialog } from "@/components/dialogs/trades/EditComplet
 import { DeleteTradeDialog } from "@/components/dialogs/trades/DeleteTradeDialog";
 import { CompleteTradeDialog } from "@/components/dialogs/trades/CompleteTradeDialog.jsx";
 
-// Continuing TradesSection.jsx
 export function TradesSection({
   selectedDate,
   brokerage,
-  onTradeChange, // Add this new prop
+  onTradeChange,
   onUpdate,
 }) {
   const [trades, setTrades] = useState([]);
@@ -37,6 +36,12 @@ export function TradesSection({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
+
+  useEffect(() => {
+    const subscription = Cookies.get('subscription');
+    setHasSubscription(subscription === 'true');
+  }, []);
 
   useEffect(() => {
     fetchTradesData();
@@ -48,10 +53,10 @@ export function TradesSection({
     );
   };
 
-    const handleTradeUpdate = async () => {
-      await fetchTradesData();
-      onTradeChange?.(); // Call the parent's callback if provided
-    };
+  const handleTradeUpdate = async () => {
+    await fetchTradesData();
+    onTradeChange?.();
+  };
 
   const fetchTradesData = async () => {
     setIsLoading(true);
@@ -76,6 +81,7 @@ export function TradesSection({
   };
 
   const handleTradeAction = (action, trade = null) => {
+    if (!hasSubscription) return;
     setSelectedTrade(trade);
     switch (action) {
       case "add":
@@ -110,6 +116,7 @@ export function TradesSection({
           <Button
             onClick={() => handleTradeAction("add")}
             className="bg-primary"
+            disabled={!hasSubscription}
           >
             <Plus className="mr-2 h-4 w-4" /> Add Trade
           </Button>
@@ -147,6 +154,7 @@ export function TradesSection({
               }
               onDelete={(trade) => handleTradeAction("delete", trade)}
               onCompleteTrade={(trade) => handleTradeAction("complete", trade)}
+              hasSubscription={hasSubscription}
             />
             <TradeSummary summary={tradeSummary} />
           </>
@@ -168,7 +176,7 @@ export function TradesSection({
       <AddTradeDialog
         open={addTradeOpen}
         onOpenChange={setAddTradeOpen}
-        onSubmit={handleTradeUpdate} // Update this
+        onSubmit={handleTradeUpdate}
         selectedDate={selectedDate}
         brokerage={brokerage}
       />
@@ -177,21 +185,21 @@ export function TradesSection({
         open={editOpenTradeOpen}
         onOpenChange={setEditOpenTradeOpen}
         trade={selectedTrade}
-        onSubmit={handleTradeUpdate} // Update this
+        onSubmit={handleTradeUpdate}
       />
 
       <EditCompleteTradeDialog
         open={editCompleteTradeOpen}
         onOpenChange={setEditCompleteTradeOpen}
         trade={selectedTrade}
-        onSubmit={handleTradeUpdate} // Update this
+        onSubmit={handleTradeUpdate}
       />
 
       <CompleteTradeDialog
         open={completeTradeOpen}
         onOpenChange={setCompleteTradeOpen}
         trade={selectedTrade}
-        onSubmit={handleTradeUpdate} // Update this
+        onSubmit={handleTradeUpdate}
         selectedDate={selectedDate}
         brokerage={brokerage}
       />
@@ -200,13 +208,13 @@ export function TradesSection({
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         trade={selectedTrade}
-        onDelete={handleTradeUpdate} // Update this
+        onDelete={handleTradeUpdate}
       />
 
       <ImportTradeDialog
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
-        onImportComplete={handleTradeUpdate} // Update this
+        onImportComplete={handleTradeUpdate}
         defaultBrokerage={brokerage}
       />
     </Card>

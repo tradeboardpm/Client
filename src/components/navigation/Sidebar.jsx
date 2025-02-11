@@ -1,87 +1,57 @@
-"use client"
-import { useEffect, useRef, useState } from "react"
-import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight, Crown } from "lucide-react"
-import Image from "next/image"
-import { usePointsStore } from "@/stores/points-store"
-import axios from "axios"
-import Cookies from 'js-cookie'
+"use client";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronLeft, ChevronRight, Crown } from "lucide-react";
+import Image from "next/image";
+import { usePointsStore } from "@/stores/points-store";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL
-
-export default function Sidebar({ isOpen }) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const { points, currentLevel, nextLevel, pointsToNextLevel } = usePointsStore()
-  const sidebarRef = useRef(null)
-  const [hasOverflow, setHasOverflow] = useState(false)
-  const [isCollapsed, setIsCollapsed] = useState(true)
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0)
-  const [subscriptionData, setSubscriptionData] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const token = Cookies.get('token')
-        if (!token) {
-          console.error('No authentication token found')
-          return
-        }
-
-        const response = await axios.get(`${API_URL}/user/subscription`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
-        setSubscriptionData(response.data)
-      } catch (error) {
-        console.error('Error fetching subscription:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchSubscription()
-  }, [])
+export default function Sidebar({ isOpen, subscriptionData }) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const { points, currentLevel, nextLevel, pointsToNextLevel } = usePointsStore();
+  const sidebarRef = useRef(null);
+  const [hasOverflow, setHasOverflow] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 0);
+  
 
   useEffect(() => {
     const handleResize = () => {
-      setWindowWidth(window.innerWidth)
-    }
+      setWindowWidth(window.innerWidth);
+    };
 
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const checkOverflow = () => {
       if (sidebarRef.current) {
-        const hasVerticalOverflow = sidebarRef.current.scrollHeight > sidebarRef.current.clientHeight
-        setHasOverflow(hasVerticalOverflow)
+        const hasVerticalOverflow = sidebarRef.current.scrollHeight > sidebarRef.current.clientHeight;
+        setHasOverflow(hasVerticalOverflow);
       }
-    }
+    };
 
-    checkOverflow()
-    window.addEventListener("resize", checkOverflow)
-    return () => window.removeEventListener("resize", checkOverflow)
-  }, [])
+    checkOverflow();
+    window.addEventListener("resize", checkOverflow);
+    return () => window.removeEventListener("resize", checkOverflow);
+  }, []);
 
   const needsUpgrade = () => {
-    if (!subscriptionData) return true
-    
-    const expiryDate = new Date(subscriptionData.expiresAt)
-    const currentDate = new Date()
-    
-    return subscriptionData.plan === "one-week" || expiryDate < currentDate
-  }
+    if (!subscriptionData) return true;
+
+    const expiryDate = new Date(subscriptionData.expiresAt);
+    const currentDate = new Date();
+
+    return subscriptionData.plan ===  expiryDate < currentDate;
+  };
 
   const handleUpgradeClick = () => {
-    router.push('/plans')
-  }
+    router.push("/plans");
+  };
 
   const navItems = [
     {
@@ -114,38 +84,38 @@ export default function Sidebar({ isOpen }) {
       href: "/my-account",
       pattern: /^\/my-account/,
     },
-  ]
+  ];
 
   const toggleCollapse = () => {
-    const newState = !isCollapsed
-    setIsCollapsed(newState)
-    localStorage.setItem('sidebarCollapsed', JSON.stringify(newState))
-  }
+    const newState = !isCollapsed;
+    setIsCollapsed(newState);
+    localStorage.setItem("sidebarCollapsed", JSON.stringify(newState));
+  };
 
   const isRouteActive = (pattern) => {
-    return pattern.test(pathname)
-  }
+    return pattern.test(pathname);
+  };
 
-  const isSmallScreen = windowWidth < 768
+  const isSmallScreen = windowWidth < 768;
 
   const getSidebarClasses = () => {
     if (isSmallScreen) {
       return `fixed inset-y-0 left-0 transform ${
-        isOpen ? 'translate-x-0 w-full' : '-translate-x-full'
-      } w-64 z-50 transition-transform duration-200 ease-in-out mt-14`
+        isOpen ? "translate-x-0 w-full" : "-translate-x-full"
+      } w-64 z-50 transition-transform duration-200 ease-in-out mt-14`;
     }
-    
+
     return `relative transform translate-x-0 ${
-      isCollapsed ? 'lg:w-16 md:w-16' : 'lg:w-[14.5rem] md:w-[14.5rem]'
-    } transition-all duration-200 ease-in-out z-0`
-  }
+      isCollapsed ? "lg:w-16 md:w-16" : "lg:w-[14.5rem] md:w-[14.5rem]"
+    } transition-all duration-200 ease-in-out z-0`;
+  };
 
   return (
     <div className="relative flex">
       <div
         ref={sidebarRef}
         className={`bg-card ${getSidebarClasses()} flex flex-col max-h-screen overflow-hidden hover:overflow-y-auto ${
-          isCollapsed && !isSmallScreen ? 'p-2' : 'p-3'
+          isCollapsed && !isSmallScreen ? "p-2" : "p-3"
         }`}
       >
         <div className="flex flex-col justify-between h-full space-y-4">
@@ -226,7 +196,7 @@ export default function Sidebar({ isOpen }) {
                       <p className="mt-24 font-semibold">
                         Upgrade to <span className="text-primary">PRO</span> for more features.
                       </p>
-                      <Button 
+                      <Button
                         className="text-background w-full mt-2"
                         onClick={handleUpgradeClick}
                       >
@@ -254,9 +224,9 @@ export default function Sidebar({ isOpen }) {
       {isSmallScreen && isOpen && (
         <div
           className="fixed inset-0"
-          onClick={() => isOpen && window.dispatchEvent(new CustomEvent('closeSidebar'))}
+          onClick={() => isOpen && window.dispatchEvent(new CustomEvent("closeSidebar"))}
         />
       )}
     </div>
-  )
+  );
 }

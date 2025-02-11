@@ -118,7 +118,6 @@ const ImageDialog = ({ isOpen, onClose, imageUrl, onDelete, isDeleting }) => {
   );
 };
 
-
 export function JournalSection({ selectedDate }) {
   const [journal, setJournal] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -126,6 +125,7 @@ export function JournalSection({ selectedDate }) {
   const [isFileUploading, setIsFileUploading] = useState(false);
   const [isDeletingFile, setIsDeletingFile] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [hasSubscription, setHasSubscription] = useState(false);
   const [localJournal, setLocalJournal] = useState({
     note: "",
     mistake: "",
@@ -133,6 +133,12 @@ export function JournalSection({ selectedDate }) {
   });
   const [files, setFiles] = useState([]);
   const [deletingFileKey, setDeletingFileKey] = useState(null);
+
+  // Check subscription status from cookies
+  useEffect(() => {
+    const subscriptionStatus = Cookies.get('subscription') === 'true';
+    setHasSubscription(subscriptionStatus);
+  }, []);
 
   // Utility function to get UTC date
   const getUTCDate = (date) => {
@@ -165,7 +171,7 @@ export function JournalSection({ selectedDate }) {
 
   // Save journal function
   const saveJournal = async (journalData) => {
-    if (!journalData) return;
+    if (!journalData || !hasSubscription) return;
 
     setIsSaving(true);
     try {
@@ -196,6 +202,8 @@ export function JournalSection({ selectedDate }) {
 
   // Update journal entries
   const handleChange = (e) => {
+    if (!hasSubscription) return;
+    
     const { name, value } = e.target;
     const updatedJournal = {
       ...localJournal,
@@ -208,12 +216,16 @@ export function JournalSection({ selectedDate }) {
 
   // Handle blur event
   const handleBlur = () => {
+    if (!hasSubscription) return;
+    
     debouncedSaveJournal.cancel();
     saveJournal(localJournal);
   };
 
   // File upload handler
   const handleFileUpload = async (e) => {
+    if (!hasSubscription) return;
+
     const originalFile = e.target.files?.[0];
     if (!originalFile) return;
 
@@ -263,6 +275,8 @@ export function JournalSection({ selectedDate }) {
 
   // File deletion handler
   const handleFileDelete = async (fileKey) => {
+    if (!hasSubscription) return;
+
     setDeletingFileKey(fileKey);
     setIsDeletingFile(true);
 
@@ -317,9 +331,14 @@ export function JournalSection({ selectedDate }) {
         <CardHeader className="p-4">
           <CardTitle className="flex font-medium text-xl items-center gap-2">
             Today's Journal
-            {isSaving && (
+            {isSaving && hasSubscription && (
               <span className="text-sm font-normal text-muted-foreground">
                 (Saving...)
+              </span>
+            )}
+            {!hasSubscription && (
+              <span className="text-sm font-normal text-destructive">
+                (Subscribe to unlock)
               </span>
             )}
           </CardTitle>
@@ -329,10 +348,11 @@ export function JournalSection({ selectedDate }) {
             <label className="text-xs font-medium">Notes</label>
             <Textarea
               name="note"
-              placeholder="Type your notes here..."
+              placeholder={hasSubscription ? "Type your notes here..." : "Subscribe to unlock journaling"}
               value={localJournal.note}
               onChange={handleChange}
               onBlur={handleBlur}
+              disabled={!hasSubscription}
               className="resize-none h-full flex-1 bg-background shadow-[0px_2px_8px_rgba(0,0,0,0.02)] border-t-0 text-[0.8rem]"
             />
           </div>
@@ -341,10 +361,11 @@ export function JournalSection({ selectedDate }) {
             <label className="text-xs font-medium">Mistakes</label>
             <Textarea
               name="mistake"
-              placeholder="Type your mistakes here..."
+              placeholder={hasSubscription ? "Type your mistakes here..." : "Subscribe to unlock journaling"}
               value={localJournal.mistake}
               onChange={handleChange}
               onBlur={handleBlur}
+              disabled={!hasSubscription}
               className="resize-none h-full flex-1 bg-background shadow-[0px_2px_8px_rgba(0,0,0,0.02)] border-t-0 text-[0.8rem]"
             />
           </div>
@@ -353,10 +374,11 @@ export function JournalSection({ selectedDate }) {
             <label className="text-xs font-medium">Lessons</label>
             <Textarea
               name="lesson"
-              placeholder="Type your lessons here..."
+              placeholder={hasSubscription ? "Type your lessons here..." : "Subscribe to unlock journaling"}
               value={localJournal.lesson}
               onChange={handleChange}
               onBlur={handleBlur}
+              disabled={!hasSubscription}
               className="resize-none h-full flex-1 bg-background shadow-[0px_2px_8px_rgba(0,0,0,0.02)] border-t-0 text-[0.8rem]"
             />
           </div>
@@ -367,28 +389,13 @@ export function JournalSection({ selectedDate }) {
               <motion.div
                 key={index}
                 className="relative group rounded-lg overflow-hidden w-20 h-8 shadow border cursor-pointer hover:shadow-md transition-shadow"
-                onClick={() => setSelectedImage(fileKey)}
+                onClick={() => hasSubscription && setSelectedImage(fileKey)}
               >
                 <img
                   src={fileKey}
                   alt={`Uploaded file ${index + 1}`}
-                  className="w-full h-full object-cover"
+                  className={cn("w-full h-full object-cover", !hasSubscription && "opacity-50")}
                 />
-               
-                {/* <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleFileDelete(fileKey);
-                  }}
-                  disabled={isDeletingFile && deletingFileKey === fileKey}
-                  className="absolute top-1 right-1 p-1 rounded-full bg-background opacity-0 group-hover:opacity-100 transition-opacity shadow border"
-                >
-                  {isDeletingFile && deletingFileKey === fileKey ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <X className="h-4 w-4" />
-                  )}
-                </button> */}
               </motion.div>
             ))}
           </div>
@@ -399,18 +406,21 @@ export function JournalSection({ selectedDate }) {
             className="hidden"
             accept="image/png,image/jpeg,image/jpg"
             onChange={handleFileUpload}
+            disabled={!hasSubscription}
           />
 
           <div className="flex items-center gap-2">
             <HoverCard>
               <HoverCardTrigger>
-              <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
+                <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
               </HoverCardTrigger>
               <HoverCardContent className="w-80">
                 <div className="flex flex-col gap-2">
                   <p className="text-sm text-muted-foreground">
                     You can add maximum 3 documents Formats: JPEG, JPG, PDF,
                     PNG, HEIF File Size: Maximum 5MB
+                    {!hasSubscription && <br />}
+                    {!hasSubscription && "(Subscribe to unlock this feature)"}
                   </p>
                 </div>
               </HoverCardContent>
@@ -420,11 +430,11 @@ export function JournalSection({ selectedDate }) {
               variant="outline"
               className={cn(
                 "w-fit flex items-center h-fit px-2 py-1.5 text-xs",
-                (files.length >= 3 || isFileUploading) &&
-                  "opacity-50 cursor-not-allowed"
+                ((files.length >= 3 || isFileUploading || !hasSubscription) &&
+                  "opacity-50 cursor-not-allowed")
               )}
-              onClick={() => document.getElementById("file-upload")?.click()}
-              disabled={files.length >= 3 || isFileUploading}
+              onClick={() => hasSubscription && document.getElementById("file-upload")?.click()}
+              disabled={files.length >= 3 || isFileUploading || !hasSubscription}
             >
               {isFileUploading ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -438,7 +448,7 @@ export function JournalSection({ selectedDate }) {
       </Card>
 
       <ImageDialog
-        isOpen={!!selectedImage}
+        isOpen={!!selectedImage && hasSubscription}
         onClose={() => setSelectedImage(null)}
         imageUrl={selectedImage}
         onDelete={() => handleFileDelete(selectedImage)}

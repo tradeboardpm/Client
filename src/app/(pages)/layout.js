@@ -15,6 +15,7 @@ export default function MainLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [subscriptionData, setSubscriptionData] = useState(null);
   const router = useRouter();
 
   const clearCookiesAndRedirect = useCallback(() => {
@@ -23,6 +24,8 @@ export default function MainLayout({ children }) {
     Cookies.remove("expiry");
     Cookies.remove("userEmail");
     Cookies.remove("userId");
+    Cookies.remove("subscription");
+    Cookies.remove("plan");
     router.push("/");
   }, [router]);
 
@@ -58,11 +61,58 @@ export default function MainLayout({ children }) {
     }
   }, [clearCookiesAndRedirect]);
 
+  const checkSubscriptionStatus = useCallback(async () => {
+    try {
+      const token = Cookies.get("token");
+      if (!token) {
+        clearCookiesAndRedirect();
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/user/subscription`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch subscription status");
+      }
+
+      const data = await response.json();
+      setSubscriptionData(data); // Store the complete subscription data
+
+      // Check if the subscription is expired
+      const currentDate = new Date();
+      const expiresAt = new Date(data.expiresAt);
+
+      if (expiresAt > currentDate) {
+        Cookies.set("subscription", "true", { expires: 7 });
+        Cookies.set("plan", data.plan, { expires: 7 });
+      } else {
+        Cookies.set("subscription", "false", { expires: 7 });
+        Cookies.set("plan", data.plan, { expires: 7 });
+        toast.error("Your subscription has expired. Please renew your subscription.");
+      }
+    } catch (error) {
+      console.error("Subscription check error:", error);
+      toast.error("Failed to check subscription status. Please try again.");
+    }
+  }, [clearCookiesAndRedirect]);
+
   useEffect(() => {
     validateToken();
+    checkSubscriptionStatus();
     const intervalId = setInterval(validateToken, 60000);
-    return () => clearInterval(intervalId);
-  }, [validateToken]);
+    const subscriptionIntervalId = setInterval(checkSubscriptionStatus, 60000);
+    return () => {
+      clearInterval(intervalId);
+      clearInterval(subscriptionIntervalId);
+    };
+  }, [validateToken, checkSubscriptionStatus]);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -79,7 +129,6 @@ export default function MainLayout({ children }) {
         if (response.ok) {
           const data = await response.json();
 
-          // Separate notifications and announcements
           const notificationItems = data.filter(
             (item) => item.type === "notification"
           );
@@ -96,7 +145,6 @@ export default function MainLayout({ children }) {
     };
 
     fetchAnnouncements();
-    // Poll for new announcements every minute
     const intervalId = setInterval(fetchAnnouncements, 60000);
     return () => clearInterval(intervalId);
   }, []);
@@ -141,7 +189,7 @@ export default function MainLayout({ children }) {
       />
 
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={sidebarOpen} />
+        <Sidebar isOpen={sidebarOpen} subscriptionData={subscriptionData} />
         <div className="flex-1 overflow-auto">
           <Toaster />
           <Toaster2 />

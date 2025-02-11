@@ -34,6 +34,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [ruleToDelete, setRuleToDelete] = useState(null);
   const [newRulesDialog, setNewRulesDialog] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
 
   const [isLoadingRules, setIsLoadingRules] = useState(false);
   const [isLoadingAction, setIsLoadingAction] = useState({
@@ -46,6 +47,9 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   });
 
   useEffect(() => {
+    // Check subscription status from cookies
+    const subscriptionStatus = Cookies.get('subscription') === 'true';
+    setHasSubscription(subscriptionStatus);
     fetchRules();
   }, [selectedDate]);
 
@@ -81,7 +85,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   };
 
   const handleEditRule = async () => {
-    if (!editingRule) return;
+    if (!editingRule || !hasSubscription) return;
 
     setIsLoadingAction((prev) => ({ ...prev, editRule: true }));
     try {
@@ -122,6 +126,8 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   };
 
   const handleDeleteRule = async (ruleId) => {
+    if (!hasSubscription) return;
+
     setIsLoadingAction((prev) => ({ ...prev, deleteRule: true }));
     try {
       const token = Cookies.get("token");
@@ -150,6 +156,8 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   };
 
   const handleToggleRuleFollow = async (ruleId, isFollowed) => {
+    if (!hasSubscription) return;
+
     setIsLoadingAction((prev) => ({ ...prev, followRule: true }));
     try {
       const token = Cookies.get("token");
@@ -171,7 +179,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
         )
       );
 
-      onRulesChange?.()
+      onRulesChange?.();
 
       toast({
         title: `Rule ${isFollowed ? "unfollowed" : "followed"}`,
@@ -192,6 +200,8 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   };
 
   const handleFollowUnfollowAll = async (isFollowed) => {
+    if (!hasSubscription) return;
+
     setIsLoadingAction((prev) => ({ ...prev, followAllRules: true }));
     try {
       const token = Cookies.get("token");
@@ -230,6 +240,8 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   };
 
   const handleLoadSampleRules = async () => {
+    if (!hasSubscription) return;
+
     setIsLoadingAction((prev) => ({ ...prev, loadSampleRules: true }));
     try {
       const token = Cookies.get("token");
@@ -280,9 +292,10 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
     return (
       <>
         <EmptyState
-          onAddRule={() => setNewRulesDialog(true)}
+          onAddRule={() => hasSubscription && setNewRulesDialog(true)}
           onLoadSampleRules={handleLoadSampleRules}
           isLoading={isLoadingAction.loadSampleRules}
+          disabled={!hasSubscription}
         />
         <AddRulesDialog
           open={newRulesDialog}
@@ -332,7 +345,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
             <Button
               className="bg-primary h-fit text-white text-xs px-3 hover:bg-purple-600"
               onClick={() => setNewRulesDialog(true)}
-              disabled={isLoadingAction.addRule}
+              disabled={isLoadingAction.addRule || !hasSubscription}
             >
               {isLoadingAction.addRule ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -363,7 +376,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
                   filteredRules.every((rule) => rule.isFollowed)
                 }
                 onChange={(e) => handleFollowUnfollowAll(e.target.checked)}
-                disabled={isLoadingAction.followAllRules}
+                disabled={isLoadingAction.followAllRules || !hasSubscription}
                 className="w-3.5 h-3.5 cursor-pointer accent-purple-600"
               />
             </div>
@@ -384,7 +397,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
                       onChange={() =>
                         handleToggleRuleFollow(rule._id, rule.isFollowed)
                       }
-                      disabled={isLoadingAction.followRule}
+                      disabled={isLoadingAction.followRule || !hasSubscription}
                       className="w-3.5 h-3.5 cursor-pointer accent-primary hover:border-ring"
                     />
                   </div>
@@ -395,8 +408,8 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
                     <Button
                       size="icon"
                       variant="ghost"
-                      onClick={() => setEditingRule(rule)}
-                      disabled={isLoadingAction.editRule}
+                      onClick={() => hasSubscription && setEditingRule(rule)}
+                      disabled={isLoadingAction.editRule || !hasSubscription}
                       className="p-0 w-fit text-gray-500/35 dark:text-gray-400 hover:text-purple-500 size-5"
                     >
                       <SquarePen className="h-4 w-4" />
@@ -406,10 +419,12 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
                       size="icon"
                       variant="ghost"
                       onClick={() => {
-                        setRuleToDelete(rule);
-                        setIsDeleteDialogOpen(true);
+                        if (hasSubscription) {
+                          setRuleToDelete(rule);
+                          setIsDeleteDialogOpen(true);
+                        }
                       }}
-                      disabled={isLoadingAction.deleteRule}
+                      disabled={isLoadingAction.deleteRule || !hasSubscription}
                       className="p-0 w-fit text-gray-500/35 dark:text-gray-400 hover:text-red-500 size-5"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -446,6 +461,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
               }
               placeholder="Enter your rule"
               maxLength={MAX_RULE_LENGTH}
+              disabled={!hasSubscription}
             />
             <div className="text-xs text-muted-foreground text-right">
               {editingRule?.description.length || 0}/{MAX_RULE_LENGTH}
@@ -465,7 +481,8 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
                 isLoadingAction.editRule ||
                 !editingRule?.description.trim() ||
                 editingRule.description ===
-                  rules.find((r) => r._id === editingRule._id)?.description
+                  rules.find((r) => r._id === editingRule._id)?.description ||
+                !hasSubscription
               }
             >
               {isLoadingAction.editRule ? (
@@ -504,7 +521,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
             <Button
               variant=""
               onClick={() => handleDeleteRule(ruleToDelete?._id || "")}
-              disabled={isLoadingAction.deleteRule}
+              disabled={isLoadingAction.deleteRule || !hasSubscription}
             >
               {isLoadingAction.deleteRule ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -517,4 +534,3 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
     </Card>
   );
 }
-

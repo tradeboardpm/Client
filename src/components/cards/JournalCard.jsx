@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { format } from "date-fns"
 import { ArrowUpRight, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -36,7 +36,14 @@ const JournalCard = ({
   const router = useRouter()
   const { toast } = useToast()
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showSubscriptionDialog, setShowSubscriptionDialog] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [hasSubscription, setHasSubscription] = useState(false)
+
+  useEffect(() => {
+    const subscription = Cookies.get('subscription');
+    setHasSubscription(subscription === 'true');
+  }, []);
 
   const getProfitColor = () => {
     if (profit > 100) return "bg-[#5BFBC2]/35 border border-[#5BFBC2]"
@@ -74,7 +81,18 @@ const JournalCard = ({
     router.push(`/${mainPage}/${date}`)
   }
 
+  const handleDeleteClick = (e) => {
+    e.stopPropagation()
+    if (!hasSubscription) {
+      setShowSubscriptionDialog(true)
+    } else {
+      setShowDeleteDialog(true)
+    }
+  }
+
   const handleDelete = async () => {
+    if (!hasSubscription) return;
+    
     try {
       setIsDeleting(true)
       const token = Cookies.get("token")
@@ -103,6 +121,11 @@ const JournalCard = ({
     }
   }
 
+  const handleUpgradeClick = () => {
+    setShowSubscriptionDialog(false)
+    router.push('/pricing') // Adjust this route to your pricing page route
+  }
+
   return (
     <>
       <Card
@@ -113,11 +136,8 @@ const JournalCard = ({
           <Button
             size="icon"
             variant="destructive"
-            onClick={(e) => {
-              e.stopPropagation()
-              setShowDeleteDialog(true)
-            }}
-            className="absolute top-0 left-0 z-10 hover:scale-110 rounded-none rounded-tl-lg  opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-br-3xl border-t-0 border-l-0"
+            onClick={handleDeleteClick}
+            className="absolute top-0 left-0 z-10 hover:scale-110 rounded-none rounded-tl-lg opacity-0 group-hover:opacity-100 transition-all duration-300 rounded-br-3xl border-t-0 border-l-0 delete-button"
           >
             <Trash2 className="w-4 h-4 text-white" />
           </Button>
@@ -175,6 +195,7 @@ const JournalCard = ({
         </CardFooter>
       </Card>
 
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -191,9 +212,26 @@ const JournalCard = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Subscription Required Dialog */}
+      <AlertDialog open={showSubscriptionDialog} onOpenChange={setShowSubscriptionDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Subscription Required</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deleting journal entries is a premium feature. Please upgrade to a paid subscription to access this functionality.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleUpgradeClick} className="bg-primary hover:bg-primary/90">
+              Upgrade Now
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
 
 export default JournalCard
-

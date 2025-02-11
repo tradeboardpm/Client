@@ -19,6 +19,7 @@ export function TradesTable({
   onDelete,
   onCompleteTrade,
   isDeleting,
+  hasSubscription,
 }) {
   return (
     <div className="rounded-lg overflow-hidden border">
@@ -97,12 +98,13 @@ export function TradesTable({
                         size="icon"
                         variant="ghost"
                         onClick={() => onCompleteTrade(trade)}
-                        className="p-0 w-fit text-gray-500/35  dark:text-gray-400 hover:text-green-500 size-5"
+                        disabled={!hasSubscription}
+                        className="p-0 w-fit text-gray-500/35 dark:text-gray-400 hover:text-green-500 size-5 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <CheckSquare className="h-4 w-4" />
                       </Button>
-                      <span className="absolute -top-4 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-2 rounded border bg-popover  text-xs font-medium shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
-                        Square Off Trade
+                      <span className="absolute -top-4 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-2 rounded border bg-popover text-xs font-medium shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
+                        {hasSubscription ? 'Square Off Trade' : 'Subscription Required'}
                       </span>
                     </div>
                   )}
@@ -114,12 +116,13 @@ export function TradesTable({
                       onClick={() =>
                         trade.isOpen ? onEditOpen(trade) : onEditComplete(trade)
                       }
-                      className="p-0 w-fit text-gray-500/35  dark:text-gray-400 hover:text-purple-500 size-5"
+                      disabled={!hasSubscription}
+                      className="p-0 w-fit text-gray-500/35 dark:text-gray-400 hover:text-purple-500 size-5 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <SquarePen className="h-4 w-4" />
                     </Button>
-                    <span className="absolute -top-4 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-2 rounded border bg-popover  text-xs font-medium shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
-                      Edit Trade
+                    <span className="absolute -top-4 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-2 rounded border bg-popover text-xs font-medium shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
+                      {hasSubscription ? 'Edit Trade' : 'Subscription Required'}
                     </span>
                   </div>
 
@@ -128,8 +131,8 @@ export function TradesTable({
                       size="icon"
                       variant="ghost"
                       onClick={() => onDelete(trade)}
-                      disabled={isDeleting}
-                      className="p-0 w-fit text-gray-500/35  dark:text-gray-400 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed size-5"
+                      disabled={!hasSubscription || isDeleting}
+                      className="p-0 w-fit text-gray-500/35 dark:text-gray-400 hover:text-red-500 disabled:opacity-50 disabled:cursor-not-allowed size-5"
                     >
                       {isDeleting ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -137,8 +140,12 @@ export function TradesTable({
                         <Trash2 className="h-4 w-4" />
                       )}
                     </Button>
-                    <span className="absolute -top-4 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-2 rounded border bg-popover  text-xs font-medium shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
-                      {isDeleting ? "Deleting..." : "Delete"}
+                    <span className="absolute -top-4 left-[50%] -translate-x-[50%] z-20 origin-left scale-0 px-2 rounded border bg-popover text-xs font-medium shadow-md transition-all duration-300 ease-in-out group-hover:scale-100">
+                      {!hasSubscription 
+                        ? 'Subscription Required'
+                        : isDeleting 
+                          ? 'Deleting...' 
+                          : 'Delete Trade'}
                     </span>
                   </div>
                 </div>
