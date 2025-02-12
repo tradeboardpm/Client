@@ -1,7 +1,8 @@
 "use client"
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 
-const PaymentSuccess = () => {
+const PaymentSuccessContent = () => {
   const searchQuery = useSearchParams()
 
   if (!searchQuery) {
@@ -27,5 +28,12 @@ const PaymentSuccess = () => {
   )
 }
 
-export default PaymentSuccess
+const PaymentSuccess = () => {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentSuccessContent />
+    </Suspense>
+  )
+}
 
+export default PaymentSuccess
