@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Monitor, MonitorX } from "lucide-react";
 import PhoneNumberInput from "@/components/ui/phone-input";
+import SubscriptionPlan from "@/components/cards/subsciption";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -38,6 +39,8 @@ export default function AccountPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [user, setUser] = useState(null);
   const [settings, setSettings] = useState(null);
+
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
 
   // Dialog states
   const [personalDetailsOpen, setPersonalDetailsOpen] = useState(false);
@@ -553,11 +556,11 @@ export default function AccountPage() {
               </CardDescription>
             </div>
             {needsUpgrade() && (
-              <Button 
+                <Button 
                 variant="outline"
-                onClick={() => router.push('/plans')}
+                onClick={() => setShowUpgradeDialog(true)}
               >
-                Upgrade Plan
+                Upgrade
               </Button>
             )}
           </CardHeader>
@@ -961,6 +964,12 @@ export default function AccountPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        <Dialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <DialogContent className="sm:max-w-7xl">
+          <SubscriptionPlan />
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   );

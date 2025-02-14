@@ -1,9 +1,19 @@
 "use client"
 import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
+import { Suspense, useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 const PaymentSuccessContent = () => {
   const searchQuery = useSearchParams()
+  const router = useRouter()
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      router.push("/dashboard")
+    }, 5000) // 5000 milliseconds = 5 seconds
+
+    return () => clearTimeout(timer) // Cleanup the timer if the component unmounts
+  }, [router])
 
   if (!searchQuery) {
     return <div>Loading...</div>

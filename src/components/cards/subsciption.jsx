@@ -14,8 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRazorpay } from "@/hooks/use-razorpay";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { ArrowLeft, Check } from "lucide-react";
-import { Toaster } from "@/components/ui/toaster";
+import { Check, Loader2 } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -78,19 +77,24 @@ const pricingPlans = [
   },
 ];
 
-export default function PricingPage() {
+const SubscriptionPlan = ({ selectedPlan }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [activePlan, setActivePlan] = useState(null);
   const router = useRouter();
   const { toast } = useToast();
   const isRazorpayLoaded = useRazorpay();
 
   useEffect(() => {
     const token = Cookies.get("token");
+    const plan = Cookies.get("plan");
+
     if (!token) {
       router.push("/login");
     } else {
       setIsLoggedIn(true);
+      setActivePlan(plan);
       fetchUserProfile(token);
     }
   }, [router]);
@@ -116,10 +120,8 @@ export default function PricingPage() {
     try {
       const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
 
-      // Retrieve the token from cookies
       const token = Cookies.get("token");
 
-      // Call the paymentsuccess API with the Bearer token in the headers
       const result = await axios.post(
         `${API_URL}/payment/payment-success`,
         {
@@ -136,32 +138,32 @@ export default function PricingPage() {
       );
 
       if (result.data.success) {
-        // Handle success (e.g., redirect or show a success message)
         console.log("Payment successful!");
         console.log("Reference:", result.data.reference);
         console.log("Plan:", result.data.plan);
 
-        // Redirect to the success page
         window.location.href = `/payment-success?reference=${result.data.reference}&plan=${result.data.plan}`;
       } else {
         console.error("Payment verification failed.");
       }
     } catch (error) {
       console.error("Error during payment success handling:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleCheckout = async (amount, plan) => {
-    // If the plan is free, redirect to /dashboard
     if (plan === "one-week") {
       router.push("/dashboard");
-      return; // Exit the function early
+      return;
     }
 
-    // For paid plans, proceed with the payment gateway
     if (!isRazorpayLoaded) {
       throw new Error("Payment system is still loading. Please try again.");
     }
+
+    setLoading(true);
 
     try {
       const token = Cookies.get("token");
@@ -197,7 +199,7 @@ export default function PricingPage() {
         prefill: {
           name: userProfile.name,
           email: userProfile.email,
-          contact: userProfile.phone.replace("+91", ""), // Remove "+91" for Razorpay
+          contact: userProfile.phone.replace("+91", ""),
         },
         theme: {
           color: "#a073f0",
@@ -212,22 +214,15 @@ export default function PricingPage() {
         description: "Payment initialization failed",
         variant: "destructive",
       });
+      setLoading(false);
     }
   };
 
   if (!isLoggedIn) return null;
 
   return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center">
       <div className="container mx-auto px-4 flex flex-col items-center justify-center relative">
-        <Button
-          variant="outline"
-          className="rounded-ful border-black rounded-full size-10 p-0 bg-background text-foreground absolute top-0 left-40"
-          onClick={() => router.back()}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-
         <h2 className="text-[1.65rem] text-center mb-4">
           Simple Pricing, Great Value
         </h2>
@@ -241,9 +236,11 @@ export default function PricingPage() {
             <div key={index} className="relative">
               <Card
                 className={`${
-                  plan.highlight ? "border-primary" : ""
+                  plan.highlight || selectedPlan === plan.plan_name
+                    ? "border-primary"
+                    : ""
                 } bg-card text-foreground w-[20rem] rounded-3xl p-2 ${
-                  plan.discount
+                  plan.discount || selectedPlan === plan.plan_name
                     ? "border-2 shadow-[0_8px_24px_rgba(119,_50,_187,_0.18)]"
                     : "shadow-[0_8px_24px_rgba(0,_0,_0,_0.08)]"
                 }`}
@@ -263,6 +260,11 @@ export default function PricingPage() {
                   <div className="text-sm font-normal mt-1 text-gray-600">
                     {plan.subtitle}
                   </div>
+                  {selectedPlan === plan.plan_name && (
+                    <div className="text-sm font-medium text-green-600 mt-2">
+                      You selected this plan
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3 mb-6">
@@ -276,8 +278,11 @@ export default function PricingPage() {
                 </CardContent>
                 <CardFooter>
                   <Button
-                    className="w-full h-10"
+                    className="w-full h-10 transition-all duration-300 hover:scale-105 active:scale-95"
                     variant={plan.buttonVariant}
+                    disabled={
+                      plan.plan_name === "one-week" && activePlan === "one-week"
+                    }
                     onClick={() =>
                       handleCheckout(
                         plan.plan_total_price,
@@ -285,7 +290,11 @@ export default function PricingPage() {
                       )
                     }
                   >
-                    {plan.buttonText}
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      plan.buttonText
+                    )}
                   </Button>
                 </CardFooter>
               </Card>
@@ -293,7 +302,8 @@ export default function PricingPage() {
           ))}
         </div>
       </div>
-      <Toaster/>
     </div>
   );
-}
+};
+
+export default SubscriptionPlan;

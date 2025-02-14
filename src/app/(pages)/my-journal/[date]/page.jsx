@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import axios from "axios"
 import Cookies from "js-cookie"
 import { format, parseISO } from "date-fns"
@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
-const JournalDetailsPage = () => {
+const JournalDetailsContent = () => {
   const router = useRouter()
   const params = useParams()
   const [journalDetails, setJournalDetails] = useState(null)
@@ -110,9 +110,9 @@ const JournalDetailsPage = () => {
   const renderDateNavigation = () => (
     <nav aria-label="Journal Navigation">
       <button
-        onClick={() => router.push("/my-journal")}
+        onClick={() => router.back()} // Navigate back to the previous page
         className="flex items-center text-foreground/70 hover:text-foreground transition-colors mb-4 rounded-full border size-10 justify-center"
-        aria-label="Back to Journal List"
+        aria-label="Back to Previous Page"
       >
         <ArrowLeft className="h-5 w-5" />
       </button>
@@ -141,6 +141,7 @@ const JournalDetailsPage = () => {
       </div>
     </nav>
   )
+
   const renderLoadingState = () => (
     <div className="flex justify-center items-center h-screen">
       <p>Loading...</p>
@@ -385,6 +386,7 @@ const JournalDetailsPage = () => {
                     }`}
                   >
                     <div
+                     
                       className={`text-sm font-medium ${
                         journalDetails.summary?.totalPnL >= 0 ? "text-green-800" : "text-red-800"
                       }`}
@@ -460,5 +462,16 @@ const JournalDetailsPage = () => {
   )
 }
 
-export default JournalDetailsPage
+// Fallback component to show while the suspense resolves
+function LoadingComponent() {
+  return <div>Loading...</div>;
+}
+
+export default function JournalDetails() {
+  return (
+    <Suspense fallback={<LoadingComponent />}>
+      <JournalDetailsContent />
+    </Suspense>
+  );
+}
 

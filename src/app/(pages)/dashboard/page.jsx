@@ -69,7 +69,6 @@ export default function JournalTradePage() {
   const [tradesPerDay, setTradesPerDay] = useState(4);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [sidebarExpanded, setSidebarExpanded] = useState(() => {
-    // Initialize from localStorage if available, default to true if not found
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("sidebarExpanded");
       return saved !== null ? JSON.parse(saved) : true;
@@ -87,7 +86,6 @@ export default function JournalTradePage() {
   const userName = Cookies.get("userName") || "Trader";
   const subscription = Cookies.get("subscription");
 
-  // Mobile detection
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -98,31 +96,24 @@ export default function JournalTradePage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // Time update interval
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Persist sidebar state
   useEffect(() => {
     localStorage.setItem("sidebarExpanded", JSON.stringify(sidebarExpanded));
   }, [sidebarExpanded]);
 
-  // Fetch data on date change
   useEffect(() => {
-    fetchJournalData();
-    fetchCapital();
-    fetchWeeklyMetrics();
+    const fetchData = async () => {
+      setIsLoading(true);
+      await Promise.all([fetchJournalData(), fetchCapital(), fetchWeeklyMetrics()]);
+      setIsLoading(false);
+    };
+
+    fetchData();
   }, [selectedDate]);
-
-  // useEffect(() => {
-  //   const timer = setTimeout(() => {
-  //     setShowWelcome(false);
-  //   }, 5000);
-
-  //   return () => clearTimeout(timer);
-  // }, []);
 
   const fetchCapital = async () => {
     try {
@@ -148,7 +139,6 @@ export default function JournalTradePage() {
   };
 
   const fetchJournalData = async () => {
-    setIsLoading(true);
     const utcDate = getUTCDate(selectedDate);
 
     try {
@@ -159,8 +149,6 @@ export default function JournalTradePage() {
     } catch (error) {
       console.error("Error fetching journal data:", error);
       setJournalData(null);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -188,7 +176,7 @@ export default function JournalTradePage() {
 
   const handleChartsUpdate = async () => {
     await Promise.all([fetchCapital(), fetchWeeklyMetrics()]);
-    setForceChartUpdate((prev) => prev + 1); // Increment to force chart update
+    setForceChartUpdate((prev) => prev + 1);
   };
 
   const formattedCapital = new Intl.NumberFormat("en-IN", {
@@ -234,7 +222,7 @@ export default function JournalTradePage() {
                     <WeeklyCharts
                       selectedDate={selectedDate}
                       tradesPerDay={tradesPerDay}
-                      forceUpdate={forceChartUpdate} // Add this prop
+                      forceUpdate={forceChartUpdate}
                     />
                   </div>
                 </div>
@@ -250,7 +238,6 @@ export default function JournalTradePage() {
               <p className="text-lg px-3 py-1 font-semibold">{formatDate(selectedDate)}</p>
             </div>
             <p className="text-background text-sm sm:text-base lg:text-xl order-3 px-4">
-              {/* Capital: ₹ {capital.toFixed(2)}  */}
               Capital: {formattedCapital}
             </p>
           </div>
@@ -294,11 +281,10 @@ export default function JournalTradePage() {
                 />
 
                 <div>
-                  
                   <WeeklyCharts
                     selectedDate={selectedDate}
                     tradesPerDay={tradesPerDay}
-                    forceUpdate={forceChartUpdate} // Add this prop
+                    forceUpdate={forceChartUpdate}
                   />
                 </div>
               </div>

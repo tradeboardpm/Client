@@ -10,12 +10,16 @@ import Cookies from "js-cookie";
 import AnnouncementManager from "@/components/AnnouncementManager";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { Dialog, DialogContent } from "@/components/ui/dialog"; // Import Dialog components from shadcn/ui
+import SubscriptionPlan from "@/components/cards/subsciption";
 
 export default function MainLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [subscriptionData, setSubscriptionData] = useState(null);
+  const [isSubscriptionDialogOpen, setIsSubscriptionDialogOpen] = useState(false); // State to control Dialog
+  const [selectedPlan, setSelectedPlan] = useState(null); // State to store selectedPlan
   const router = useRouter();
 
   const clearCookiesAndRedirect = useCallback(() => {
@@ -149,6 +153,16 @@ export default function MainLayout({ children }) {
     return () => clearInterval(intervalId);
   }, []);
 
+  // Check for selectedPlan in localStorage on component mount
+  useEffect(() => {
+    const selectedPlanFromStorage = localStorage.getItem("selectedPlan");
+    if (selectedPlanFromStorage) {
+      setSelectedPlan(selectedPlanFromStorage); // Set the selectedPlan state
+      setIsSubscriptionDialogOpen(true); // Open the Dialog
+      localStorage.removeItem("selectedPlan"); // Clear selectedPlan from localStorage
+    }
+  }, []);
+
   const handleLogout = async () => {
     try {
       const token = Cookies.get("token");
@@ -196,6 +210,20 @@ export default function MainLayout({ children }) {
           <TooltipProvider>{children}</TooltipProvider>
         </div>
       </div>
+
+      {/* Dialog for SubscriptionPlan */}
+      <Dialog
+        open={isSubscriptionDialogOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setIsSubscriptionDialogOpen(false); // Close the Dialog
+          }
+        }}
+      >
+        <DialogContent className="max-w-7xl">
+          <SubscriptionPlan selectedPlan={selectedPlan} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

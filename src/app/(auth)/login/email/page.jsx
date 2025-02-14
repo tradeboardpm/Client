@@ -50,8 +50,6 @@ export default function LoginPage() {
       Cookies.set("userPhone", data.user.phone, { expires: expiryTime });
       Cookies.set("expiry", expiryTime.getTime().toString(), { expires: expiryTime });
 
-      // Redirect to dashboard
-      router.push("/subscription-plan");
     } catch (err) {
       setError(err.message);
     } finally {

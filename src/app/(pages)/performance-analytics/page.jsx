@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, Suspense } from "react"
 import axios from "axios"
 import Cookies from "js-cookie"
-import { format, startOfMonth, endOfMonth, subMonths } from "date-fns"
+import { format, startOfMonth, endOfMonth, subMonths, parseISO } from "date-fns"
 import Image from "next/image"
+import { useRouter, useSearchParams } from "next/navigation"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -157,36 +158,133 @@ const formatPeriodDateRange = (period) => {
   }
 }
 
-export default function PerformaceAnalytics() {
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    limit: 12,
-  })
-  const [period, setPeriod] = useState("thisWeek")
-  const [metricsDateRange, setMetricsDateRange] = useState({
-    from: null,
-    to: null,
-  })
-  const [journalsDateRange, setJournalsDateRange] = useState({
-    from: startOfMonth(new Date()),
-    to: endOfMonth(new Date()),
-  })
-  const [filters, setFilters] = useState({
-    minWinRate: 0,
-    maxWinRate: 100,
-    minTrades: 0,
-    maxTrades: 50,
-    minRulesFollowed: 0,
-    maxRulesFollowed: 100,
-  })
-  const [metrics, setMetrics] = useState(null)
-  const [monthlyJournals, setMonthlyJournals] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [openPopover, setOpenPopover] = useState(null)
-  const popoverRef = useRef(null)
+const defaultFilters = {
+  minWinRate: 0,
+  maxWinRate: 100,
+  minTrades: 0,
+  maxTrades: 50,
+  minRulesFollowed: 0,
+  maxRulesFollowed: 100,
+}
+
+
+
+function PerformaceAnalyticsContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+
+    // Function to get initial state from URL
+    const getInitialState = () => {
+      const urlPeriod = searchParams.get('period') || 'thisWeek'
+      
+      const metricsFrom = searchParams.get('metricsFrom')
+      const metricsTo = searchParams.get('metricsTo')
+      const journalsFrom = searchParams.get('journalsFrom')
+      const journalsTo = searchParams.get('journalsTo')
+  
+      return {
+        period: urlPeriod,
+        metricsDateRange: {
+          from: metricsFrom ? parseISO(metricsFrom) : null,
+          to: metricsTo ? parseISO(metricsTo) : null,
+        },
+        journalsDateRange: {
+          from: journalsFrom ? parseISO(journalsFrom) : startOfMonth(new Date()),
+          to: journalsTo ? parseISO(journalsTo) : endOfMonth(new Date()),
+        },
+        filters: {
+          minWinRate: Number(searchParams.get('minWinRate')) || defaultFilters.minWinRate,
+          maxWinRate: Number(searchParams.get('maxWinRate')) || defaultFilters.maxWinRate,
+          minTrades: Number(searchParams.get('minTrades')) || defaultFilters.minTrades,
+          maxTrades: Number(searchParams.get('maxTrades')) || defaultFilters.maxTrades,
+          minRulesFollowed: Number(searchParams.get('minRulesFollowed')) || defaultFilters.minRulesFollowed,
+          maxRulesFollowed: Number(searchParams.get('maxRulesFollowed')) || defaultFilters.maxRulesFollowed,
+        },
+        pagination: {
+          currentPage: Number(searchParams.get('page')) || 1,
+          totalPages: 1,
+          totalItems: 0,
+          limit: 12,
+        }
+      }
+    }
+  
+    const initialState = getInitialState()
+
+    const [pagination, setPagination] = useState(initialState.pagination)
+    const [period, setPeriod] = useState(initialState.period)
+    const [metricsDateRange, setMetricsDateRange] = useState(initialState.metricsDateRange)
+    const [journalsDateRange, setJournalsDateRange] = useState(initialState.journalsDateRange)
+    const [filters, setFilters] = useState(initialState.filters)
+    const [metrics, setMetrics] = useState(null)
+    const [monthlyJournals, setMonthlyJournals] = useState(null)
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
+    const [openPopover, setOpenPopover] = useState(null)
+    const popoverRef = useRef(null)
+
+     // Function to update URL with current state
+  const updateURL = () => {
+    const params = new URLSearchParams(searchParams)
+    
+    // Update period
+    params.set('period', period)
+    
+    // Update metrics date range
+    if (metricsDateRange.from) params.set('metricsFrom', metricsDateRange.from.toISOString())
+    if (metricsDateRange.to) params.set('metricsTo', metricsDateRange.to.toISOString())
+    
+    // Update journals date range
+    if (journalsDateRange.from) params.set('journalsFrom', journalsDateRange.from.toISOString())
+    if (journalsDateRange.to) params.set('journalsTo', journalsDateRange.to.toISOString())
+    
+    // Update filters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== defaultFilters[key]) {
+        params.set(key, value.toString())
+      } else {
+        params.delete(key)
+      }
+    })
+    
+    // Update pagination
+    if (pagination.currentPage > 1) {
+      params.set('page', pagination.currentPage.toString())
+    } else {
+      params.delete('page')
+    }
+    
+    router.push(`?${params.toString()}`, { scroll: false })
+  }
+
+
+  const handlePageChange = (page) => {
+    setPagination((prevPagination) => ({
+      ...prevPagination,
+      currentPage: page,
+    }))
+  }
+
+  const clearAllFilters = () => {
+    setFilters(defaultFilters)
+    setJournalsDateRange({
+      from: startOfMonth(new Date()),
+      to: endOfMonth(new Date()),
+    })
+    setPagination(prev => ({
+      ...prev,
+      currentPage: 1
+    }))
+    setOpenPopover(null)
+  }
+
+  useEffect(() => {
+    fetchData()
+  }, [period, metricsDateRange, journalsDateRange, filters, pagination.currentPage])
+
+  useEffect(() => {
+    updateURL()
+  }, [period, metricsDateRange, journalsDateRange, filters, pagination.currentPage])
 
   // Compute date range based on selected period
   const computeDateRange = () => {
@@ -243,6 +341,12 @@ export default function PerformaceAnalytics() {
     try {
       const { from: startDate, to: endDate } = computeDateRange()
 
+      // // Validate dates
+      // if (startDate > new Date() || endDate > new Date()) {
+      //   setError("Invalid date range selected")
+      //   return
+      // }
+
       const [metricsResponse, journalsResponse] = await Promise.all([
         axios.get(`${process.env.NEXT_PUBLIC_API_URL}/metrics/date-range`, {
           params: {
@@ -276,12 +380,6 @@ export default function PerformaceAnalytics() {
     }
   }
 
-  const handlePageChange = (page) => {
-    setPagination((prevPagination) => ({
-      ...prevPagination,
-      currentPage: page,
-    }))
-  }
 
   const formatDateRange = (range) => {
     if (!range.from || !range.to) return ""
@@ -418,26 +516,6 @@ export default function PerformaceAnalytics() {
     )
   }
 
-  const clearAllFilters = () => {
-    // Reset filters to default values
-    setFilters({
-      minWinRate: 0,
-      maxWinRate: 100,
-      minTrades: 0,
-      maxTrades: 50,
-      minRulesFollowed: 0,
-      maxRulesFollowed: 100,
-    })
-
-    // Reset date ranges to default
-    setJournalsDateRange({
-      from: startOfMonth(new Date()),
-      to: endOfMonth(new Date()),
-    })
-
-    // Close any open popovers
-    setOpenPopover(null)
-  }
 
   const hasActiveFilters = () => {
     return (
@@ -676,3 +754,15 @@ export default function PerformaceAnalytics() {
   )
 }
 
+// Fallback component to show while the suspense resolves
+function LoadingComponent() {
+  return <div>Loading...</div>;
+}
+
+export default function PerformaceAnalytics() {
+  return (
+    <Suspense fallback={<LoadingComponent />}>
+      <PerformaceAnalyticsContent />
+    </Suspense>
+  );
+}

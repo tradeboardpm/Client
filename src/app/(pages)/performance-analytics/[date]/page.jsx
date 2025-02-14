@@ -91,7 +91,7 @@ const JournalDetailsPage = () => {
     if (newIndex >= 0 && newIndex < journalDates.length) {
       const newDate = parseISO(journalDates[newIndex])
       setCurrentDate(newDate)
-      router.push(`/performance-analytics/${journalDates[newIndex]}`)
+      router.push(`/my-journal/${journalDates[newIndex]}`)
     }
   }
 
@@ -110,9 +110,9 @@ const JournalDetailsPage = () => {
   const renderDateNavigation = () => (
     <nav aria-label="Journal Navigation">
       <button
-        onClick={() => router.push("/performance-analytics")}
+        onClick={() => router.back()} // Navigate back to the previous page
         className="flex items-center text-foreground/70 hover:text-foreground transition-colors mb-4 rounded-full border size-10 justify-center"
-        aria-label="Back to Journal List"
+        aria-label="Back to Previous Page"
       >
         <ArrowLeft className="h-5 w-5" />
       </button>
@@ -141,6 +141,7 @@ const JournalDetailsPage = () => {
       </div>
     </nav>
   )
+
   const renderLoadingState = () => (
     <div className="flex justify-center items-center h-screen">
       <p>Loading...</p>
@@ -385,6 +386,7 @@ const JournalDetailsPage = () => {
                     }`}
                   >
                     <div
+                     
                       className={`text-sm font-medium ${
                         journalDetails.summary?.totalPnL >= 0 ? "text-green-800" : "text-red-800"
                       }`}

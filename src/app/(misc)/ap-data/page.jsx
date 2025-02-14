@@ -34,9 +34,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import Topbar from "./topbar";
 
 const CustomLegend = ({ items }) => (
-  <div className="flex items-center gap-4 ml-4 text-xs text-muted-foreground">
+  <div className="flex flex-wrap items-center gap-2 ml-4 text-xs text-muted-foreground">
     {items.map((item, index) => (
       <div key={index} className="flex items-center gap-1">
         <div
@@ -46,6 +47,23 @@ const CustomLegend = ({ items }) => (
         <span>{item.label}</span>
       </div>
     ))}
+  </div>
+);
+
+const RuleItem = ({ rule, count, isFollowed }) => (
+  <div className="flex items-center justify-between p-3 border-b border-gray-200 hover:bg-gray-50">
+    <div className="flex-1">
+      <p className="text-sm font-medium text-gray-900">{rule}</p>
+    </div>
+    <div className="flex items-center gap-2">
+      <span
+        className={`px-3 py-1 rounded-full text-sm font-medium ${
+          isFollowed ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+        }`}
+      >
+        {count}
+      </span>
+    </div>
   </div>
 );
 
@@ -64,6 +82,8 @@ function ApDataInner() {
   const [isLoading, setIsLoading] = useState(true);
   const [sharedData, setSharedData] = useState(null);
   const searchParams = useSearchParams();
+  const [openFollowedDialog, setOpenFollowedDialog] = useState(false);
+  const [openUnfollowedDialog, setOpenUnfollowedDialog] = useState(false);
   const token = searchParams.get("token");
 
   useEffect(() => {
@@ -104,54 +124,58 @@ function ApDataInner() {
     );
   }
 
-  // Transform detailed data into chart-friendly format
   const chartData = Object.entries(sharedData.detailed).map(([date, data]) => ({
-    date: new Date(date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
+    date:
+      sharedData.dataRange.frequency === "weekly"
+        ? new Date(date).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })
+        : date,
     ...data,
   }));
-    
-    const determineUpcomingLevel = (currentPoints) => {
-      for (const level of LEVELS) {
-        if (currentPoints < level.threshold) {
-          return level.name;
-        }
+
+  const determineUpcomingLevel = (currentPoints) => {
+    for (const level of LEVELS) {
+      if (currentPoints < level.threshold) {
+        return level.name;
       }
-      return "Diamond"; // If points exceed the highest threshold
-    };
+    }
+    return "Diamond";
+  };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="mb-4">
-        <h1 className="text-xl font-semibold ">Welcome {sharedData.apName},</h1>
-        <h1 className="text-xl font-semibold ">
-          You are viewing the monthly progress of {sharedData.userName}
+  <>
+  <Topbar/>
+  <div className="lg:px-20 mx-auto p-4 sm:p-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold">Welcome {sharedData.apName},</h1>
+        <h1 className="text-xl font-semibold text-muted-foreground opacity-70">
+          You are viewing the {sharedData.dataRange.frequency} progress of{" "}
+          {sharedData.userName}
         </h1>
-        <p>
+        <p className="text-sm text-muted-foreground">
           Shared with you since:{" "}
           {new Date(sharedData.dataSentAt).toLocaleString()}
         </p>
       </div>
 
       <Card className="mb-6">
-        <CardHeader className="flex flex-row justify-between items-center">
+        <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <CardTitle className="text-xl">Performance</CardTitle>
-          <p className="text-lg font-semibold rounded-lg border-2 text-primary py-1 px-2 w-fit">
+          <p className="text-lg font-semibold rounded-lg border-2 text-primary py-1 px-2 w-fit mt-2 sm:mt-0">
             Capital: ₹ {sharedData.overall.capital?.toFixed(2) ?? "N/A"}
           </p>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-row gap-6 w-full">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Trades Taken Chart */}
-            <Card className="shadow-lg flex-1 bg-accent/40">
-              <CardHeader className="p-4 flex flex-col justify-between">
-                <CardTitle className="text-base font-semibold p-0">
+            <Card className="shadow-lg bg-popover">
+              <CardHeader className="p-4">
+                <CardTitle className="text-base font-semibold">
                   Trades Taken
                 </CardTitle>
-
-                <CardDescription className="p-0 text-xs">
+                <CardDescription className="text-xs">
                   Daily trade count
                 </CardDescription>
               </CardHeader>
@@ -164,7 +188,7 @@ function ApDataInner() {
                     },
                   }}
                 >
-                  <ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height={200}>
                     <LineChart
                       data={chartData}
                       margin={{ top: 20, right: 20, bottom: 10, left: 0 }}
@@ -201,8 +225,8 @@ function ApDataInner() {
             </Card>
 
             {/* Win Rate Chart */}
-            <Card className="shadow-lg flex-1 bg-accent/40">
-              <CardHeader className="p-4 flex flex-row items-center justify-between">
+            <Card className="shadow-lg bg-popover">
+              <CardHeader className="p-4">
                 <CardTitle className="text-base font-semibold">
                   Win Rate
                 </CardTitle>
@@ -226,7 +250,7 @@ function ApDataInner() {
                     },
                   }}
                 >
-                  <ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height={200}>
                     <BarChart
                       data={chartData}
                       margin={{ top: 20, right: 20, bottom: 10, left: 0 }}
@@ -270,8 +294,8 @@ function ApDataInner() {
             </Card>
 
             {/* Profit & Loss Chart */}
-            <Card className="shadow-lg flex-1 bg-accent/40">
-              <CardHeader className="p-4 flex flex-row items-center justify-between">
+            <Card className="shadow-lg bg-popover">
+              <CardHeader className="p-4">
                 <CardTitle className="text-base font-semibold">
                   Profit & Loss
                 </CardTitle>
@@ -285,7 +309,7 @@ function ApDataInner() {
                     },
                   }}
                 >
-                  <ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height={200}>
                     <LineChart
                       data={chartData}
                       margin={{ top: 20, right: 20, bottom: 10, left: 0 }}
@@ -337,8 +361,8 @@ function ApDataInner() {
             </Card>
 
             {/* Rules Chart */}
-            <Card className="shadow-lg flex-1 bg-accent/40">
-              <CardHeader className="p-4 flex flex-row items-center justify-between">
+            <Card className="shadow-lg bg-popover">
+              <CardHeader className="p-4">
                 <CardTitle className="text-base font-semibold">Rules</CardTitle>
                 <CustomLegend
                   items={[
@@ -360,7 +384,7 @@ function ApDataInner() {
                     },
                   }}
                 >
-                  <ResponsiveContainer>
+                  <ResponsiveContainer width="100%" height={200}>
                     <BarChart
                       data={chartData}
                       margin={{ top: 20, right: 20, bottom: 10, left: 0 }}
@@ -407,26 +431,31 @@ function ApDataInner() {
       </Card>
 
       <Card>
-        <CardHeader className="flex flex-row justify-between items-center">
+        <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
           <CardTitle className="text-xl">Journaling Trends</CardTitle>
-          <p className="text-lg font-semibold rounded-lg border-2 text-primary py-1 px-2 w-fit flex items-center gap-2">
+          <p className="text-lg font-semibold rounded-lg border-2 text-primary py-1 px-2 w-fit mt-2 sm:mt-0 flex items-center gap-2">
             <span>
-              Upcoming Level:{" "}
-              {determineUpcomingLevel(sharedData.overall.currentPoints)}
+              Level:{" "}
+              <span className="font-normal">
+                {determineUpcomingLevel(sharedData.overall.currentPoints)}
+              </span>
             </span>
             <Separator className="h-6" orientation="vertical" />
             <span>
-              Current Points: {sharedData.overall.currentPoints ?? "N/A"}
+              Current Points:{" "}
+              <span className="font-normal">
+                {sharedData.overall.currentPoints ?? "N/A"}
+              </span>
             </span>
           </p>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <Card>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Card className="bg-popover">
               <CardHeader>
                 <CardTitle>On Profitable Days</CardTitle>
               </CardHeader>
-              <CardContent className="flex justify-between">
+              <CardContent className="grid grid-cols-2 gap-4">
                 <p>
                   Rules you followed: <br />
                   <span className="text-green-600 font-semibold text-lg">
@@ -464,11 +493,11 @@ function ApDataInner() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-popover">
               <CardHeader>
                 <CardTitle>On Loss Making Days</CardTitle>
               </CardHeader>
-              <CardContent className="flex justify-between">
+              <CardContent className="grid grid-cols-2 gap-4">
                 <p>
                   Rules you followed: <br />
                   <span className="text-red-600 font-semibold text-lg">
@@ -481,7 +510,6 @@ function ApDataInner() {
                 <p>
                   Words Journaled: <br />
                   <span className="text-red-600 font-semibold text-lg">
-                    {" "}
                     {sharedData.overall.profitLossSummary.loss_days.avgWordsJournaled.toFixed(
                       2
                     )}
@@ -507,11 +535,11 @@ function ApDataInner() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-popover">
               <CardHeader>
                 <CardTitle>On Break-Even Days</CardTitle>
               </CardHeader>
-              <CardContent className="flex justify-between">
+              <CardContent className="grid grid-cols-2 gap-4">
                 <p>
                   Rules you followed: <br />
                   <span className="text-blue-600 font-semibold text-lg">
@@ -549,80 +577,108 @@ function ApDataInner() {
               </CardContent>
             </Card>
 
-            <div className="flex gap-4">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Card className="cursor-pointer hover:bg-gray-100 flex-1">
-                    <CardHeader>
-                      <CardTitle>Top Followed Rules</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="flex flex-col">
-                        <span className="text-sm">
-                          {sharedData.overall.topFollowedRules[0]?.rule}
-                        </span>
-                        <span className="text-sm">
-                          <span className="text-xl text-green-600 font-semibold">
-                            {
-                              sharedData.overall.topFollowedRules[0]
-                                ?.followedCount
-                            }
-                          </span>{" "}
-                          times followed
-                        </span>
-                      </p>
-                    </CardContent>
-                  </Card>
-                </DialogTrigger>
-                <DialogContent>
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Top Followed Rules Card */}
+              <Card
+                className="cursor-pointer bg-popover hover:bg-accent flex-1"
+                onClick={() => setOpenFollowedDialog(true)}
+              >
+                <CardHeader>
+                  <CardTitle>Top Followed Rules</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="flex flex-col">
+                    <span className="text-sm">
+                      {sharedData.overall.topFollowedRules[0]?.rule}
+                    </span>
+                    <span className="text-sm">
+                      <span className="text-xl text-green-600 font-semibold">
+                        {sharedData.overall.topFollowedRules[0]?.followedCount}
+                      </span>{" "}
+                      times followed
+                    </span>
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Top Unfollowed Rules Card */}
+              <Card
+                className="cursor-pointer bg-popover hover:bg-accent flex-1"
+                onClick={() => setOpenUnfollowedDialog(true)}
+              >
+                <CardHeader>
+                  <CardTitle>Top Unfollowed Rules</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="flex flex-col">
+                    <span className="text-sm">
+                      {sharedData.overall.topUnfollowedRules[0]?.rule}
+                    </span>
+                    <span className="text-sm">
+                      <span className="text-xl text-red-600 font-semibold">
+                        {
+                          sharedData.overall.topUnfollowedRules[0]
+                            ?.unfollowedCount
+                        }
+                      </span>{" "}
+                      times un-followed
+                    </span>
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Enhanced Dialog for Unfollowed Rules */}
+              <Dialog
+                open={openUnfollowedDialog}
+                onOpenChange={setOpenUnfollowedDialog}
+              >
+                <DialogContent className="max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle>All Followed Rules</DialogTitle>
+                    <DialogTitle className="text-xl font-semibold">
+                      All Unfollowed Rules
+                    </DialogTitle>
                   </DialogHeader>
-                  <div className="mt-4">
-                    {sharedData.overall.topFollowedRules.map((rule, index) => (
-                      <p key={index}>
-                        {rule.rule}: {rule.followedCount}
-                      </p>
-                    ))}
+                  <div className="mt-4 max-h-96 overflow-y-auto pr-2">
+                    <div className="space-y-1">
+                      {sharedData.overall.topUnfollowedRules.map(
+                        (rule, index) => (
+                          <RuleItem
+                            key={index}
+                            rule={rule.rule}
+                            count={rule.unfollowedCount}
+                            isFollowed={false}
+                          />
+                        )
+                      )}
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Card className="cursor-pointer hover:bg-gray-100 flex-1">
-                    <CardHeader>
-                      <CardTitle>Top Unfollowed Rules</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="flex flex-col">
-                        <span className="text-sm">
-                          {sharedData.overall.topUnfollowedRules[0]?.rule}
-                        </span>
-                        <span className="text-sm">
-                          <span className="text-xl text-red-600 font-semibold">
-                            {
-                              sharedData.overall.topUnfollowedRules[0]
-                                ?.unfollowedCount
-                            }
-                          </span>{" "}
-                          times un-followed
-                        </span>
-                      </p>
-                    </CardContent>
-                  </Card>
-                </DialogTrigger>
-                <DialogContent>
+
+              {/* Enhanced Dialog for Followed Rules */}
+              <Dialog
+                open={openFollowedDialog}
+                onOpenChange={setOpenFollowedDialog}
+              >
+                <DialogContent className="max-w-2xl">
                   <DialogHeader>
-                    <DialogTitle>All Unfollowed Rules</DialogTitle>
+                    <DialogTitle className="text-xl font-semibold">
+                      All Followed Rules
+                    </DialogTitle>
                   </DialogHeader>
-                  <div className="mt-4">
-                    {sharedData.overall.topUnfollowedRules.map(
-                      (rule, index) => (
-                        <p key={index}>
-                          {rule.rule}: {rule.unfollowedCount}
-                        </p>
-                      )
-                    )}
+                  <div className="mt-4 max-h-96 overflow-y-auto pr-2">
+                    <div className="space-y-1">
+                      {sharedData.overall.topFollowedRules.map(
+                        (rule, index) => (
+                          <RuleItem
+                            key={index}
+                            rule={rule.rule}
+                            count={rule.followedCount}
+                            isFollowed={true}
+                          />
+                        )
+                      )}
+                    </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -631,6 +687,7 @@ function ApDataInner() {
         </CardContent>
       </Card>
     </div>
+  </>
   );
 }
 

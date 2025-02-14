@@ -123,7 +123,7 @@ const JournalCard = ({
 
   const handleUpgradeClick = () => {
     setShowSubscriptionDialog(false)
-    router.push('/pricing') // Adjust this route to your pricing page route
+    router.push('/plans') // Adjust this route to your pricing page route
   }
 
   return (

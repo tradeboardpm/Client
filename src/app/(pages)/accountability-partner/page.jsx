@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {Trash2 } from "lucide-react";
+import { MoreVertical, Package, Trash2 } from "lucide-react";
 import {
   MultiSelector,
   MultiSelectorContent,
@@ -37,19 +37,12 @@ export default function AccountabilityPartner() {
   const [selectedDetails, setSelectedDetails] = useState([]);
   const [showDialog, setShowDialog] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasSubscription, setHasSubscription] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     relation: "",
     shareFrequency: "weekly",
   });
-
-  useEffect(() => {
-    const subscription = Cookies.get('subscription');
-    setHasSubscription(subscription === 'true');
-    fetchPartners();
-  }, []);
 
   const detailOptions = [
     { value: "tradesTaken", label: "No. of Trades taken" },
@@ -77,6 +70,10 @@ export default function AccountabilityPartner() {
     }
   );
 
+  useEffect(() => {
+    fetchPartners();
+  }, []);
+
   const fetchPartners = async () => {
     try {
       const response = await api.get("/accountability-partner");
@@ -91,14 +88,11 @@ export default function AccountabilityPartner() {
   };
 
   const handleInputChange = (e) => {
-    if (!hasSubscription) return;
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!hasSubscription) return;
-    
     setIsLoading(true);
     try {
       const submitData = {
@@ -137,8 +131,6 @@ export default function AccountabilityPartner() {
   };
 
   const handleRemovePartner = async (partnerId) => {
-    if (!hasSubscription) return;
-    
     try {
       await api.delete(`/accountability-partner/${partnerId}`);
       toast({
@@ -156,8 +148,6 @@ export default function AccountabilityPartner() {
   };
 
   const resetForm = () => {
-    if (!hasSubscription) return;
-    
     setFormData({
       name: "",
       email: "",
@@ -166,6 +156,8 @@ export default function AccountabilityPartner() {
     });
     setSelectedDetails([]);
   };
+
+  const isSubscriptionActive = Cookies.get("subscription") === "true";
 
   return (
     <div className="bg-card h-full">
@@ -191,11 +183,6 @@ export default function AccountabilityPartner() {
                 Accountability Partners cannot make any changes to your data or
                 your account.
               </p>
-              {!hasSubscription && (
-                <p className="text-sm text-destructive font-medium">
-                  Please upgrade to a paid subscription to add accountability partners.
-                </p>
-              )}
               <div className="w-full flex justify-end items-end">
                 <Button
                   variant="outline"
@@ -225,7 +212,7 @@ export default function AccountabilityPartner() {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    disabled={!hasSubscription}
+                    disabled={!isSubscriptionActive}
                   />
                 </div>
                 <div className="flex-1">
@@ -237,7 +224,7 @@ export default function AccountabilityPartner() {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    disabled={!hasSubscription}
+                    disabled={!isSubscriptionActive}
                   />
                 </div>
               </div>
@@ -247,9 +234,9 @@ export default function AccountabilityPartner() {
                   <Select
                     value={formData.relation}
                     onValueChange={(value) =>
-                      hasSubscription && setFormData({ ...formData, relation: value })
+                      setFormData({ ...formData, relation: value })
                     }
-                    disabled={!hasSubscription}
+                    disabled={!isSubscriptionActive}
                   >
                     <SelectTrigger id="relation" className="bg-card">
                       <SelectValue placeholder="Select" />
@@ -268,9 +255,9 @@ export default function AccountabilityPartner() {
                   </Label>
                   <MultiSelector
                     values={selectedDetails}
-                    onValuesChange={(values) => hasSubscription && setSelectedDetails(values)}
+                    onValuesChange={setSelectedDetails}
                     className="w-full -mt-2 h-fit"
-                    disabled={!hasSubscription}
+                    disabled={!isSubscriptionActive}
                   >
                     <MultiSelectorTrigger className="w-full rounded-md bg-card border border-input/25 shadow-sm p-2">
                       <MultiSelectorInput
@@ -298,17 +285,17 @@ export default function AccountabilityPartner() {
                 <RadioGroup
                   value={formData.shareFrequency}
                   onValueChange={(value) =>
-                    hasSubscription && setFormData({ ...formData, shareFrequency: value })
+                    setFormData({ ...formData, shareFrequency: value })
                   }
                   className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
-                  disabled={!hasSubscription}
+                  disabled={!isSubscriptionActive}
                 >
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="weekly" id="weekly" disabled={!hasSubscription} />
+                    <RadioGroupItem value="weekly" id="weekly" />
                     <Label htmlFor="weekly">Weekly</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="monthly" id="monthly" disabled={!hasSubscription} />
+                    <RadioGroupItem value="monthly" id="monthly" />
                     <Label htmlFor="monthly">Monthly</Label>
                   </div>
                 </RadioGroup>
@@ -318,18 +305,10 @@ export default function AccountabilityPartner() {
                 starting from today.
               </div>
               <div className="flex justify-end space-x-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={resetForm}
-                  disabled={!hasSubscription}
-                >
+                <Button type="button" variant="outline" onClick={resetForm}>
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isLoading || !hasSubscription}
-                >
+                <Button type="submit" disabled={isLoading || !isSubscriptionActive}>
                   {isLoading ? "Adding..." : "Add"}
                 </Button>
               </div>
@@ -360,7 +339,7 @@ export default function AccountabilityPartner() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleRemovePartner(partner._id)}
-                        disabled={!hasSubscription}
+                        disabled={!isSubscriptionActive}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -370,7 +349,8 @@ export default function AccountabilityPartner() {
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <div className="text-center flex flex-col items-center justify-center">
+                <div className="text-center  flex flex-col items-center justify-center ">
+                  {/* <Package className="mx-auto h-12 w-12 text-gray-400" /> */}
                   <img
                     src="/images/no_box.png"
                     alt="no data"

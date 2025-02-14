@@ -24,10 +24,10 @@ const ChargesBreakdown = ({ trade }) => {
     action: trade.action,
     price,
     quantity: trade.quantity,
-    brokerage: trade.brokerage,
+    brokerage: trade.brokerage || 0, // Default to 0 if NaN
   });
 
-  const totalCharges = charges.totalCharges - charges.brokerage + trade.brokerage;
+  const totalCharges = (charges.totalCharges - (charges.brokerage || 0)) + (trade.brokerage || 0);
   const showBreakdown = trade.equityType !== EQUITY_TYPES.OTHER && !trade.manualExchangeCharge;
 
   // Show simple total when exchange charges are manual or equity type is OTHER
@@ -36,7 +36,7 @@ const ChargesBreakdown = ({ trade }) => {
       <div className="flex justify-start gap-2 items-center w-full h-16 rounded-lg px-4 bg-[#F4E4FF] dark:bg-[#312d33]">
         <span className="font-medium">Total Order Amount:</span>
         <span className="text-base font-medium text-primary">
-          ₹ {(charges.turnover + trade.exchangeRate).toFixed(2)}
+          ₹ {(charges.turnover + (trade.exchangeRate || 0)).toFixed(2)}
         </span>
       </div>
     );
@@ -57,7 +57,7 @@ const ChargesBreakdown = ({ trade }) => {
           <div className="space-y-1 text-xs bg-card p-2 rounded-lg">
             {[
               { label: "Order Value:", value: charges.turnover },
-              { label: "Brokerage:", value: trade.brokerage },
+              { label: "Brokerage:", value: trade.brokerage || 0 },
               { label: "STT:", value: charges.sttCharges },
               { label: "Exchange Charges:", value: charges.exchangeCharges },
               { label: "SEBI Charges:", value: charges.sebiCharges },
