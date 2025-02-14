@@ -9,7 +9,7 @@ export const metadata = {
 
 const ComingSoonOverlay = () => {
   return (
-    <div className="fixed inset-0 bg-black bg-clip-padding backdrop-filter backdrop-blur-sm bg-opacity-20 flex items-center justify-center z-[99999]">
+    <div className="fixed inset-0 bg-black bg-clip-padding backdrop-filter backdrop-blur-2xl bg-opacity-20 flex items-center justify-center z-[99999]">
       <div className="text-center p-8 max-w-2xl bg-card rounded-lg shadow-2xl rotate-3">
         
         <div className="mb-8">
