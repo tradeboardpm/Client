@@ -13,7 +13,6 @@ import TradingJourneySection from "@/components/sections/home/TradingJourneySect
 import TradingDisciplineSection from "@/components/sections/home/TradingDisciplineSection";
 import CTASection from "@/components/sections/home/CTASection";
 
-
 export default function LandingPage() {
   const [isSticky, setIsSticky] = useState(false);
   const [showNav, setShowNav] = useState(true);
@@ -74,7 +73,7 @@ export default function LandingPage() {
           <FAQSection />
         </AnimatedSection>
       </main>
-<CTASection/>
+      <CTASection />
       <Footer />
     </div>
   );

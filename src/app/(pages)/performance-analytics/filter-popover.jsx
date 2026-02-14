@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@radix-ui/react-dropdown-menu";
 import { ChevronDown } from "lucide-react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 
@@ -17,39 +17,64 @@ const FilterPopover = ({
   open,
   onOpenChange,
   showPercentage = false,
+  isModified = false,
 }) => {
   const [tempValue, setTempValue] = useState(value);
+  const dropdownContentRef = useRef(null);
 
-  const handleDone = () => {
+  // Synchronize tempValue with the value prop when it changes
+  useEffect(() => {
+    setTempValue(value);
+  }, [value]);
+
+  const handleDone = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     onChange(tempValue);
     onOpenChange(false);
   };
 
+  const handleContentClick = (e) => {
+    e.stopPropagation();
+  };
+
+  const handleSliderChange = (newValue) => {
+    setTempValue(newValue);
+  };
+
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild className="border-border bg-card">
+    <DropdownMenu open={open} onOpenChange={onOpenChange}>
+      <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className="w-fit flex items-center gap-2 justify-between text-foreground h-8"
+          className={`w-fit flex items-center gap-2 justify-between text-foreground h-8 border-border bg-card ${
+            isModified ? "bg-[#fafafa] dark:bg-popover border-primary" : ""
+          }`}
         >
           {title}
           <ChevronDown className="h-4 w-4 text-foreground/65" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-80">
-        <div className="space-y-4">
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        className="w-80 p-4 z-50 bg-popover border rounded-md shadow-lg"
+        align="start"
+        onClick={handleContentClick}
+      >
+        <div className="space-y-6" ref={dropdownContentRef}>
           <h4 className="font-medium leading-none">{title}</h4>
-          <div className="flex flex-col gap-4">
-            <div className="relative pt-6">
+          <div className="flex flex-col gap-6">
+            <div className="relative pt-8 pb-2">
               <SliderPrimitive.Root
                 min={min}
                 max={max}
                 step={1}
                 value={tempValue}
-                onValueChange={setTempValue}
+                onValueChange={handleSliderChange}
+                onPointerDown={(e) => e.stopPropagation()}
+                onMouseDown={(e) => e.stopPropagation()}
                 className="relative flex w-full touch-none select-none items-center"
               >
-                <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
+                  <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-secondary">
                   <SliderPrimitive.Range className="absolute h-full bg-primary" />
                 </SliderPrimitive.Track>
                 {tempValue.map(
@@ -63,7 +88,7 @@ const FilterPopover = ({
                           left: `${((val - min) / (max - min)) * 100}%`,
                         }}
                       >
-                        <div className="bg-background border border-primary rounded px-2 py-1 text-xs">
+                        <div className="bg-background border border-primary rounded px-2 py-1 text-xs whitespace-nowrap">
                           {val}
                           {showPercentage && "%"}
                         </div>
@@ -78,7 +103,7 @@ const FilterPopover = ({
                 ))}
               </SliderPrimitive.Root>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between text-sm text-muted-foreground">
               <span>
                 {min}
                 {showPercentage && "%"}
@@ -88,13 +113,17 @@ const FilterPopover = ({
                 {showPercentage && "%"}
               </span>
             </div>
-            <Button onClick={handleDone} className="w-full mt-2">
+            <Button
+              onClick={handleDone}
+              className="w-full mt-4"
+              variant="default"
+            >
               Done
             </Button>
           </div>
-        </div>
-      </PopoverContent>
-    </Popover>
+          </div>
+        </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

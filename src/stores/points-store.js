@@ -1,78 +1,94 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+// src/stores/points-store.ts
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
-// Define the levels and their point thresholds
 const LEVELS = [
-  { name: 'Pearl', threshold: 250 },
+  { name: 'Pearl',      threshold: 250 },   // First achievable level
   { name: 'Aquamarine', threshold: 500 },
-  { name: 'Topaz', threshold: 750 },
-  { name: 'Opal', threshold: 1000 },
-  { name: 'Sapphire', threshold: 1250 },
-  { name: 'Emerald', threshold: 1500 },
-  { name: 'Ruby', threshold: 1750 },
-  { name: 'Diamond', threshold: 2000 }
+  { name: 'Topaz',      threshold: 750 },
+  { name: 'Opal',       threshold: 1000 },
+  { name: 'Sapphire',   threshold: 1250 },
+  { name: 'Emerald',    threshold: 1500 },
+  { name: 'Ruby',       threshold: 1750 },
+  { name: 'Diamond',    threshold: 2000 },
 ];
 
+const INITIAL_STATE = {
+  points: 0,
+  currentLevel: null, // null when below Pearl (250)
+  nextLevel: LEVELS[0].name, // Pearl
+  pointsToNextLevel: LEVELS[0].threshold, // 250
+  progressToNextLevel: 0,
+  totalLevels: LEVELS.length,
+};
 
 export const usePointsStore = create()(
   persist(
     (set, get) => ({
-      points: 0,
-      currentLevel: 'Pearl',
-      nextLevel: 'Aquamarine',
-      pointsToNextLevel: 250,
+      ...INITIAL_STATE,
 
-      // Set points directly
+      reset: () => set(INITIAL_STATE),
+
       setPoints: (newPoints) => {
-        const currentLevelObj = LEVELS.reduce((prev, current) => 
-          newPoints >= current.threshold ? current : prev
-        , LEVELS[0]);
+        const points = Math.max(0, newPoints);
 
-        const nextLevelIndex = LEVELS.findIndex(l => l.name === currentLevelObj.name) + 1;
-        const nextLevel = nextLevelIndex < LEVELS.length ? LEVELS[nextLevelIndex].name : null;
-        const pointsToNextLevel = nextLevel 
-          ? LEVELS.find(l => l.name === nextLevel).threshold 
-          : 0;
+        // Below Pearl level (< 250)
+        if (points < LEVELS[0].threshold) {
+          const progressToNextLevel = Math.round(
+            (points / LEVELS[0].threshold) * 100
+          );
+
+          set({
+            points,
+            currentLevel: null, // No current level yet
+            nextLevel: LEVELS[0].name, // Pearl
+            pointsToNextLevel: LEVELS[0].threshold - points,
+            progressToNextLevel,
+          });
+          return;
+        }
+
+        // Find the current level (>= 250)
+        let currentLevelObj = LEVELS[0];
+        let nextLevelObj = LEVELS[1];
+
+        for (let i = LEVELS.length - 1; i >= 0; i--) {
+          if (points >= LEVELS[i].threshold) {
+            currentLevelObj = LEVELS[i];
+            nextLevelObj = LEVELS[i + 1] || null;
+            break;
+          }
+        }
+
+        const currentThreshold = currentLevelObj.threshold;
+        const nextThreshold = nextLevelObj?.threshold || currentThreshold;
+
+        // Calculate progress to next level
+        const pointsInCurrentTier = points - currentThreshold;
+        const tierSize = nextThreshold - currentThreshold;
+        
+        const progressToNextLevel = nextLevelObj
+          ? Math.min(100, Math.round((pointsInCurrentTier / tierSize) * 100))
+          : 100;
 
         set({
-          points: newPoints,
+          points,
           currentLevel: currentLevelObj.name,
-          nextLevel,
-          pointsToNextLevel: pointsToNextLevel - newPoints
+          nextLevel: nextLevelObj?.name || null,
+          pointsToNextLevel: nextLevelObj ? nextThreshold - points : 0,
+          progressToNextLevel,
         });
       },
 
-      // Add points to the current total
-      addPoints: (pointsToAdd) => {
-        const newPoints = get().points + pointsToAdd;
-        get().setPoints(newPoints);
-      }
+      addPoints: (amount) => {
+        const newTotal = get().points + amount;
+        get().setPoints(newTotal);
+      },
     }),
     {
-      name: 'points-storage', // unique name
-      storage: {
-        getItem: (name) => {
-          const str = localStorage.getItem(name);
-          return str ? JSON.parse(str) : null;
-        },
-        setItem: (name, value) => {
-          localStorage.setItem(name, JSON.stringify(value));
-        },
-        removeItem: (name) => {
-          localStorage.removeItem(name);
-        },
-      },
+      name: "points-storage",
+      storage: createJSONStorage(() => localStorage),
+      version: 2, // Increment version for the change
     }
   )
 );
-
-// // Optional: Helper function to sync points from backend
-// export const syncPointsFromBackend = async (api) => {
-//   try {
-//     const response = await api.get("/user/settings");
-//     const points = response.data.points || 0;
-//     usePointsStore.getState().setPoints(points);
-//   } catch (error) {
-//     console.error("Error syncing points:", error);
-//   }
-// };

@@ -2,38 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-@font-face {
-  font-family: "Poppins";
-  src: url("/fonts/Poppins.ttf");
-}
-
-@font-face {
-  font-family: "Poppins-Black";
-  src: url("/fonts/Poppins-Black.ttf");
-}
-
-@font-face {
-  font-family: "Poppins-Bold";
-  src: url("/fonts/Poppins-Bold.ttf");
-}
-
-.poppins-black {
-  font-family: "Poppins-Black";
-  color: #552c29;
-}
-
-.poppins-bold {
-  font-family: "Poppins-Bold";
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-poppins: var(--font-poppins);
 }
 
 body {
-  font-family: "Poppins";
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-poppins), Arial, Helvetica, sans-serif;
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+input:read-only:focus {
+  outline: none;
+  box-shadow: none;
+  border-color: inherit;
+  cursor:not-allowed;
+  caret:none;
 }
 
 @layer base {

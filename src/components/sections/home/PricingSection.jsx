@@ -12,8 +12,28 @@ import {
 const pricingPlans = [
   {
     name: "One Week on Us",
-    subtitle: "(₹ 0)",
+    subtitle: "(7 Days Free)",
+    plan_name: "one-week",
+    plan_total_price: "0",
     price: "Free",
+    period: "for 7 days",
+    features: [
+      "Dashboard",
+      "My Journal",
+      "Trade Logs",
+      "Weekly/Monthly Analysis",
+      "Performance Analytics",
+      "Accountability Partner",
+    ],
+    buttonText: "Start Free Trial",
+    buttonVariant: "",
+  },
+  {
+    name: "Half-Year Adventure",
+    subtitle: "",
+    plan_name: "half-year",
+    plan_total_price: "399",
+    price: "₹ 399 Only",
     period: "",
     features: [
       "Dashboard",
@@ -25,30 +45,14 @@ const pricingPlans = [
     ],
     buttonText: "Get Started Now",
     buttonVariant: "",
-    planId: "free"
-  },
-  {
-    name: "Half-Year Adventure",
-    subtitle: "(₹ 1,194 / Half Year)",
-    price: "₹ 199",
-    period: "per month",
-    features: [
-      "Dashboard",
-      "My Journal",
-      "Trade Logs",
-      "Weekly/Monthly Analysis",
-      "Performance Analytics",
-      "Accountability Partner",
-    ],
-    buttonText: "Get Started Now",
-    buttonVariant: "",
-    planId: "half-year"
   },
   {
     name: "Year of Possibilities",
-    subtitle: "(₹ 1,788 / Year)",
-    price: "₹ 149",
-    period: "per month",
+    subtitle: "Best Value",
+    plan_name: "yearly",
+    plan_total_price: "599",
+    price: "₹ 599 Only",
+    period: "",
     features: [
       "Dashboard",
       "My Journal",
@@ -61,16 +65,15 @@ const pricingPlans = [
     buttonVariant: "default",
     highlight: true,
     discount: true,
-    planId: "yearly"
   },
 ];
 
 const PricingSection = () => {
   const router = useRouter();
 
-  const handlePlanSelection = (planId) => {
+  const handlePlanSelection = (planName) => {
     // Store the selected plan and current route in localStorage
-    localStorage.setItem('selectedPlan', planId);
+    localStorage.setItem('selectedPlan', planName);
     localStorage.setItem('sourceRoute', window.location.pathname);
     
     // Navigate to signup page
@@ -106,13 +109,15 @@ const PricingSection = () => {
                     {plan.price}
                     {plan.period && (
                       <span className="text-sm font-normal">
-                        /{plan.period}
+                        {" "}{plan.period}
                       </span>
                     )}
                   </div>
-                  <div className="text-sm font-normal mt-1 text-gray-600">
-                    {plan.subtitle}
-                  </div>
+                  {plan.subtitle && (
+                    <div className="text-sm font-normal mt-1 text-gray-600">
+                      {plan.subtitle}
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3">
@@ -128,7 +133,7 @@ const PricingSection = () => {
                   <Button 
                     className="w-full" 
                     variant={plan.buttonVariant}
-                    onClick={() => handlePlanSelection(plan.planId)}
+                    onClick={() => handlePlanSelection(plan.plan_name)}
                   >
                     {plan.buttonText}
                   </Button>

@@ -5,31 +5,77 @@ import Topbar from "@/components/navigation/Topbar";
 import Sidebar from "@/components/navigation/Sidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { Toaster as Toaster2 } from "@/components/ui/toaster";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Cookies from "js-cookie";
 import AnnouncementManager from "@/components/AnnouncementManager";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Dialog, DialogContent } from "@/components/ui/dialog"; // Import Dialog components from shadcn/ui
+import { Dialog, DialogClose, DialogContent } from "@/components/ui/dialog";
 import SubscriptionPlan from "@/components/cards/subsciption";
+import { logoutAndClearAll } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { X } from "lucide-react";
 
 export default function MainLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [announcements, setAnnouncements] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [subscriptionData, setSubscriptionData] = useState(null);
-  const [isSubscriptionDialogOpen, setIsSubscriptionDialogOpen] = useState(false); // State to control Dialog
-  const [selectedPlan, setSelectedPlan] = useState(null); // State to store selectedPlan
+  const [isSubscriptionDialogOpen, setIsSubscriptionDialogOpen] =
+    useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // ===================================================================
+  // 1. CLEAR LOCALSTORAGE ON SESSION EXPIRY (from middleware)
+  // ===================================================================
+  useEffect(() => {
+    const sessionExpired = searchParams.get("session_expired");
+    if (sessionExpired === "true") {
+      // Save theme before clearing
+      const theme = localStorage.getItem("theme") || "light";
+
+      // Clear everything
+      localStorage.clear();
+
+      // Restore theme
+      localStorage.setItem("theme", theme);
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+
+      // Remove ?session_expired=true from URL without reload
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete("session_expired");
+      router.replace(newUrl.pathname + newUrl.search, { scroll: false });
+    }
+  }, [searchParams, router]);
+  // ===================================================================
 
   const clearCookiesAndRedirect = useCallback(() => {
-    Cookies.remove("userName");
-    Cookies.remove("token");
-    Cookies.remove("expiry");
-    Cookies.remove("userEmail");
-    Cookies.remove("userId");
-    Cookies.remove("subscription");
-    Cookies.remove("plan");
+    // Reset theme
+    document.documentElement.classList.remove("dark");
+    localStorage.setItem("theme", "light");
+
+    // Clear all cookies
+    Object.keys(Cookies.get()).forEach((cookieName) => {
+      Cookies.remove(cookieName);
+    });
+
+    // Save theme before clearing localStorage
+    const theme = localStorage.getItem("theme");
+
+    // Clear localStorage
+    localStorage.clear();
+
+    // Restore theme
+    localStorage.setItem("theme", theme || "light");
+
+    // Redirect to home
     router.push("/");
   }, [router]);
 
@@ -38,7 +84,7 @@ export default function MainLayout({ children }) {
       const token = Cookies.get("token");
       if (!token) {
         clearCookiesAndRedirect();
-        return;
+        return false;
       }
 
       const response = await fetch(
@@ -57,11 +103,14 @@ export default function MainLayout({ children }) {
       if (!response.ok || data.error || data === false) {
         toast.error("Your session has expired. Please log in again.");
         clearCookiesAndRedirect();
+        return false;
       }
+      return true;
     } catch (error) {
       console.error("Token validation error:", error);
       toast.error("An error occurred. Please try logging in again.");
       clearCookiesAndRedirect();
+      return false;
     }
   }, [clearCookiesAndRedirect]);
 
@@ -70,7 +119,7 @@ export default function MainLayout({ children }) {
       const token = Cookies.get("token");
       if (!token) {
         clearCookiesAndRedirect();
-        return;
+        return false;
       }
 
       const response = await fetch(
@@ -87,9 +136,8 @@ export default function MainLayout({ children }) {
       }
 
       const data = await response.json();
-      setSubscriptionData(data); // Store the complete subscription data
+      setSubscriptionData(data);
 
-      // Check if the subscription is expired
       const currentDate = new Date();
       const expiresAt = new Date(data.expiresAt);
 
@@ -99,95 +147,144 @@ export default function MainLayout({ children }) {
       } else {
         Cookies.set("subscription", "false", { expires: 7 });
         Cookies.set("plan", data.plan, { expires: 7 });
-        toast.error("Your subscription has expired. Please renew your subscription.");
+        toast.error(
+          "Your subscription has expired. Please renew your subscription."
+        );
       }
+      return true;
     } catch (error) {
       console.error("Subscription check error:", error);
       toast.error("Failed to check subscription status. Please try again.");
+      return false;
     }
   }, [clearCookiesAndRedirect]);
 
+  const fetchAnnouncements = useCallback(async () => {
+    try {
+      const token = Cookies.get("token");
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/announcements`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+
+        const notificationItems = data.filter(
+          (item) => item.type === "notification"
+        );
+        const announcementItems = data.filter(
+          (item) => item.type !== "notification"
+        );
+
+        setNotifications(notificationItems);
+        setAnnouncements(announcementItems);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error fetching announcements:", error);
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
-    validateToken();
-    checkSubscriptionStatus();
+    const initializeData = async () => {
+      setLoading(true);
+      const [tokenValid, subscriptionValid, announcementsValid] =
+        await Promise.all([
+          validateToken(),
+          checkSubscriptionStatus(),
+          fetchAnnouncements(),
+        ]);
+
+      if (tokenValid && subscriptionValid && announcementsValid) {
+        setLoading(false);
+
+        const isFirstTimeLogin = localStorage.getItem("isFirstTimeLogin");
+        if (isFirstTimeLogin === "true") {
+          setIsSubscriptionDialogOpen(true);
+          localStorage.setItem("isFirstTimeLogin", "false");
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    initializeData();
+
     const intervalId = setInterval(validateToken, 60000);
     const subscriptionIntervalId = setInterval(checkSubscriptionStatus, 60000);
     return () => {
       clearInterval(intervalId);
       clearInterval(subscriptionIntervalId);
     };
-  }, [validateToken, checkSubscriptionStatus]);
+  }, [validateToken, checkSubscriptionStatus, fetchAnnouncements]);
 
-  useEffect(() => {
-    const fetchAnnouncements = async () => {
-      try {
-        const token = Cookies.get("token");
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/announcement`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        if (response.ok) {
-          const data = await response.json();
-
-          const notificationItems = data.filter(
-            (item) => item.type === "notification"
-          );
-          const announcementItems = data.filter(
-            (item) => item.type !== "notification"
-          );
-
-          setNotifications(notificationItems);
-          setAnnouncements(announcementItems);
-        }
-      } catch (error) {
-        console.error("Error fetching announcements:", error);
-      }
-    };
-
-    fetchAnnouncements();
-    const intervalId = setInterval(fetchAnnouncements, 60000);
-    return () => clearInterval(intervalId);
-  }, []);
-
-  // Check for selectedPlan in localStorage on component mount
   useEffect(() => {
     const selectedPlanFromStorage = localStorage.getItem("selectedPlan");
     if (selectedPlanFromStorage) {
-      setSelectedPlan(selectedPlanFromStorage); // Set the selectedPlan state
-      setIsSubscriptionDialogOpen(true); // Open the Dialog
-      localStorage.removeItem("selectedPlan"); // Clear selectedPlan from localStorage
+      setSelectedPlan(selectedPlanFromStorage);
+      setIsSubscriptionDialogOpen(true);
+      localStorage.removeItem("selectedPlan");
     }
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      const token = Cookies.get("token");
-      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  // const handleLogout = async () => {
+  //   try {
+  //     const token = Cookies.get("token");
+  //     await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/logout`, {
+  //       method: "POST",
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
 
-      clearCookiesAndRedirect();
-      toast.success("Logged out successfully");
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast.error("Failed to logout. Please try again.");
-    }
+  //     // Reset theme
+  //     document.documentElement.classList.remove("dark");
+  //     localStorage.setItem("theme", "light");
+
+  //     // Clear cookies
+  //     Object.keys(Cookies.get()).forEach((cookieName) => {
+  //       Cookies.remove(cookieName);
+  //     });
+
+  //     // Save theme
+  //     const theme = localStorage.getItem("theme");
+
+  //     // Clear localStorage
+  //     localStorage.clear();
+
+  //     // Restore theme
+  //     localStorage.setItem("theme", theme || "light");
+
+  //     router.push("/");
+  //     toast.success("Logged out successfully");
+  //   } catch (error) {
+  //     console.error("Logout error:", error);
+  //     toast.error("Failed to logout. Please try again.");
+  //   }
+  // };
+
+  const handleLogout = async () => {
+    logoutAndClearAll(router);
   };
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  const closeSidebar = () => setSidebarOpen(false);
 
   const handleRemoveAnnouncement = useCallback((announcement) => {
     setAnnouncements((prevAnnouncements) =>
       prevAnnouncements.filter((a) => a._id !== announcement._id)
     );
   }, []);
+
+  const handleCloseDialog = () => {
+    setIsSubscriptionDialogOpen(false);
+  };
 
   return (
     <div className="flex flex-col h-screen bg-background">
@@ -202,26 +299,50 @@ export default function MainLayout({ children }) {
         notifications={notifications}
       />
 
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar isOpen={sidebarOpen} subscriptionData={subscriptionData} />
+      <div className="flex flex-1 overflow-hidden pt-14">
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={closeSidebar}
+          subscriptionData={subscriptionData}
+        />
         <div className="flex-1 overflow-auto">
           <Toaster />
           <Toaster2 />
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            {loading ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
+              </div>
+            ) : (
+              children
+            )}
+          </TooltipProvider>
         </div>
       </div>
 
-      {/* Dialog for SubscriptionPlan */}
       <Dialog
         open={isSubscriptionDialogOpen}
         onOpenChange={(isOpen) => {
           if (!isOpen) {
-            setIsSubscriptionDialogOpen(false); // Close the Dialog
+            setIsSubscriptionDialogOpen(false);
           }
         }}
       >
-        <DialogContent className="max-w-7xl">
-          <SubscriptionPlan selectedPlan={selectedPlan} />
+        <DialogContent className="sm:max-w-7xl max-h-[96vh] p-0 overflow-y-auto overflow-x-hidden bg-card backdrop-blur-sm">
+          <DialogClose>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-4 right-4 z-50 rounded-full bg-card hover:bg-accent text-foreground"
+              onClick={handleCloseDialog}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          </DialogClose>
+          <SubscriptionPlan
+            selectedPlan={selectedPlan}
+            onCloseDialog={handleCloseDialog}
+          />
         </DialogContent>
       </Dialog>
     </div>

@@ -6,7 +6,6 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { toast } from "sonner";
 
 function VerifyOTPContent() {
@@ -17,7 +16,6 @@ function VerifyOTPContent() {
   const [resendTimer, setResendTimer] = useState(0);
   const router = useRouter();
 
-  // Handle email extraction from URL query params on client-side
   useEffect(() => {
     if (typeof window !== "undefined") {
       const searchParams = new URLSearchParams(window.location.search);
@@ -30,7 +28,6 @@ function VerifyOTPContent() {
     }
   }, [router]);
 
-  // Handle resend OTP timer
   useEffect(() => {
     let timer;
     if (resendTimer > 0) {
@@ -45,7 +42,7 @@ function VerifyOTPContent() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-email-otp`,
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-forgot-password-otp`, // Correct endpoint
         {
           method: "POST",
           headers: {
@@ -59,11 +56,17 @@ function VerifyOTPContent() {
 
       if (response.ok) {
         toast.success("OTP verified successfully");
-        router.push(
-          `/login/email/forgot-password/reset-password?email=${encodeURIComponent(
-            email
-          )}&token=${encodeURIComponent(data.token)}`
-        );
+        // console.log("Response from verify-forgot-password-otp:", data);
+
+        if (!data.resetToken) {
+          throw new Error("No reset token received from server");
+        }
+
+        const redirectUrl = `/login/email/forgot-password/reset-password?token=${encodeURIComponent(
+          data.resetToken
+        )}&email=${encodeURIComponent(email)}`;
+        // console.log("Redirecting to:", redirectUrl);
+        router.push(redirectUrl);
       } else {
         throw new Error(data.error || "Failed to verify OTP");
       }
@@ -93,7 +96,7 @@ function VerifyOTPContent() {
 
       if (response.ok) {
         toast.success("New OTP sent successfully");
-        setResendTimer(60); // Set a 60-second cooldown
+        setResendTimer(60);
       } else {
         throw new Error(data.error || "Failed to resend OTP");
       }
@@ -109,7 +112,8 @@ function VerifyOTPContent() {
     <div className="w-full max-w-lg p-8 space-y-8">
       <Button
         variant="outline"
-        className="mb-8 rounded-full size-10 p-0 absolute left-10 lg:left-32 top-20"
+        size="icon"
+        className="absolute left-4 top-20 rounded-full  p-2 lg:left-8 "
         onClick={() => router.back()}
       >
         <ArrowLeft className="h-4 w-4" />

@@ -25,10 +25,10 @@ const HeroSection = ({ heroSectionRef }) => {
         <nav className="flex items-center justify-between p-4 text-background mx-auto container max-w-[84rem]">
           <div className="flex items-center space-x-2">
             <Image
-              src="/images/home_logo.png"
+              src="/images/Tradeboard.in_logo_Final White.png"
               alt="Tradeboard.in Logo"
-              width={240}
-              height={60}
+              width={160}
+              height={40}
             />
           </div>
           <div className="hidden md:flex space-x-7 text-sm">
@@ -82,9 +82,9 @@ const HeroSection = ({ heroSectionRef }) => {
             Trade Better With Discipline
           </h1>
           <span className="text-[1.4rem] max-w-7xl mx-auto">
-            We offer traders the tools to analyse their daily trading patterns
-            and learn from <br />
-            it to establish themselves as successful traders.
+            Tradeboard assists you to maintain discipline, track performance and
+            achieve <br />
+            consistent results through data-driven decisions.
           </span>
           <div className="bg-gradient-to-b from-transparent from-50% to-card to-50% p-3">
             <div className="relative w-full max-w-[58rem] mx-auto aspect-video">

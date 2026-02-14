@@ -22,10 +22,28 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const pricingPlans = [
   {
     name: "One Week on Us",
-    subtitle: "(₹ 0)",
+    subtitle: "(7 Days Free)",
     plan_name: "one-week",
     plan_total_price: "0",
     price: "Free",
+    period: "for 7 days",
+    features: [
+      "Dashboard",
+      "My Journal",
+      "Trade Logs",
+      "Weekly/Monthly Analysis",
+      "Performance Analytics",
+      "Accountability Partner",
+    ],
+    buttonText: "Start Free Trial",
+    buttonVariant: "",
+  },
+  {
+    name: "Half-Year Adventure",
+    subtitle: "",
+    plan_name: "half-year",
+    plan_total_price: "399",
+    price: "₹ 399 Only",
     period: "",
     features: [
       "Dashboard",
@@ -39,30 +57,12 @@ const pricingPlans = [
     buttonVariant: "",
   },
   {
-    name: "Half-Year Adventure",
-    subtitle: "(₹ 1,194 / Half Year)",
-    plan_name: "half-year",
-    plan_total_price: "1194",
-    price: "199",
-    period: "per month",
-    features: [
-      "Dashboard",
-      "My Journal",
-      "Trade Logs",
-      "Weekly/Monthly Analysis",
-      "Performance Analytics",
-      "Accountability Partner",
-    ],
-    buttonText: "Get Started Now",
-    buttonVariant: "",
-  },
-  {
     name: "Year of Possibilities",
-    subtitle: "(₹ 1,788 / Year)",
+    subtitle: "Best Value",
     plan_name: "yearly",
-    plan_total_price: "1788",
-    price: "149",
-    period: "per month",
+    plan_total_price: "599",
+    price: "₹ 599 Only",
+    period: "",
     features: [
       "Dashboard",
       "My Journal",
@@ -114,7 +114,8 @@ export default function PricingPage() {
 
   const handlePaymentSuccess = async (response, plan) => {
     try {
-      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
+      const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
+        response;
 
       // Retrieve the token from cookies
       const token = Cookies.get("token");
@@ -137,9 +138,9 @@ export default function PricingPage() {
 
       if (result.data.success) {
         // Handle success (e.g., redirect or show a success message)
-        console.log("Payment successful!");
-        console.log("Reference:", result.data.reference);
-        console.log("Plan:", result.data.plan);
+        // console.log("Payment successful!");
+        // console.log("Reference:", result.data.reference);
+        // console.log("Plan:", result.data.plan);
 
         // Redirect to the success page
         window.location.href = `/payment-success?reference=${result.data.reference}&plan=${result.data.plan}`;
@@ -253,16 +254,18 @@ export default function PricingPage() {
                     {plan.name}
                   </CardTitle>
                   <div className="text-2xl font-semibold">
-                    ₹ {plan.price}
+                    {plan.price}
                     {plan.period && (
                       <span className="text-sm font-normal">
-                        /{plan.period}
+                        {" "}{plan.period}
                       </span>
                     )}
                   </div>
-                  <div className="text-sm font-normal mt-1 text-gray-600">
-                    {plan.subtitle}
-                  </div>
+                  {plan.subtitle && (
+                    <div className="text-sm font-normal mt-1 text-gray-600">
+                      {plan.subtitle}
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-3 mb-6">
@@ -293,7 +296,7 @@ export default function PricingPage() {
           ))}
         </div>
       </div>
-      <Toaster/>
+      <Toaster />
     </div>
   );
 }

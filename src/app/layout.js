@@ -1,5 +1,13 @@
 import { Toast, ToastProvider } from "@/components/ui/toast";
+import { Poppins } from "next/font/google";
 import "./globals.css";
+
+
+const poppins = Poppins({
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],  // Add the weights you need
+});
 
 export const metadata = {
   title: "Tradeboard - Trade Better With Discipline",
@@ -36,9 +44,9 @@ export default function RootLayout({ children }) {
       <head>
         <script src="https://accounts.google.com/gsi/client" async defer />
       </head>
-      <body className="antialiased ">
+      <body className={`${poppins.variable} antialiased`}>
         <ToastProvider>
-          <ComingSoonOverlay />
+          {/* <ComingSoonOverlay /> */}
           {children}
           <Toast />
         </ToastProvider>

@@ -14,14 +14,18 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const JournalDetailsPage = () => {
   const router = useRouter()
   const params = useParams()
   const [journalDetails, setJournalDetails] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [currentDate, setCurrentDate] = useState(parseISO(params.date))
-  const [journalDates, setJournalDates] = useState([]) // Array of all journal dates
+  const [currentDate, setCurrentDate] = useState(() => {
+    const cookieDate = Cookies.get("journalDetailsDate")
+    return cookieDate ? parseISO(JSON.parse(cookieDate)) : parseISO(params.date)
+  })
+  const [journalDates, setJournalDates] = useState([])
   const [sidebarExpanded, setSidebarExpanded] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("sidebarExpanded")
@@ -34,8 +38,20 @@ const JournalDetailsPage = () => {
   const [selectedSection, setSelectedSection] = useState("calendar")
   const [tradesPerDay, setTradesPerDay] = useState(4)
   const [selectedImage, setSelectedImage] = useState(null)
+  const [openImageDialog, setOpenImageDialog] = useState(false);
+const [currentImageUrl, setCurrentImageUrl] = useState("");
 
-  // Fetch all journal dates
+  const updateCookies = (date) => {
+    Cookies.set("journalDetailsDate", JSON.stringify(date.toISOString()), {
+      expires: 1/48 // 30 minutes
+    })
+  }
+
+  const handleImageClick = (fileUrl) => {
+    setCurrentImageUrl(fileUrl);
+    setOpenImageDialog(true);
+  };
+
   useEffect(() => {
     const fetchJournalDates = async () => {
       try {
@@ -50,11 +66,9 @@ const JournalDetailsPage = () => {
         console.error("Error fetching journal dates:", error)
       }
     }
-
     fetchJournalDates()
   }, [])
 
-  // Fetch journal details for the current date
   useEffect(() => {
     const fetchJournalDetails = async () => {
       try {
@@ -67,6 +81,7 @@ const JournalDetailsPage = () => {
           },
         })
         setJournalDetails(response.data)
+        updateCookies(currentDate)
       } catch (error) {
         console.error("Error fetching journal details:", error)
         setJournalDetails(null)
@@ -74,15 +89,13 @@ const JournalDetailsPage = () => {
         setIsLoading(false)
       }
     }
-
     fetchJournalDetails()
-  }, [currentDate, params.date])
+  }, [currentDate])
 
   const toggleSidebar = () => {
     setSidebarExpanded(!sidebarExpanded)
   }
 
-  // Navigate to the next or previous journal
   const navigateJournal = (direction) => {
     const currentIndex = journalDates.findIndex((date) => date === format(currentDate, "yyyy-MM-dd"))
     if (currentIndex === -1) return
@@ -91,11 +104,11 @@ const JournalDetailsPage = () => {
     if (newIndex >= 0 && newIndex < journalDates.length) {
       const newDate = parseISO(journalDates[newIndex])
       setCurrentDate(newDate)
-      router.push(`/my-journal/${journalDates[newIndex]}`)
+      router.push(`/performance-analytics/${journalDates[newIndex]}`)
+      updateCookies(newDate)
     }
   }
 
-  // Check if there is a next or previous journal
   const hasNextJournal = () => {
     const currentIndex = journalDates.findIndex((date) => date === format(currentDate, "yyyy-MM-dd"))
     return currentIndex < journalDates.length - 1
@@ -106,11 +119,35 @@ const JournalDetailsPage = () => {
     return currentIndex > 0
   }
 
-  // Render date navigation with next/previous journal buttons
+  const handleBackClick = () => {
+    const cookieDate = Cookies.get("performanceAnalyticsDate")
+    if (cookieDate) {
+      const date = parseISO(JSON.parse(cookieDate))
+      const params = Cookies.get("performanceAnalyticsFilters") ? JSON.parse(Cookies.get("performanceAnalyticsFilters")) : {}
+      const queryString = new URLSearchParams({
+        period: params.period || "thisWeek",
+        ...(params.metricsFrom && { metricsFrom: params.metricsFrom }),
+        ...(params.metricsTo && { metricsTo: params.metricsTo }),
+        ...(params.journalsFrom && { journalsFrom: params.journalsFrom }),
+        ...(params.journalsTo && { journalsTo: params.journalsTo }),
+        ...(params.minWinRate && { minWinRate: params.minWinRate }),
+        ...(params.maxWinRate && { maxWinRate: params.maxWinRate }),
+        ...(params.minTrades && { minTrades: params.minTrades }),
+        ...(params.maxTrades && { maxTrades: params.maxTrades }),
+        ...(params.minRulesFollowed && { minRulesFollowed: params.minRulesFollowed }),
+        ...(params.maxRulesFollowed && { maxRulesFollowed: params.maxRulesFollowed }),
+        ...(params.page && { page: params.page }),
+      }).toString()
+      router.push(`/performance-analytics?${queryString}`)
+    } else {
+      router.push('/performance-analytics')
+    }
+  }
+
   const renderDateNavigation = () => (
     <nav aria-label="Journal Navigation">
       <button
-        onClick={() => router.back()} // Navigate back to the previous page
+        onClick={handleBackClick}
         className="flex items-center text-foreground/70 hover:text-foreground transition-colors mb-4 rounded-full border size-10 justify-center"
         aria-label="Back to Previous Page"
       >
@@ -166,7 +203,6 @@ const JournalDetailsPage = () => {
         <Sheet open={isSideSheetOpen} onOpenChange={setIsSideSheetOpen}>
           <SheetTrigger asChild>
             <Button variant="outline" size="icon">
-              {/* <Menu /> */}
             </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[360px] overflow-auto">
@@ -195,7 +231,7 @@ const JournalDetailsPage = () => {
                 variant="ghost"
                 size="icon"
                 className="bg-transparent"
-                onClick={() => handleSectionClick("charts")}
+                onClick={() => setSelectedSection("charts")}
               >
                 <BarChart className="size-5" />
               </Button>
@@ -220,9 +256,7 @@ const JournalDetailsPage = () => {
       <div className="flex flex-col md:flex-row min-h-screen bg-card">
         <main className="flex-1 p-6 bg-background rounded-t-xl">
           {renderDateNavigation()}
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Journal Card */}
             <Card className="flex-1 w-full h-full flex justify-between flex-col pb-6 shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
               <CardHeader>
                 <CardTitle className="text-xl">Journal</CardTitle>
@@ -236,7 +270,6 @@ const JournalDetailsPage = () => {
                     value={journalData.note || "No notes"}
                   />
                 </div>
-
                 <div className="space-y-2 flex flex-col flex-1">
                   <label className="text-sm font-medium">Mistakes</label>
                   <Textarea
@@ -245,7 +278,6 @@ const JournalDetailsPage = () => {
                     value={journalData.mistake || "No mistakes recorded"}
                   />
                 </div>
-
                 <div className="space-y-2 flex flex-col flex-1">
                   <label className="text-sm font-medium">Lessons</label>
                   <Textarea
@@ -255,28 +287,28 @@ const JournalDetailsPage = () => {
                   />
                 </div>
               </CardContent>
-              <CardFooter className="h-fit p-0 px-6">
-                {journalData.attachedFiles?.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {journalData.attachedFiles.map((file, index) => (
-                      <div
-                        key={index}
-                        className="relative group rounded-lg overflow-hidden w-20 h-9 shadow border cursor-pointer"
-                        onClick={() => handleImageClick(file)}
-                      >
-                        <img
-                          src={file || "/placeholder.svg"}
-                          alt={`Uploaded file ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardFooter>
+              <CardFooter className="h-fit p-0 px-6 mt-4">
+  {journalData.attachedFiles && journalData.attachedFiles.length > 0 ? (
+    <div className="flex flex-wrap gap-2 w-full">
+      {journalData.attachedFiles.map((file, index) => (
+        <div 
+          key={index}
+          className="relative group rounded-lg overflow-hidden w-20 h-12 shadow border cursor-pointer"
+          onClick={() => handleImageClick(file)}
+        >
+          <img
+            src={file || "/placeholder.svg"}
+            alt={`Uploaded file ${index + 1}`}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="text-muted-foreground text-sm">No attachments</div>
+  )}
+</CardFooter>
             </Card>
-
-            {/* Rules Card */}
             <Card className="w-full max-w-4xl h-full mx-auto p-4 flex-1 shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
               <CardHeader className="p-0">
                 <div className="flex items-center justify-between">
@@ -289,13 +321,9 @@ const JournalDetailsPage = () => {
                 <div className="rounded-lg overflow-hidden border">
                   <div className="sticky top-0 z-10 grid grid-cols-[auto,1fr,auto] gap-4 p-2 px-4 bg-[#F4E4FF] dark:bg-[#49444c] border-b">
                     <div className="flex items-center">
-                      <Checkbox
-                        checked={false}
-                        // Add onCheckedChange handler for follow/unfollow all
-                      />
+                      <Checkbox checked={false} />
                     </div>
                     <span className="font-medium">My Rules</span>
-                    {/* <span className="font-medium text-right">Action</span> */}
                   </div>
                   <div className="max-h-[50vh] min-h-96 overflow-y-auto">
                     <div className="divide-y">
@@ -305,15 +333,11 @@ const JournalDetailsPage = () => {
                           className="grid grid-cols-[auto,1fr,auto] gap-4 px-4 py-2 items-center hover:bg-secondary/50"
                         >
                           <div>
-                            <Checkbox
-                              checked={rule.isFollowed}
-                              // Add onCheckedChange handler
-                            />
+                            <Checkbox checked={rule.isFollowed} />
                           </div>
-                          <span className="text-gray-700 text-[0.8rem]">{rule.description}</span>
+                          <span className="text-muted-foreground text-[0.8rem]">{rule.description}</span>
                         </div>
                       ))}
-
                       {(!journalData.rules || journalData.rules.length === 0) && (
                         <div className="text-center text-muted-foreground p-4">No rules tracked</div>
                       )}
@@ -323,8 +347,6 @@ const JournalDetailsPage = () => {
               </CardContent>
             </Card>
           </div>
-
-          {/* Trades Card */}
           {journalData.trades?.length > 0 && (
             <Card className="mt-4 shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
@@ -354,10 +376,10 @@ const JournalDetailsPage = () => {
                           <TableCell
                             className={cn(
                               !trade.buyingPrice || !trade.sellingPrice
-                                ? "text-foreground font-semibold  text-center"
+                                ? "text-foreground font-semibold text-center"
                                 : trade.buyingPrice < trade.sellingPrice
-                                  ? "text-green-500 font-semibold  text-center"
-                                  : "text-red-500 font-semibold  text-center",
+                                  ? "text-green-500 font-semibold text-center"
+                                  : "text-red-500 font-semibold text-center",
                             )}
                           >
                             {trade.instrumentName}
@@ -379,30 +401,29 @@ const JournalDetailsPage = () => {
                     </TableBody>
                   </Table>
                 </div>
-                <div className="flex gap-6 items-center justify-between mt-6">
+                <div className="flex-col lg:flex-row flex gap-6 items-center justify-between mt-6">
                   <div
-                    className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
+                    className={`rounded-lg p-2 flex items-center gap-2 w-full lg:w-fit ${
                       journalDetails.summary?.totalPnL >= 0 ? "bg-green-600/20" : "bg-red-600/20"
                     }`}
                   >
                     <div
-                     
                       className={`text-sm font-medium ${
-                        journalDetails.summary?.totalPnL >= 0 ? "text-green-800" : "text-red-800"
+                        journalDetails.summary?.totalPnL >= 0 ? "text-green-500" : "text-red-500"
                       }`}
                     >
                       Today's Profit:
                     </div>
                     <div
                       className={`text-lg font-medium ${
-                        journalDetails.summary?.totalPnL >= 0 ? "text-green-900" : "text-red-900"
+                        journalDetails.summary?.totalPnL >= 0 ? "text-green-500" : "text-red-500"
                       }`}
                     >
                       ₹ {(journalDetails.summary?.totalPnL ?? 0).toFixed(2)}
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-[#A073F0]/25 flex items-center gap-2 p-2 w-fit">
+                  <div className="rounded-lg bg-[#A073F0]/25 flex items-center gap-2 p-2  w-full lg:w-fit">
                     <div className="text-sm font-medium text-primary">Today's Charges:</div>
                     <div className="text-lg font-medium text-primary">
                       ₹ {(journalDetails.summary?.totalCharges ?? 0).toFixed(2)}
@@ -410,20 +431,20 @@ const JournalDetailsPage = () => {
                   </div>
 
                   <div
-                    className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
+                    className={`rounded-lg p-2 flex items-center gap-2 w-full lg:w-fit ${
                       journalDetails.summary?.netPnL >= 0 ? "bg-green-600/20" : "bg-red-600/20"
                     }`}
                   >
                     <div
                       className={`text-sm font-medium ${
-                        journalDetails.summary?.netPnL >= 0 ? "text-green-800" : "text-red-800"
+                        journalDetails.summary?.netPnL >= 0 ? "text-green-500" : "text-red-500"
                       }`}
                     >
                       Net Realised P&L:
                     </div>
                     <div
                       className={`text-lg font-medium ${
-                        journalDetails.summary?.netPnL >= 0 ? "text-green-900" : "text-red-900"
+                        journalDetails.summary?.netPnL >= 0 ? "text-green-500" : "text-red-500"
                       }`}
                     >
                       ₹ {(journalDetails.summary?.netPnL ?? 0).toFixed(2)}
@@ -458,9 +479,18 @@ const JournalDetailsPage = () => {
           </div>
         </div>
       )}
+
+<Dialog open={openImageDialog} onOpenChange={setOpenImageDialog}>
+  <DialogContent className="sm:max-w-4xl w-fit max-h-[90vh] p-0 ">
+    <img
+      src={currentImageUrl || "/placeholder.svg"}
+      alt="Image preview"
+      className="max-w-full max-h-[75vh] object-contain rounded-lg"
+    />
+  </DialogContent>
+</Dialog>
     </>
   )
 }
 
 export default JournalDetailsPage
-

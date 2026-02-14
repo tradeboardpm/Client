@@ -23,9 +23,18 @@ import { Info, SquarePen, Trash2, Plus, Search, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { AddRulesDialog } from "@/components/dialogs/rules/AddRulesDialog";
 import { EmptyState } from "./EmptyState";
+import { Spinner } from "@/components/ui/spinner";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 const MAX_RULE_LENGTH = 150;
+
+// CRITICAL FIX: Always send UTC midnight (00:00:00.000Z) for the selected date
+const getUtcMidnightISOString = (date) => {
+  const d = new Date(date);
+  return new Date(
+    Date.UTC(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0, 0)
+  ).toISOString();
+};
 
 export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   const [rules, setRules] = useState([]);
@@ -35,6 +44,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   const [ruleToDelete, setRuleToDelete] = useState(null);
   const [newRulesDialog, setNewRulesDialog] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
+  const [masterDate, setMasterDate] = useState(null); // DEBUG: Track masterDate
 
   const [isLoadingRules, setIsLoadingRules] = useState(false);
   const [isLoadingAction, setIsLoadingAction] = useState({
@@ -44,14 +54,30 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
     followRule: false,
     followAllRules: false,
     loadSampleRules: false,
+    bulkAddRules: false,
   });
 
+  const MAX_RULES = 50;
+
   useEffect(() => {
-    // Check subscription status from cookies
-    const subscriptionStatus = Cookies.get('subscription') === 'true';
+    const subscriptionStatus = Cookies.get("subscription") === "true";
     setHasSubscription(subscriptionStatus);
     fetchRules();
+    fetchMasterDate(); // DEBUG: Fetch masterDate for display
   }, [selectedDate]);
+
+  // DEBUG: Fetch user's masterDate
+  const fetchMasterDate = async () => {
+    try {
+      const token = Cookies.get("token");
+      const response = await axios.get(`${API_URL}/user/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMasterDate(response.data?.masterDate || null);
+    } catch (error) {
+      console.error("Error fetching masterDate:", error);
+    }
+  };
 
   const fetchRules = async () => {
     setIsLoadingRules(true);
@@ -59,12 +85,12 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
       const token = Cookies.get("token");
       const response = await axios.get(`${API_URL}/rules`, {
         headers: { Authorization: `Bearer ${token}` },
-        params: { date: selectedDate.toISOString() },
+        params: { date: getUtcMidnightISOString(selectedDate) },
       });
 
       const rulesWithFollowStatus = response.data.map((rule) => ({
         ...rule,
-        isFollowed: rule.isFollowed || false,
+        isFollowed: rule?.isFollowed ?? false,
       }));
 
       setRules(rulesWithFollowStatus);
@@ -82,6 +108,68 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
 
   const handleAddRules = (newRules) => {
     setRules((prevRules) => [...prevRules, ...newRules]);
+    fetchMasterDate(); // Refresh masterDate after adding rules
+  };
+
+  const handleBulkAddRules = async (ruleDescriptions) => {
+    if (!hasSubscription || !ruleDescriptions || ruleDescriptions.length === 0)
+      return;
+
+    const validRules = ruleDescriptions
+      .map((desc) => (desc && typeof desc === "string" ? desc.trim() : ""))
+      .filter((desc) => desc.length > 0);
+
+    if (validRules.length === 0) {
+      toast({
+        title: "Error",
+        description:
+          "Please provide at least one valid non-empty rule description.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoadingAction((prev) => ({ ...prev, bulkAddRules: true }));
+    try {
+      const token = Cookies.get("token");
+      const response = await axios.post(
+        `${API_URL}/rules/bulk`,
+        {
+          rules: validRules.map((desc) => ({ description: desc })),
+          date: getUtcMidnightISOString(selectedDate),
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setRules((prevRules) => [
+        ...prevRules,
+        ...(response.data.rules || response.data),
+      ]);
+      setNewRulesDialog(false);
+      fetchMasterDate(); // Refresh masterDate
+
+      toast({
+        title: "Rules added",
+        description: `${
+          response.data.rules?.length || validRules.length
+        } rules added successfully.`,
+      });
+    } catch (error) {
+      console.error("Error adding bulk rules:", error);
+      
+      // Show specific error message from backend
+      const errorMessage = error.response?.data?.error || "Failed to add rules. Please try again.";
+      
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingAction((prev) => ({ ...prev, bulkAddRules: false }));
+    }
   };
 
   const handleEditRule = async () => {
@@ -90,10 +178,11 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
     setIsLoadingAction((prev) => ({ ...prev, editRule: true }));
     try {
       const token = Cookies.get("token");
-      await axios.patch(
+      const response = await axios.patch(
         `${API_URL}/rules/${editingRule._id}`,
         {
           description: editingRule.description,
+          date: getUtcMidnightISOString(selectedDate),
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -102,22 +191,26 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
 
       setRules((prevRules) =>
         prevRules.map((rule) =>
-          rule._id === editingRule._id
-            ? { ...rule, description: editingRule.description }
-            : rule
+          rule._id === editingRule._id ? { ...response.data } : rule
         )
       );
 
       setEditingRule(null);
+      onRulesChange?.();
+      onUpdate?.();
       toast({
         title: "Rule updated",
         description: "Your rule has been updated successfully.",
       });
     } catch (error) {
       console.error("Error editing rule:", error);
+      
+      // Show specific error message from backend
+      const errorMessage = error.response?.data?.error || "Failed to update the rule. Please try again.";
+      
       toast({
         title: "Error",
-        description: "Failed to update the rule. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -133,21 +226,28 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
       const token = Cookies.get("token");
       await axios.delete(`${API_URL}/rules/${ruleId}`, {
         headers: { Authorization: `Bearer ${token}` },
+        data: { date: getUtcMidnightISOString(selectedDate) },
       });
 
       setRules((prevRules) => prevRules.filter((rule) => rule._id !== ruleId));
 
       setIsDeleteDialogOpen(false);
       setRuleToDelete(null);
+      onRulesChange?.();
+      onUpdate?.();
       toast({
         title: "Rule deleted",
         description: "Your rule has been deleted successfully.",
       });
     } catch (error) {
       console.error("Error deleting rule:", error);
+      
+      // Show specific error message from backend
+      const errorMessage = error.response?.data?.error || "Failed to delete the rule. Please try again.";
+      
       toast({
         title: "Error",
-        description: "Failed to delete the rule. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -155,18 +255,27 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
     }
   };
 
-  const handleToggleRuleFollow = async (ruleId, isFollowed) => {
+  const handleToggleRuleFollow = async (ruleId, currentIsFollowed) => {
     if (!hasSubscription) return;
 
+    setRules((prevRules) =>
+      prevRules.map((rule) =>
+        rule._id === ruleId ? { ...rule, isFollowed: !currentIsFollowed } : rule
+      )
+    );
+
     setIsLoadingAction((prev) => ({ ...prev, followRule: true }));
+
     try {
       const token = Cookies.get("token");
-      await axios.post(
+      const newFollowStatus = !currentIsFollowed;
+
+      const response = await axios.post(
         `${API_URL}/rules/follow-unfollow`,
         {
           ruleId,
-          date: selectedDate.toISOString(),
-          isFollowed: !isFollowed,
+          date: getUtcMidnightISOString(selectedDate),
+          isFollowed: newFollowStatus,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -175,19 +284,33 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
 
       setRules((prevRules) =>
         prevRules.map((rule) =>
-          rule._id === ruleId ? { ...rule, isFollowed: !isFollowed } : rule
+          rule._id === ruleId
+            ? {
+                ...rule,
+                isFollowed: response.data.isFollowed ?? newFollowStatus,
+              }
+            : rule
         )
       );
 
       onRulesChange?.();
+      onUpdate?.();
 
       toast({
-        title: `Rule ${isFollowed ? "unfollowed" : "followed"}`,
+        title: `Rule ${newFollowStatus ? "followed" : "unfollowed"}`,
         description: `The rule has been ${
-          isFollowed ? "unfollowed" : "followed"
+          newFollowStatus ? "followed" : "unfollowed"
         } successfully.`,
       });
     } catch (error) {
+      setRules((prevRules) =>
+        prevRules.map((rule) =>
+          rule._id === ruleId
+            ? { ...rule, isFollowed: currentIsFollowed }
+            : rule
+        )
+      );
+
       console.error("Error following/unfollowing rule:", error);
       toast({
         title: "Error",
@@ -202,24 +325,24 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   const handleFollowUnfollowAll = async (isFollowed) => {
     if (!hasSubscription) return;
 
+    const previousRules = rules;
+    setRules((prev) => prev.map((rule) => ({ ...rule, isFollowed })));
+
     setIsLoadingAction((prev) => ({ ...prev, followAllRules: true }));
+
     try {
       const token = Cookies.get("token");
       await axios.post(
         `${API_URL}/rules/follow-unfollow-all`,
         {
-          date: selectedDate.toISOString(),
+          date: getUtcMidnightISOString(selectedDate),
           isFollowed,
         },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setRules((prevRules) =>
-        prevRules.map((rule) => ({ ...rule, isFollowed }))
-      );
       onRulesChange?.();
+      onUpdate?.();
 
       toast({
         title: `All rules ${isFollowed ? "followed" : "unfollowed"}`,
@@ -228,10 +351,11 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
         } successfully.`,
       });
     } catch (error) {
-      console.error("Error following/unfollowing all rules:", error);
+      setRules(previousRules);
+
       toast({
         title: "Error",
-        description: "Failed to update all rules. Please try again.",
+        description: "Failed to update all rules. Changes reverted.",
         variant: "destructive",
       });
     } finally {
@@ -243,29 +367,47 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
     if (!hasSubscription) return;
 
     setIsLoadingAction((prev) => ({ ...prev, loadSampleRules: true }));
+
     try {
       const token = Cookies.get("token");
       const response = await axios.post(
         `${API_URL}/rules/load-sample`,
-        {
-          date: selectedDate.toISOString(),
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { date: getUtcMidnightISOString(selectedDate) },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      setRules(response.data);
+      const loadedRules = response.data?.rules || response.data || [];
+
+      if (!Array.isArray(loadedRules)) {
+        throw new Error("Invalid response format: rules array not found");
+      }
+
+      setRules((prevRules) => {
+        const existingIds = new Set(prevRules.map((r) => r._id));
+        const uniqueNewRules = loadedRules.filter(
+          (rule) => !existingIds.has(rule._id)
+        );
+        return [...prevRules, ...uniqueNewRules];
+      });
+
+      fetchMasterDate(); // Refresh masterDate
 
       toast({
         title: "Sample rules loaded",
-        description: "Standard trading rules have been loaded successfully.",
+        description: `${loadedRules.length} standard trading rules added.`,
       });
+
+      onRulesChange?.();
+      onUpdate?.();
     } catch (error) {
       console.error("Error loading sample rules:", error);
+      
+      // Show specific error message from backend
+      const errorMessage = error.response?.data?.error || "Failed to load sample rules. Please try again.";
+      
       toast({
         title: "Error",
-        description: "Failed to load sample rules. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -281,8 +423,7 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
     return (
       <Card className="w-full max-w-4xl h-full mx-auto p-4 flex items-center justify-center">
         <div className="flex items-center">
-          <Loader2 className="mr-2 h-8 w-8 animate-spin" />
-          <span>Loading rules...</span>
+          <Spinner className="h-12 w-12" />
         </div>
       </Card>
     );
@@ -291,6 +432,30 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   if (rules.length === 0) {
     return (
       <>
+        {/* DEBUG: Master Date Display */}
+        {masterDate && (
+          <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg">
+            <p className="text-sm font-mono">
+              <strong>DEBUG - Master Date:</strong>{" "}
+              {new Date(masterDate).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                timeZone: "UTC",
+              })}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Selected Date:{" "}
+              {new Date(selectedDate).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                timeZone: "UTC",
+              })}
+            </p>
+          </div>
+        )}
+        
         <EmptyState
           onAddRule={() => hasSubscription && setNewRulesDialog(true)}
           onLoadSampleRules={handleLoadSampleRules}
@@ -302,7 +467,8 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
           onOpenChange={setNewRulesDialog}
           selectedDate={selectedDate}
           onRulesAdded={handleAddRules}
-          isLoading={isLoadingAction.addRule}
+          onBulkAddRules={handleBulkAddRules}
+          isLoading={isLoadingAction.addRule || isLoadingAction.bulkAddRules}
         />
       </>
     );
@@ -311,6 +477,36 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
   return (
     <Card className="w-full h-full mx-auto p-4 flex-1 shadow-[0px_8px_20px_rgba(0,0,0,0.08)] dark:shadow-[0px_8px_20px_rgba(0,0,0,0.32)]">
       <CardHeader className="p-0">
+        {/* DEBUG: Master Date Display */}
+        {masterDate && (
+          <div className="mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/20 border border-yellow-300 dark:border-yellow-700 rounded-lg">
+            <p className="text-sm font-mono">
+              <strong>DEBUG - Master Date:</strong>{" "}
+              {new Date(masterDate).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                timeZone: "UTC",
+              })}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Selected Date:{" "}
+              {new Date(selectedDate).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                timeZone: "UTC",
+              })}
+              {" | "}
+              Action Allowed:{" "}
+              {new Date(getUtcMidnightISOString(selectedDate)).getTime() >=
+              new Date(masterDate).getTime()
+                ? "✅ YES"
+                : "❌ NO (Historical Date)"}
+            </p>
+          </div>
+        )}
+
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CardTitle className="text-xl font-medium">Rules</CardTitle>
@@ -343,11 +539,16 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
             </div>
 
             <Button
-              className="bg-primary h-fit text-white text-xs px-3 hover:bg-purple-600"
+              className="bg-primary h-fit text-background text-xs px-3 hover:bg-purple-600"
               onClick={() => setNewRulesDialog(true)}
-              disabled={isLoadingAction.addRule || !hasSubscription}
+              disabled={
+                isLoadingAction.addRule ||
+                isLoadingAction.bulkAddRules ||
+                !hasSubscription ||
+                rules.length >= MAX_RULES
+              }
             >
-              {isLoadingAction.addRule ? (
+              {isLoadingAction.addRule || isLoadingAction.bulkAddRules ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Plus className="mr-2 h-4 w-4" />
@@ -360,11 +561,15 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
               onOpenChange={setNewRulesDialog}
               selectedDate={selectedDate}
               onRulesAdded={handleAddRules}
-              isLoading={isLoadingAction.addRule}
+              onBulkAddRules={handleBulkAddRules}
+              isLoading={
+                isLoadingAction.addRule || isLoadingAction.bulkAddRules
+              }
             />
           </div>
         </div>
       </CardHeader>
+
       <CardContent className="p-0 mt-3">
         <div className="rounded-lg overflow-hidden border">
           <div className="sticky top-0 z-10 grid grid-cols-[auto,1fr,auto] gap-4 p-2 px-4 bg-[#F4E4FF] dark:bg-[#49444c] border-b">
@@ -437,12 +642,13 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
         </div>
       </CardContent>
 
+      {/* Edit Rule Dialog */}
       <Dialog open={!!editingRule} onOpenChange={() => setEditingRule(null)}>
         <DialogContent>
-          <DialogHeader className={"border-b pb-2 mb-2"}>
+          <DialogHeader className="border-b pb-2 mb-2">
             <DialogTitle className="text-xl mb-1">Edit Rule</DialogTitle>
             <DialogDescription className="text-xs">
-              Here you can edit your rules.
+              Here you can edit your rule. Note: Changes cannot be made on dates before the master date.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col space-y-1 mb-4 text-sm">
@@ -494,12 +700,13 @@ export function RulesSection({ selectedDate, onUpdate, onRulesChange }) {
         </DialogContent>
       </Dialog>
 
+      {/* Delete Rule Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
-          <DialogHeader className={"border-b pb-2 mb-2"}>
+          <DialogHeader className="border-b pb-2 mb-2">
             <DialogTitle className="text-xl mb-1">Delete Rule</DialogTitle>
             <DialogDescription className="text-xs">
-              Are you sure you want to delete this rule permanently?
+              Are you sure you want to delete this rule? Note: Rules cannot be deleted on dates before the master date.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col space-y-1 mb-4 text-sm">

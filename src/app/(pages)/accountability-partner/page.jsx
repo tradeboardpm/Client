@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -21,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MoreVertical, Package, Trash2 } from "lucide-react";
+import { Info, Trash2 } from "lucide-react";
 import {
   MultiSelector,
   MultiSelectorContent,
@@ -41,8 +40,9 @@ export default function AccountabilityPartner() {
     name: "",
     email: "",
     relation: "",
-    shareFrequency: "weekly",
   });
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [partnerToDelete, setPartnerToDelete] = useState(null);
 
   const detailOptions = [
     { value: "tradesTaken", label: "No. of Trades taken" },
@@ -55,6 +55,9 @@ export default function AccountabilityPartner() {
 
   const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
+    headers: {
+      "Content-Type": "application/json",
+    },
   });
 
   api.interceptors.request.use(
@@ -65,9 +68,7 @@ export default function AccountabilityPartner() {
       }
       return config;
     },
-    (error) => {
-      return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
   );
 
   useEffect(() => {
@@ -77,13 +78,19 @@ export default function AccountabilityPartner() {
   const fetchPartners = async () => {
     try {
       const response = await api.get("/accountability-partner");
-      setPartners(response.data);
+      if (response.data.success) {
+        setPartners(response.data.data || []);
+      } else {
+        throw new Error(response.data.error || "Failed to fetch partners");
+      }
     } catch (error) {
+      console.error("Fetch partners error:", error);
       toast({
         title: "Error",
         description: "Failed to fetch partners",
         variant: "destructive",
       });
+      setPartners([]);
     }
   };
 
@@ -93,13 +100,21 @@ export default function AccountabilityPartner() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (selectedDetails.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one detail to share",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const submitData = {
         name: formData.name,
         email: formData.email,
         relation: formData.relation,
-        shareFrequency: formData.shareFrequency,
         dataToShare: {
           tradesTaken: selectedDetails.includes("tradesTaken"),
           winRate: selectedDetails.includes("winRate"),
@@ -110,21 +125,27 @@ export default function AccountabilityPartner() {
         },
       };
 
-      await api.post("/accountability-partner", submitData);
-
-      toast({
-        title: "Success",
-        description: "Accountability partner added successfully",
-      });
-
-      fetchPartners();
-      resetForm();
+      const response = await api.post("/accountability-partner", submitData);
+      
+      if (response.data.success) {
+        toast({
+          title: "Success",
+          description: "Accountability partner added successfully. They will receive a welcome email.",
+        });
+        setPartners((prev) => [...prev, response.data.data]);
+        resetForm();
+      } else {
+        throw new Error(response.data.error || "Failed to add partner");
+      }
     } catch (error) {
+      console.error("Add partner error:", error.message);
       toast({
-        title: "Error",
-        description: error.response?.data?.error || "Failed to add partner",
+        title: "Warning",
+        description: "Partner added but email notification failed. " + 
+                    (error.response?.data?.error || error.message),
         variant: "destructive",
       });
+      await fetchPartners();
     } finally {
       setIsLoading(false);
     }
@@ -132,19 +153,39 @@ export default function AccountabilityPartner() {
 
   const handleRemovePartner = async (partnerId) => {
     try {
-      await api.delete(`/accountability-partner/${partnerId}`);
-      toast({
-        title: "Success",
-        description: "Accountability partner removed successfully",
-      });
-      fetchPartners();
+      const response = await api.delete(`/accountability-partner/${partnerId}`);
+      
+      if (response.status === 200 && response.data.success) {
+        toast({
+          title: "Success",
+          description: "Accountability partner removed successfully",
+        });
+        setPartners((prev) => prev.filter((partner) => partner._id !== partnerId));
+      } else {
+        throw new Error(response.data.error || "Unexpected response from server");
+      }
     } catch (error) {
+      console.error("Remove partner error:", error.message, error.response?.data);
       toast({
         title: "Error",
-        description: "Failed to remove partner",
+        description: error.response?.data?.error || "Failed to remove partner",
         variant: "destructive",
       });
+      await fetchPartners();
     }
+  };
+
+  const confirmDeletePartner = (partner) => {
+    setPartnerToDelete(partner);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (partnerToDelete) {
+      await handleRemovePartner(partnerToDelete._id);
+    }
+    setDeleteDialogOpen(false);
+    setPartnerToDelete(null);
   };
 
   const resetForm = () => {
@@ -152,7 +193,6 @@ export default function AccountabilityPartner() {
       name: "",
       email: "",
       relation: "",
-      shareFrequency: "weekly",
     });
     setSelectedDetails([]);
   };
@@ -164,8 +204,8 @@ export default function AccountabilityPartner() {
       <div className="flex flex-col lg:flex-row h-full bg-background rounded-t-xl">
         <Dialog open={showDialog} onOpenChange={setShowDialog}>
           <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle>Accountability Partner</DialogTitle>
+            <DialogHeader className='mb-3'>
+              <DialogTitle className="text-xl">Accountability Partner</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <p>
@@ -175,15 +215,18 @@ export default function AccountabilityPartner() {
                 an individual about their progress.
               </p>
               <p>
-                Add details of such a person and we will share your progress
-                with them. You can also choose what details the accountability
+                Add details of such a person and they will receive a welcome email with a link 
+                to view your current week's trading progress. They can access the data anytime 
+                by opening the link. You can also choose what details the accountability
                 partner can view.
               </p>
-              <p className="text-sm text-gray-500">
-                Accountability Partners cannot make any changes to your data or
-                your account.
-              </p>
-              <div className="w-full flex justify-end items-end">
+
+              <div className="w-full flex justify-between pt-8">
+                <p className="text-sm flex gap-2 items-center p-1 rounded font-bold w-fit px-2">
+                  <Info size={16}/>
+                  Accountability Partners cannot make any changes to your data or
+                  your account.
+                </p>
                 <Button
                   variant="outline"
                   className="text-primary"
@@ -238,7 +281,7 @@ export default function AccountabilityPartner() {
                     }
                     disabled={!isSubscriptionActive}
                   >
-                    <SelectTrigger id="relation" className="bg-card">
+                    <SelectTrigger id="relation" className=" border border-accent bg-card dark:bg-accent">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
@@ -259,10 +302,11 @@ export default function AccountabilityPartner() {
                     className="w-full -mt-2 h-fit"
                     disabled={!isSubscriptionActive}
                   >
-                    <MultiSelectorTrigger className="w-full rounded-md bg-card border border-input/25 shadow-sm p-2">
+                    <MultiSelectorTrigger className="w-full rounded-md  border border-accent bg-card dark:bg-accent shadow-sm p-2">
                       <MultiSelectorInput
                         placeholder="Select details..."
-                        className="bg-card text-sm"
+                        className=" text-sm"
+                        disabled={!isSubscriptionActive}
                       />
                     </MultiSelectorTrigger>
                     <MultiSelectorContent>
@@ -271,6 +315,7 @@ export default function AccountabilityPartner() {
                           <MultiSelectorItem
                             key={option.value}
                             value={option.value}
+                            disabled={!isSubscriptionActive}
                           >
                             {option.label}
                           </MultiSelectorItem>
@@ -280,36 +325,25 @@ export default function AccountabilityPartner() {
                   </MultiSelector>
                 </div>
               </div>
-              <div>
-                <Label>Share my progress*</Label>
-                <RadioGroup
-                  value={formData.shareFrequency}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, shareFrequency: value })
-                  }
-                  className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4"
-                  disabled={!isSubscriptionActive}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="weekly" id="weekly" />
-                    <Label htmlFor="weekly">Weekly</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="monthly" id="monthly" />
-                    <Label htmlFor="monthly">Monthly</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-              <div className="text-sm text-gray-500">
-                Your accountability partner will receive progress analysis
-                starting from today.
+              <div className="text-sm text-muted-foreground bg-blue-50 dark:bg-blue-950/20 p-3 rounded-md border border-blue-200 dark:border-blue-900">
+                <strong>Note:</strong> Your accountability partner will receive a welcome email 
+                with a secure link to view your current week's trading progress. The data 
+                shown will always be for the week they access the link.
               </div>
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={resetForm}>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={resetForm}
+                  disabled={!isSubscriptionActive}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isLoading || !isSubscriptionActive}>
-                  {isLoading ? "Adding..." : "Add"}
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || !isSubscriptionActive}
+                >
+                  {isLoading ? "Adding..." : "Add Partner"}
                 </Button>
               </div>
             </form>
@@ -331,14 +365,16 @@ export default function AccountabilityPartner() {
                       <div>
                         <h3 className="font-semibold">{partner.name}</h3>
                         <p className="text-sm text-gray-500">
-                          Last updated:{" "}
-                          {new Date(partner.updatedAt).toLocaleString()}
+                          {partner.email}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Added: {new Date(partner.createdAt).toLocaleDateString()}
                         </p>
                       </div>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleRemovePartner(partner._id)}
+                        onClick={() => confirmDeletePartner(partner)}
                         disabled={!isSubscriptionActive}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -349,14 +385,13 @@ export default function AccountabilityPartner() {
               </div>
             ) : (
               <div className="flex items-center justify-center h-full">
-                <div className="text-center  flex flex-col items-center justify-center ">
-                  {/* <Package className="mx-auto h-12 w-12 text-gray-400" /> */}
+                <div className="text-center flex flex-col items-center justify-center">
                   <img
                     src="/images/no_box.png"
                     alt="no data"
                     className="size-36"
                   />
-                  <h3 className="mt-2 text-lg font-semibold text-gray-900">
+                  <h3 className="mt-2 text-lg font-semibold text-gray-900 dark:text-gray-100">
                     No Data
                   </h3>
                   <p className="mt-1 text-sm text-gray-500">
@@ -368,6 +403,43 @@ export default function AccountabilityPartner() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>
+              Do you really want to delete this accountability partner{" "}
+              <span className="font-semibold">
+                {partnerToDelete?.name}
+              </span>
+              ?
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              They will no longer be able to access your trading data through their link.
+            </p>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={!isSubscriptionActive}
+            >
+              No
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleConfirmDelete}
+              disabled={!isSubscriptionActive}
+            >
+              Yes, Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

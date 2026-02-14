@@ -1,118 +1,138 @@
-"use client"
-
-import { useState, useEffect, Suspense } from "react"
-import axios from "axios"
-import Cookies from "js-cookie"
-import { format, parseISO } from "date-fns"
-import { ArrowLeft, ChevronLeft, ChevronRight, BarChart, X } from "lucide-react"
-import { useRouter, useParams } from "next/navigation"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { WeeklyCharts } from "../../../../components/charts/weekly-charts"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+"use client";
+import { useState, useEffect, Suspense } from "react";
+import axios from "axios";
+import Cookies from "js-cookie";
+import { format, parseISO } from "date-fns";
+import { ArrowLeft, ChevronLeft, ChevronRight, BarChart, X } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { WeeklyCharts } from "../../../../components/charts/weekly-charts";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 
 const JournalDetailsContent = () => {
-  const router = useRouter()
-  const params = useParams()
-  const [journalDetails, setJournalDetails] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [currentDate, setCurrentDate] = useState(parseISO(params.date))
-  const [journalDates, setJournalDates] = useState([]) // Array of all journal dates
+  const router = useRouter();
+  const params = useParams();
+  const [journalDetails, setJournalDetails] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentDate, setCurrentDate] = useState(parseISO(params.date));
+  const [journalDates, setJournalDates] = useState([]);
   const [sidebarExpanded, setSidebarExpanded] = useState(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("sidebarExpanded")
-      return saved !== null ? JSON.parse(saved) : true
-    }
-    return true
-  })
-  const [isMobile, setIsMobile] = useState(false)
-  const [isSideSheetOpen, setIsSideSheetOpen] = useState(false)
-  const [selectedSection, setSelectedSection] = useState("calendar")
-  const [tradesPerDay, setTradesPerDay] = useState(4)
-  const [selectedImage, setSelectedImage] = useState(null)
+    const saved = localStorage.getItem("sidebarExpanded");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSideSheetOpen, setIsSideSheetOpen] = useState(false);
+  const [selectedSection, setSelectedSection] = useState("calendar");
+  const [tradesPerDay, setTradesPerDay] = useState(4);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [openImageDialog, setOpenImageDialog] = useState(false);
+const [currentImageUrl, setCurrentImageUrl] = useState("");
 
-  // Fetch all journal dates
   useEffect(() => {
     const fetchJournalDates = async () => {
       try {
-        const token = Cookies.get("token")
+        const token = Cookies.get("token");
         const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/metrics/dates`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        })
-        setJournalDates(response.data.dates)
+        });
+        setJournalDates(response.data.dates);
       } catch (error) {
-        console.error("Error fetching journal dates:", error)
+        console.error("Error fetching journal dates:", error);
       }
-    }
+    };
 
-    fetchJournalDates()
-  }, [])
+    fetchJournalDates();
+  }, []);
 
-  // Fetch journal details for the current date
   useEffect(() => {
     const fetchJournalDetails = async () => {
       try {
-        setIsLoading(true)
-        const token = Cookies.get("token")
-        const formattedDate = format(currentDate, "yyyy-MM-dd")
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/journals/details?date=${formattedDate}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        setJournalDetails(response.data)
+        setIsLoading(true);
+        const token = Cookies.get("token");
+        const formattedDate = format(currentDate, "yyyy-MM-dd");
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/journals/details?date=${formattedDate}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        setJournalDetails(response.data);
       } catch (error) {
-        console.error("Error fetching journal details:", error)
-        setJournalDetails(null)
+        console.error("Error fetching journal details:", error);
+        setJournalDetails(null);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchJournalDetails()
-  }, [currentDate, params.date])
+    fetchJournalDetails();
+  }, [currentDate, params.date]);
 
   const toggleSidebar = () => {
-    setSidebarExpanded(!sidebarExpanded)
-  }
+    setSidebarExpanded(!sidebarExpanded);
+  };
+  const handleImageClick = (fileUrl) => {
+    setCurrentImageUrl(fileUrl);
+    setOpenImageDialog(true);
+  };
 
-  // Navigate to the next or previous journal
   const navigateJournal = (direction) => {
-    const currentIndex = journalDates.findIndex((date) => date === format(currentDate, "yyyy-MM-dd"))
-    if (currentIndex === -1) return
+    const currentIndex = journalDates.findIndex(
+      (date) => date === format(currentDate, "yyyy-MM-dd")
+    );
+    if (currentIndex === -1) return;
 
-    const newIndex = currentIndex + direction
+    const newIndex = currentIndex + direction;
     if (newIndex >= 0 && newIndex < journalDates.length) {
-      const newDate = parseISO(journalDates[newIndex])
-      setCurrentDate(newDate)
-      router.push(`/my-journal/${journalDates[newIndex]}`)
+      const newDate = parseISO(journalDates[newIndex]);
+      setCurrentDate(newDate);
+      router.push(`/my-journal/${journalDates[newIndex]}`);
     }
-  }
+  };
 
-  // Check if there is a next or previous journal
   const hasNextJournal = () => {
-    const currentIndex = journalDates.findIndex((date) => date === format(currentDate, "yyyy-MM-dd"))
-    return currentIndex < journalDates.length - 1
-  }
+    const currentIndex = journalDates.findIndex(
+      (date) => date === format(currentDate, "yyyy-MM-dd")
+    );
+    return currentIndex < journalDates.length - 1;
+  };
 
   const hasPreviousJournal = () => {
-    const currentIndex = journalDates.findIndex((date) => date === format(currentDate, "yyyy-MM-dd"))
-    return currentIndex > 0
-  }
+    const currentIndex = journalDates.findIndex(
+      (date) => date === format(currentDate, "yyyy-MM-dd")
+    );
+    return currentIndex > 0;
+  };
 
-  // Render date navigation with next/previous journal buttons
+  const handleBackClick = () => {
+    const cookieDate = Cookies.get("journalDate");
+    if (cookieDate) {
+      const date = new Date(JSON.parse(cookieDate));
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      router.push(`/my-journal?year=${year}&month=${month}`);
+    } else {
+      router.push("/my-journal");
+    }
+  };
+
+
   const renderDateNavigation = () => (
     <nav aria-label="Journal Navigation">
       <button
-        onClick={() => router.back()} // Navigate back to the previous page
+        onClick={handleBackClick}
         className="flex items-center text-foreground/70 hover:text-foreground transition-colors mb-4 rounded-full border size-10 justify-center"
-        aria-label="Back to Previous Page"
+        aria-label="Back to Journal Page"
       >
         <ArrowLeft className="h-5 w-5" />
       </button>
@@ -140,13 +160,13 @@ const JournalDetailsContent = () => {
         </div>
       </div>
     </nav>
-  )
+  );
 
   const renderLoadingState = () => (
     <div className="flex justify-center items-center h-screen">
       <p>Loading...</p>
     </div>
-  )
+  );
 
   const renderNoJournalState = () => (
     <div className="flex flex-col md:flex-row min-h-screen bg-card">
@@ -158,7 +178,7 @@ const JournalDetailsContent = () => {
       </main>
       {renderSidebar()}
     </div>
-  )
+  );
 
   const renderSidebar = () => {
     if (isMobile) {
@@ -171,11 +191,14 @@ const JournalDetailsContent = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-[360px] overflow-auto">
             <div className="mt-4">
-              <WeeklyCharts selectedDate={format(currentDate, "yyyy-MM-dd")} tradesPerDay={tradesPerDay} />
+              <WeeklyCharts
+                selectedDate={format(currentDate, "yyyy-MM-dd")}
+                tradesPerDay={tradesPerDay}
+              />
             </div>
           </SheetContent>
         </Sheet>
-      )
+      );
     }
 
     return (
@@ -187,7 +210,10 @@ const JournalDetailsContent = () => {
         >
           {sidebarExpanded ? (
             <div className="p-4 space-y-6">
-              <WeeklyCharts selectedDate={format(currentDate, "yyyy-MM-dd")} tradesPerDay={tradesPerDay} />
+              <WeeklyCharts
+                selectedDate={format(currentDate, "yyyy-MM-dd")}
+                tradesPerDay={tradesPerDay}
+              />
             </div>
           ) : (
             <div className="flex flex-col items-center gap-4 pt-6 bg-card">
@@ -195,7 +221,7 @@ const JournalDetailsContent = () => {
                 variant="ghost"
                 size="icon"
                 className="bg-transparent"
-                onClick={() => handleSectionClick("charts")}
+                onClick={() => setSidebarExpanded(true)} // Expand sidebar on click
               >
                 <BarChart className="size-5" />
               </Button>
@@ -206,15 +232,19 @@ const JournalDetailsContent = () => {
             onClick={toggleSidebar}
             className="absolute top-1/2 p-0 -left-5 z-10 h-8 w-8 rounded-full bg-card shadow-md border-none flex items-center justify-center transform -translate-y-1/2 border border-border"
           >
-            {!sidebarExpanded ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            {!sidebarExpanded ? (
+              <ChevronLeft className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   const renderJournalContent = () => {
-    const journalData = journalDetails?.journalDetails || {}
+    const journalData = journalDetails?.journalDetails || {};
 
     return (
       <div className="flex flex-col md:flex-row min-h-screen bg-card">
@@ -232,7 +262,7 @@ const JournalDetailsContent = () => {
                   <label className="text-sm font-medium">Notes</label>
                   <Textarea
                     readOnly
-                    className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0"
+                    className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)] border-t-0"
                     value={journalData.note || "No notes"}
                   />
                 </div>
@@ -241,7 +271,7 @@ const JournalDetailsContent = () => {
                   <label className="text-sm font-medium">Mistakes</label>
                   <Textarea
                     readOnly
-                    className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0"
+                    className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)] border-t-0"
                     value={journalData.mistake || "No mistakes recorded"}
                   />
                 </div>
@@ -250,30 +280,32 @@ const JournalDetailsContent = () => {
                   <label className="text-sm font-medium">Lessons</label>
                   <Textarea
                     readOnly
-                    className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)]  border-t-0"
+                    className="resize-none h-full flex-1 bg-[#FAF7FF] dark:bg-[#363637] shadow-[0px_2px_8px_rgba(0,0,0,0.02)] border-t-0"
                     value={journalData.lesson || "No lessons learned"}
                   />
                 </div>
               </CardContent>
-              <CardFooter className="h-fit p-0 px-6">
-                {journalData.attachedFiles?.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {journalData.attachedFiles.map((file, index) => (
-                      <div
-                        key={index}
-                        className="relative group rounded-lg overflow-hidden w-20 h-9 shadow border cursor-pointer"
-                        onClick={() => handleImageClick(file)}
-                      >
-                        <img
-                          src={file || "/placeholder.svg"}
-                          alt={`Uploaded file ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardFooter>
+              <CardFooter className="h-fit p-0 px-6 mt-4">
+  {journalData.attachedFiles && journalData.attachedFiles.length > 0 ? (
+    <div className="flex flex-wrap gap-2 w-full">
+      {journalData.attachedFiles.map((file, index) => (
+        <div 
+          key={index}
+          className="relative group rounded-lg overflow-hidden w-20 h-12 shadow border cursor-pointer"
+          onClick={() => handleImageClick(file)}
+        >
+          <img
+            src={file || "/placeholder.svg"}
+            alt={`Uploaded file ${index + 1}`}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      ))}
+    </div>
+  ) : (
+    <div className="text-muted-foreground text-sm">No attachments</div>
+  )}
+</CardFooter>
             </Card>
 
             {/* Rules Card */}
@@ -289,13 +321,9 @@ const JournalDetailsContent = () => {
                 <div className="rounded-lg overflow-hidden border">
                   <div className="sticky top-0 z-10 grid grid-cols-[auto,1fr,auto] gap-4 p-2 px-4 bg-[#F4E4FF] dark:bg-[#49444c] border-b">
                     <div className="flex items-center">
-                      <Checkbox
-                        checked={false}
-                        // Add onCheckedChange handler for follow/unfollow all
-                      />
+                      <Checkbox checked={false} />
                     </div>
                     <span className="font-medium">My Rules</span>
-                    {/* <span className="font-medium text-right">Action</span> */}
                   </div>
                   <div className="max-h-[50vh] min-h-96 overflow-y-auto">
                     <div className="divide-y">
@@ -305,15 +333,11 @@ const JournalDetailsContent = () => {
                           className="grid grid-cols-[auto,1fr,auto] gap-4 px-4 py-2 items-center hover:bg-secondary/50"
                         >
                           <div>
-                            <Checkbox
-                              checked={rule.isFollowed}
-                              // Add onCheckedChange handler
-                            />
+                            <Checkbox checked={rule.isFollowed} />
                           </div>
-                          <span className="text-gray-700 text-[0.8rem]">{rule.description}</span>
+                          <span className="text-[0.8rem]">{rule.description}</span>
                         </div>
                       ))}
-
                       {(!journalData.rules || journalData.rules.length === 0) && (
                         <div className="text-center text-muted-foreground p-4">No rules tracked</div>
                       )}
@@ -354,10 +378,10 @@ const JournalDetailsContent = () => {
                           <TableCell
                             className={cn(
                               !trade.buyingPrice || !trade.sellingPrice
-                                ? "text-foreground font-semibold  text-center"
+                                ? "text-foreground font-semibold text-center"
                                 : trade.buyingPrice < trade.sellingPrice
-                                  ? "text-green-500 font-semibold  text-center"
-                                  : "text-red-500 font-semibold  text-center",
+                                ? "text-green-500 font-semibold text-center"
+                                : "text-red-500 font-semibold text-center"
                             )}
                           >
                             {trade.instrumentName}
@@ -379,30 +403,29 @@ const JournalDetailsContent = () => {
                     </TableBody>
                   </Table>
                 </div>
-                <div className="flex gap-6 items-center justify-between mt-6">
+                <div className="flex-col lg:flex-row flex gap-6 items-center justify-between mt-6">
                   <div
-                    className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
+                    className={`rounded-lg p-2 flex items-center gap-2 w-full lg:w-fit ${
                       journalDetails.summary?.totalPnL >= 0 ? "bg-green-600/20" : "bg-red-600/20"
                     }`}
                   >
                     <div
-                     
                       className={`text-sm font-medium ${
-                        journalDetails.summary?.totalPnL >= 0 ? "text-green-800" : "text-red-800"
+                        journalDetails.summary?.totalPnL >= 0 ? "text-green-500" : "text-red-500"
                       }`}
                     >
                       Today's Profit:
                     </div>
                     <div
                       className={`text-lg font-medium ${
-                        journalDetails.summary?.totalPnL >= 0 ? "text-green-900" : "text-red-900"
+                        journalDetails.summary?.totalPnL >= 0 ? "text-green-500" : "text-red-500"
                       }`}
                     >
                       ₹ {(journalDetails.summary?.totalPnL ?? 0).toFixed(2)}
                     </div>
                   </div>
 
-                  <div className="rounded-lg bg-[#A073F0]/25 flex items-center gap-2 p-2 w-fit">
+                  <div className="rounded-lg bg-[#A073F0]/25 flex items-center gap-2 p-2  w-full lg:w-fit">
                     <div className="text-sm font-medium text-primary">Today's Charges:</div>
                     <div className="text-lg font-medium text-primary">
                       ₹ {(journalDetails.summary?.totalCharges ?? 0).toFixed(2)}
@@ -410,20 +433,20 @@ const JournalDetailsContent = () => {
                   </div>
 
                   <div
-                    className={`rounded-lg p-2 flex items-center gap-2 w-fit ${
+                    className={`rounded-lg p-2 flex items-center gap-2 w-full lg:w-fit ${
                       journalDetails.summary?.netPnL >= 0 ? "bg-green-600/20" : "bg-red-600/20"
                     }`}
                   >
                     <div
                       className={`text-sm font-medium ${
-                        journalDetails.summary?.netPnL >= 0 ? "text-green-800" : "text-red-800"
+                        journalDetails.summary?.netPnL >= 0 ? "text-green-500" : "text-red-500"
                       }`}
                     >
                       Net Realised P&L:
                     </div>
                     <div
                       className={`text-lg font-medium ${
-                        journalDetails.summary?.netPnL >= 0 ? "text-green-900" : "text-red-900"
+                        journalDetails.summary?.netPnL >= 0 ? "text-green-500" : "text-red-500"
                       }`}
                     >
                       ₹ {(journalDetails.summary?.netPnL ?? 0).toFixed(2)}
@@ -436,31 +459,49 @@ const JournalDetailsContent = () => {
         </main>
         {renderSidebar()}
       </div>
-    )
-  }
+    );
+  };
 
-  if (isLoading) return renderLoadingState()
-  if (!journalDetails) return renderNoJournalState()
+  if (isLoading) return renderLoadingState();
+  if (!journalDetails) return renderNoJournalState();
 
   return (
     <>
       {renderJournalContent()}
       {selectedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-card p-4 rounded-lg max-w-3xl max-h-[90vh] relative">
-            <img src={selectedImage || "/placeholder.svg"} alt="Selected file" className="max-w-full h-auto rounded-lg" />
-            <button
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="relative bg-card p-4 rounded-lg max-w-4xl max-h-[90vh] overflow-auto">
+            <img
+              src={selectedImage || "/placeholder.svg"}
+              alt="Preview"
+              className="max-w-full max-h-[80vh] object-contain rounded-lg"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setSelectedImage(null)}
-              className="bg-popover rounded-full absolute -top-3 -right-3 p-1"
+              className="absolute top-2 right-2 bg-popover rounded-full p-1 hover:bg-popover/80"
             >
-              <X/>
-            </button>
+              <X className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       )}
+
+<Dialog open={openImageDialog} onOpenChange={setOpenImageDialog}>
+  <DialogContent className="sm:max-w-4xl w-fit max-h-[90vh] p-0 ">
+    <img
+      src={currentImageUrl || "/placeholder.svg"}
+      alt="Image preview"
+      className="max-w-full max-h-[75vh] object-contain rounded-lg"
+    />
+  </DialogContent>
+</Dialog>
     </>
-  )
-}
+  );
+};
+
+
 
 // Fallback component to show while the suspense resolves
 function LoadingComponent() {
@@ -474,4 +515,3 @@ export default function JournalDetails() {
     </Suspense>
   );
 }
-

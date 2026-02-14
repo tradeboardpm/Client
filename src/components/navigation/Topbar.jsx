@@ -1,3 +1,4 @@
+// Topbar.jsx
 import React, { useState, useEffect } from "react";
 import { Bell, Menu, Sun, Moon, Laptop, LogOut, Check } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,7 +23,6 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
 const NotificationItem = ({ title, content, validUntil, type }) => {
-  // Format the date to be more readable
   const formattedDate = new Date(validUntil).toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
@@ -47,7 +47,7 @@ export default function Topbar({
 }) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [username, setUsername] = useState("");
-  const [theme, setTheme] = useState("system");
+  const [theme, setTheme] = useState("light");
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
   const router = useRouter();
 
@@ -57,12 +57,11 @@ export default function Topbar({
       setUsername(name);
     }
 
-    const savedTheme = localStorage.getItem("theme") || "system";
+    const savedTheme = localStorage.getItem("theme") || "light";
     setTheme(savedTheme);
     applyTheme(savedTheme);
   }, []);
 
-  // Update hasNewNotifications when notifications change
   useEffect(() => {
     if (notifications.length > 0) {
       setHasNewNotifications(true);
@@ -102,11 +101,11 @@ export default function Topbar({
   const getThemeIcon = () => {
     switch (theme) {
       case "light":
-        return <Sun className="h-6 w-6" />;
+        return <Sun className="h-5 w-5" />;
       case "dark":
-        return <Moon className="h-6 w-6" />;
+        return <Moon className="h-5 w-5" />;
       default:
-        return <Laptop className="h-6 w-6" />;
+        return <Laptop className="h-5 w-5" />;
     }
   };
 
@@ -115,33 +114,39 @@ export default function Topbar({
   };
 
   return (
-    <div className="bg-card px-4 py-2 flex justify-between items-center z-10">
+    <div className="bg-card px-2 sm:px-4 py-2 h-14 flex justify-between items-center z-10 fixed w-full top-0">
       <div className="flex items-center">
         <Button
           variant="ghost"
           size="icon"
-          className="mr-2 md:hidden"
+          className="mr-1 sm:mr-2 md:hidden"
           onClick={toggleSidebar}
         >
-          <Menu className="h-6 w-6" />
+          <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
         </Button>
-        <img
+        {/* <img
           src="/images/Tradeboard_logo_RGB.png"
           alt="logo"
-          className="h-7 object-cover p-1 mt-2"
+          className="h-6 sm:h-7 object-cover p-1 mt-2"
+        /> */}
+
+           <img
+          src="/images/Tradeboard_Logo_Final.png"
+          alt="logo"
+          className="h-10 object-cover  mt-2"
         />
       </div>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2 sm:space-x-4">
         <Sheet open={isSheetOpen} onOpenChange={handleSheetOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-6 w-6" />
+              <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
               {hasNewNotifications && (
                 <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500" />
               )}
             </Button>
           </SheetTrigger>
-          <SheetContent className="w-[360px]">
+          <SheetContent className="w-[300px] sm:w-[360px]">
             <SheetHeader>
               <SheetTitle>Notifications</SheetTitle>
             </SheetHeader>
@@ -194,13 +199,13 @@ export default function Topbar({
           className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
           onClick={handleAccountClick}
         >
-          <Avatar>
+          <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
             <AvatarImage src="/placeholder-avatar.jpg" />
             <AvatarFallback>
               {username ? username.charAt(0).toUpperCase() : "U"}
             </AvatarFallback>
           </Avatar>
-          <span className="font-semibold hidden sm:inline ml-2">
+          <span className="font-semibold hidden md:inline ml-2">
             {username || "User"}
           </span>
         </div>
