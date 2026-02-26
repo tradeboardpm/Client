@@ -618,17 +618,15 @@ function ApDataInner() {
                   <CardTitle>On Break-Even Days</CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-2 gap-4">
-                  {sharedData.dataToShare.rulesFollowed && (
-                    <p>
-                      Rules you followed: <br />
-                      <span className="text-blue-600 font-semibold text-lg">
-                        {sharedData.overall.profitLossSummary.breakEven_days.avgRulesFollowed.toFixed(
-                          2
-                        )}
-                        %
-                      </span>
-                    </p>
-                  )}
+                  <p>
+                    Rules you followed: <br />
+                    <span className="text-blue-600 font-semibold text-lg">
+                      {sharedData.overall.profitLossSummary.breakEven_days.avgRulesFollowed.toFixed(
+                        2
+                      )}
+                      %
+                    </span>
+                  </p>
                   <p>
                     Words Journaled: <br />
                     <span className="text-blue-600 font-semibold text-lg">
@@ -637,27 +635,23 @@ function ApDataInner() {
                       )}
                     </span>
                   </p>
-                  {sharedData.dataToShare.tradesTaken && (
-                    <p>
-                      Trades taken: <br />
-                      <span className="text-blue-600 font-semibold text-lg">
-                        {sharedData.overall.profitLossSummary.breakEven_days.avgTradesTaken.toFixed(
-                          2
-                        )}
-                      </span>
-                    </p>
-                  )}
-                  {sharedData.dataToShare.winRate && (
-                    <p>
-                      Win rate: <br />
-                      <span className="text-blue-600 font-semibold text-lg">
-                        {sharedData.overall.profitLossSummary.breakEven_days.winRate.toFixed(
-                          2
-                        )}
-                        %
-                      </span>
-                    </p>
-                  )}
+                  <p>
+                    Trades taken: <br />
+                    <span className="text-blue-600 font-semibold text-lg">
+                      {sharedData.overall.profitLossSummary.breakEven_days.avgTradesTaken.toFixed(
+                        2
+                      )}
+                    </span>
+                  </p>
+                  <p>
+                    Win rate: <br />
+                    <span className="text-blue-600 font-semibold text-lg">
+                      {sharedData.overall.profitLossSummary.breakEven_days.winRate.toFixed(
+                        2
+                      )}
+                      %
+                    </span>
+                  </p>
                 </CardContent>
               </Card>
 
@@ -720,7 +714,7 @@ function ApDataInner() {
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
                       <DialogTitle className="text-xl font-semibold">
-                        All Unfollowed Rules (This Week)
+                        All Unfollowed Rules
                       </DialogTitle>
                     </DialogHeader>
                     <div className="mt-4 max-h-96 overflow-y-auto pr-2">
@@ -754,7 +748,7 @@ function ApDataInner() {
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
                       <DialogTitle className="text-xl font-semibold">
-                        All Followed Rules (This Week)
+                        All Followed Rules
                       </DialogTitle>
                     </DialogHeader>
                     <div className="mt-4 max-h-96 overflow-y-auto pr-2">
