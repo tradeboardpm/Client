@@ -151,7 +151,7 @@ export default function MainLayout({ children }) {
           "Your subscription has expired. Please renew your subscription."
         );
       }
-      return true;
+      return data;
     } catch (error) {
       console.error("Subscription check error:", error);
       toast.error("Failed to check subscription status. Please try again.");
@@ -205,8 +205,14 @@ export default function MainLayout({ children }) {
         setLoading(false);
 
         const isFirstTimeLogin = localStorage.getItem("isFirstTimeLogin");
-        if (isFirstTimeLogin === "true") {
+        const isPaid =
+          subscriptionInfo?.plan && subscriptionInfo.plan !== "one-week";
+
+        if (isFirstTimeLogin === "true" && !isPaid) {
           setIsSubscriptionDialogOpen(true);
+          localStorage.setItem("isFirstTimeLogin", "false");
+        } else if (isFirstTimeLogin === "true") {
+          // If they are paid but it's first time login, just mark it as false
           localStorage.setItem("isFirstTimeLogin", "false");
         }
       } else {
@@ -226,9 +232,15 @@ export default function MainLayout({ children }) {
 
   useEffect(() => {
     const selectedPlanFromStorage = localStorage.getItem("selectedPlan");
-    if (selectedPlanFromStorage) {
+    const isPaid =
+      subscriptionData?.plan && subscriptionData.plan !== "one-week";
+
+    if (selectedPlanFromStorage && !isPaid) {
       setSelectedPlan(selectedPlanFromStorage);
       setIsSubscriptionDialogOpen(true);
+      localStorage.removeItem("selectedPlan");
+    } else if (selectedPlanFromStorage) {
+      // If they are already paid, we don't need to show the dialog even if they had a selected plan
       localStorage.removeItem("selectedPlan");
     }
   }, []);
